@@ -20,16 +20,16 @@ Stage C — Wireframed HTML (semantic + accessible)
 - [ ] Keyboard navigation + ARIA for live results
 
 Stage D — GitHub Actions deploy static site + data files
-- [ ] Build step runs python scripts to produce data artifacts
-- [ ] Test step runs Jest
-- [ ] Deploy step publishes /app + /data
+- [X] Build step runs python scripts to produce data artifacts
+- [X] Test step runs Jest
+- [X] Deploy step publishes /app + /data
 
 ## Stage E — Pure JS core + Jest
-- [ ] Parse/load dataset
-- [ ] Extract Document[]
-- [ ] Build / load index
-- [ ] Implement search(query, options) → ranked results
-- [ ] Unit tests for each pure function
+- [X] Parse/load dataset
+- [X] Extract Document[]
+- [X] Build / load index
+- [X] Implement search(query, options) → ranked results
+- [X] Unit tests for each pure function
 
 ## Stage F — Add service worker + IndexedDB
 - [ ] Precache app shell + dataset
