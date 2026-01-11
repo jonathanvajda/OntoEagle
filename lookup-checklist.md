@@ -37,9 +37,9 @@ Stage D — GitHub Actions deploy static site + data files
 - [X] Store index/docs in IDB for offline + fast subsequent loads
 
 ## Stage G — Polish CSS (Skeleton + scoped, muted cool palette)
-- [ ] app- prefixed classes only
-- [ ] WCAG contrast checks
-- [ ] Reduced-motion support
+- [X] app- prefixed classes only
+- [X] WCAG contrast checks
+- [X] Reduced-motion support
 
 ## Stage H — Admin dashboard (coverage)
 - [ ] Jest coverage artifact + static HTML report in deploy

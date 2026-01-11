@@ -1,0 +1,277 @@
+/* =========================================================
+   OntoEagle — Ontology Search App
+   Stage G: Polished, scoped, accessible CSS
+   ========================================================= */
+
+/* ---------- CSS variables (cool, muted palette) ---------- */
+
+:root {
+  --ont-bg: #f8fafc;
+  --ont-panel-bg: #ffffff;
+  --ont-border: #d0d7de;
+
+  --ont-text: #1f2937;          /* near-black */
+  --ont-muted: #4b5563;         /* accessible muted text */
+
+  --ont-accent: #2563eb;        /* cool blue */
+  --ont-accent-soft: #e0e7ff;
+
+  --ont-pill-bg: #eef2ff;
+  --ont-pill-text: #1e3a8a;
+
+  --ont-focus: #2563eb;
+
+  --ont-radius: 6px;
+  --ont-gap: 1rem;
+
+  --ont-font-body: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  --ont-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* ---------- Global reset (scoped) ---------- */
+
+.ont-search {
+  font-family: var(--ont-font-body);
+  color: var(--ont-text);
+  background: var(--ont-bg);
+  margin: 0;
+  padding: 0;
+}
+
+/* Skip link */
+.ont-search__skip {
+  position: absolute;
+  left: -999px;
+  top: auto;
+}
+.ont-search__skip:focus {
+  left: 1rem;
+  top: 1rem;
+  background: #fff;
+  padding: 0.5rem;
+  z-index: 1000;
+}
+
+/* ---------- Header ---------- */
+
+.ont-search__header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--ont-border);
+  background: var(--ont-panel-bg);
+}
+
+.ont-search__title {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.ont-search__status {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--ont-muted);
+}
+
+/* ---------- Layout ---------- */
+
+.ont-search__layout {
+  display: grid;
+  grid-template-columns: 320px 1fr 360px;
+  gap: var(--ont-gap);
+  padding: 1rem;
+}
+
+@media (max-width: 1100px) {
+  .ont-search__layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Panels ---------- */
+
+.ont-search__panel,
+.ont-search__results,
+.ont-search__detailsPanel {
+  background: var(--ont-panel-bg);
+  border: 1px solid var(--ont-border);
+  border-radius: var(--ont-radius);
+  padding: 1rem;
+}
+
+/* ---------- Forms ---------- */
+
+.ont-search__label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.ont-search__input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--ont-border);
+  border-radius: var(--ont-radius);
+  font-size: 1rem;
+}
+
+.ont-search__input:focus {
+  outline: 2px solid var(--ont-focus);
+  outline-offset: 1px;
+}
+
+.ont-search__queryRow {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ont-search__btn {
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--ont-radius);
+  border: 1px solid var(--ont-border);
+  background: var(--ont-accent);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ont-search__btn--secondary {
+  background: #e5e7eb;
+  color: var(--ont-text);
+}
+
+.ont-search__btn--ghost {
+  background: transparent;
+  color: var(--ont-muted);
+}
+
+.ont-search__btn:focus {
+  outline: 2px solid var(--ont-focus);
+}
+
+/* ---------- Fieldsets ---------- */
+
+.ont-search__fieldset {
+  border: none;
+  margin: 0.75rem 0;
+  padding: 0;
+}
+
+.ont-search__legend {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.ont-search__check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.25rem 0;
+}
+
+/* ---------- Results ---------- */
+
+.ont-search__resultsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.ont-search__h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.ont-search__resultsMeta {
+  font-size: 0.875rem;
+  color: var(--ont-muted);
+}
+
+.ont-search__list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0 0;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.ont-search__result {
+  margin-bottom: 0.5rem;
+}
+
+.ont-search__resultBtn {
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem;
+  border: 1px solid var(--ont-border);
+  border-radius: var(--ont-radius);
+  background: #fff;
+  cursor: pointer;
+}
+
+.ont-search__resultBtn:hover {
+  background: var(--ont-accent-soft);
+}
+
+.ont-search__resultBtn:focus {
+  outline: 2px solid var(--ont-focus);
+}
+
+.ont-search__resultTitle {
+  font-weight: 600;
+}
+
+.ont-search__resultMeta {
+  font-size: 0.875rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ont-search__resultIri {
+  font-family: var(--ont-font-mono);
+  font-size: 0.75rem;
+  color: var(--ont-muted);
+  word-break: break-all;
+}
+
+/* ---------- Pills ---------- */
+
+.ont-search__pill {
+  background: var(--ont-pill-bg);
+  color: var(--ont-pill-text);
+  border-radius: 999px;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+/* ---------- Details ---------- */
+
+.ont-search__detailsCard {
+  font-size: 0.9rem;
+}
+
+.ont-search__detailsIri code {
+  font-family: var(--ont-font-mono);
+  font-size: 0.8rem;
+}
+
+/* ---------- Empty / help ---------- */
+
+.ont-search__help {
+  font-size: 0.875rem;
+  color: var(--ont-muted);
+}
+
+.ont-search__empty {
+  text-align: center;
+  color: var(--ont-muted);
+  padding: 2rem 1rem;
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
