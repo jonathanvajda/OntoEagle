@@ -1,26 +1,25 @@
 # Feature checklist by stage
 
 ## Stage A — Plan + skeleton
-- [ ] Define Document schema + search options schema
-- [ ] Define relevance model (label weight > exact IRI > altLabel > definition)
-- [ ] Repo layout + tooling: node, jest, eslint (optional), prettier (optional)
+- [X] Define Document schema + search options schema
+- [X] Define relevance model (label weight > exact IRI > altLabel > definition)
+- [X] Repo layout + tooling: node, jest, eslint (optional), prettier (optional)
 
 ## Stage B — CI dataset build (Python)
 
-- [ ] Read all ontology files from a folder
-- [ ] Parse with RDFLib (format guessed)
-- [ ] Merge into one graph
-- [ ] Serialize JSON-LD (and optionally N-Quads)
+- [X] Read all ontology files from a folder
+- [X] Parse with RDFLib (format guessed)
+- [X] Merge into one graph
+- [X] Serialize JSON-LD (and optionally N-Quads)
 - [ ] (optional) Generate index.json in CI for faster first-load
 
 Stage C — Wireframed HTML (semantic + accessible)
 
-- [ ] Search bar + options panel
-- [ ] Results list (cards) + details panel
+- [X] Search bar + options panel
+- [X] Results list (cards) + details panel
 - [ ] Keyboard navigation + ARIA for live results
 
 Stage D — GitHub Actions deploy static site + data files
-
 - [ ] Build step runs python scripts to produce data artifacts
 - [ ] Test step runs Jest
 - [ ] Deploy step publishes /app + /data
