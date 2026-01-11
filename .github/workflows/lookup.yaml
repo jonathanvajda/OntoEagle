@@ -64,7 +64,6 @@ jobs:
       - name: Run Jest
         run: npm test -- --ci --coverage
 
-      # Optional: publish coverage inside docs/ so it's visible on the site
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
@@ -84,7 +83,6 @@ jobs:
           name: site-docs
           path: docs
 
-      # Optional: include coverage report in the deployed site
       - name: Download coverage artifact (optional)
         uses: actions/download-artifact@v4
         with:
@@ -94,10 +92,10 @@ jobs:
 
       - name: Copy coverage into docs/admin/coverage (optional)
         run: |
-          if [ -d "coverage" ]; then
-            mkdir -p docs/admin
-            rm -rf docs/admin/coverage
-            cp -r coverage docs/admin/coverage
+          if [ -d "coverage/lcov-report" ]; then
+            mkdir -p docs/admin/coverage
+            rm -rf docs/admin/coverage/*
+            cp -r coverage/* docs/admin/coverage/
           fi
 
       - name: Configure Pages

@@ -42,7 +42,7 @@ Stage D — GitHub Actions deploy static site + data files
 - [X] Reduced-motion support
 
 ## Stage H — Admin dashboard (coverage)
-- [ ] Jest coverage artifact + static HTML report in deploy
+- [X] Jest coverage artifact + static HTML report in deploy
 
 ## Stage I — User-supplied graphs (stretch)
 - [ ] Import TTL/OWL/RDF/XML/JSON-LD in browser
