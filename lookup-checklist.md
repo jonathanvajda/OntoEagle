@@ -32,9 +32,9 @@ Stage D — GitHub Actions deploy static site + data files
 - [X] Unit tests for each pure function
 
 ## Stage F — Add service worker + IndexedDB
-- [ ] Precache app shell + dataset
-- [ ] Store settings in IDB
-- [ ] Store index/docs in IDB for offline + fast subsequent loads
+- [X] Precache app shell + dataset
+- [X] Store settings in IDB
+- [X] Store index/docs in IDB for offline + fast subsequent loads
 
 ## Stage G — Polish CSS (Skeleton + scoped, muted cool palette)
 - [ ] app- prefixed classes only
