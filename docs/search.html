@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ontology Lookup</title>
+  <link rel="stylesheet" href="./styles/search-app.css" />
+</head>
+
+<body class="ont-search">
+  <a class="ont-search__skip" href="#ontResults">Skip to results</a>
+
+  <header class="ont-search__header" role="banner">
+    <h1 class="ont-search__title">Ontology Lookup</h1>
+
+    <!-- Global app status (dataset load, offline/online, etc.) -->
+    <div class="ont-search__status" aria-live="polite" aria-atomic="true">
+      <span id="ontStatusText">Idle</span>
+    </div>
+  </header>
+
+  <main class="ont-search__layout" role="main">
+    <!-- Left: Search + filters -->
+    <section class="ont-search__panel" aria-label="Search and filters">
+      <form id="ontSearchForm" class="ont-search__form" role="search" autocomplete="off">
+        <label for="ontQuery" class="ont-search__label">Search</label>
+
+        <div class="ont-search__queryRow">
+          <input
+            id="ontQuery"
+            name="q"
+            class="ont-search__input"
+            type="search"
+            placeholder='e.g., vehicle, "act of location change", IAO_0000115'
+            aria-describedby="ontQueryHelp"
+            spellcheck="false"
+          />
+          <button id="ontSearchBtn" class="ont-search__btn" type="submit">Search</button>
+        </div>
+
+        <p id="ontQueryHelp" class="ont-search__help">
+          Quotes keep phrases together. Use filters below to narrow type/namespace and fields.
+        </p>
+
+        <details class="ont-search__details" open>
+          <summary class="ont-search__summary">Options</summary>
+
+          <fieldset class="ont-search__fieldset">
+            <legend class="ont-search__legend">Match</legend>
+
+            <label class="ont-search__check">
+              <input id="optExact" type="checkbox" />
+              <span>Exact match</span>
+            </label>
+
+            <label class="ont-search__check">
+              <input id="optWildcard" type="checkbox" checked />
+              <span>Wildcard / contains</span>
+            </label>
+          </fieldset>
+
+          <fieldset class="ont-search__fieldset">
+            <legend class="ont-search__legend">Fields searched</legend>
+
+            <label class="ont-search__check">
+              <input id="optIncludeDefinition" type="checkbox" checked />
+              <span>Definitions</span>
+            </label>
+
+            <label class="ont-search__check">
+              <input id="optIncludeCitation" type="checkbox" />
+              <span>Citations</span>
+            </label>
+
+            <label class="ont-search__check">
+              <input id="optIncludeExamples" type="checkbox" />
+              <span>Examples</span>
+            </label>
+
+            <label class="ont-search__check">
+              <input id="optIncludeClarifications" type="checkbox" />
+              <span>Clarifications</span>
+            </label>
+          </fieldset>
+
+          <fieldset class="ont-search__fieldset">
+            <legend class="ont-search__legend">Element types</legend>
+
+            <div class="ont-search__grid" role="group" aria-label="OWL element types">
+              <label class="ont-search__check"><input class="optType" type="checkbox" value="Ontology" checked /> <span>Ontology</span></label>
+              <label class="ont-search__check"><input class="optType" type="checkbox" value="Class" checked /> <span>Class</span></label>
+              <label class="ont-search__check"><input class="optType" type="checkbox" value="ObjectProperty" checked /> <span>ObjectProperty</span></label>
+              <label class="ont-search__check"><input class="optType" type="checkbox" value="DatatypeProperty" checked /> <span>DatatypeProperty</span></label>
+              <label class="ont-search__check"><input class="optType" type="checkbox" value="AnnotationProperty" checked /> <span>AnnotationProperty</span></label>
+              <label class="ont-search__check"><input class="optType" type="checkbox" value="NamedIndividual" checked /> <span>NamedIndividual</span></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="ont-search__fieldset">
+            <legend class="ont-search__legend">Namespaces</legend>
+            <label class="ont-search__label" for="optNamespaces">Filter (comma-separated prefixes or namespace IRIs)</label>
+            <input
+              id="optNamespaces"
+              class="ont-search__input"
+              type="text"
+              placeholder="e.g., cco, bfo, iao OR http://purl.obolibrary.org/obo/"
+            />
+            <p class="ont-search__help">Leave blank to search all namespaces.</p>
+          </fieldset>
+
+          <div class="ont-search__row">
+            <button id="ontSaveSettingsBtn" class="ont-search__btn ont-search__btn--secondary" type="button">
+              Save settings
+            </button>
+            <button id="ontResetSettingsBtn" class="ont-search__btn ont-search__btn--ghost" type="button">
+              Reset
+            </button>
+          </div>
+        </details>
+      </form>
+    </section>
+
+    <!-- Center: Results -->
+    <section class="ont-search__results" aria-label="Search results">
+      <header class="ont-search__resultsHeader">
+        <h2 class="ont-search__h2" id="ontResults">Results</h2>
+
+        <!-- Live region for result count/time -->
+        <div class="ont-search__resultsMeta" aria-live="polite" aria-atomic="true">
+          <span id="ontResultsCount">0</span> results
+          <span aria-hidden="true">•</span>
+          <span id="ontResultsTime">0 ms</span>
+        </div>
+      </header>
+
+      <!-- Ranked results: listbox + options for keyboard navigation -->
+      <ol
+        id="ontResultsList"
+        class="ont-search__list"
+        role="listbox"
+        aria-label="Ranked results"
+        aria-activedescendant=""
+        tabindex="0"
+      ></ol>
+
+      <div id="ontEmptyState" class="ont-search__empty" hidden>
+        <p><strong>No results yet.</strong> Try a search above.</p>
+      </div>
+    </section>
+
+    <!-- Right: Details -->
+    <aside class="ont-search__detailsPanel" aria-label="Selected element details">
+      <h2 class="ont-search__h2">Details</h2>
+      <div id="ontDetails" class="ont-search__detailsCard">
+        <p class="ont-search__help">Select a result to view details.</p>
+      </div>
+    </aside>
+  </main>
+
+  <script type="module" src="./scripts/search-main.js"></script>
+</body>
+</html>
