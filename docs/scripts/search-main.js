@@ -11,13 +11,13 @@
  * Pure logic lives in:
  * - normalize.js
  * - rdf_extract.js
- * - indexer.js
+ * - indexer.js // INDEX FEATURE: 
  * - search.js
  * - types.js
  */
 
 import { extractDocumentsFromJsonLd, mapByIri, parseGraphJsonLdText } from './rdf_extract.js';
-import { buildIndex } from './indexer.js';
+ // INDEX FEATURE: import { buildIndex } from './indexer.js';
 import { searchDocuments } from './search.js';
 import { defaultSearchOptions } from './types.js';
 
@@ -70,7 +70,7 @@ const typeCheckboxes = /** @type {NodeListOf<HTMLInputElement>} */ (document.que
  * ----------------------------- */
 
 let docsByIri = new Map();   // Map<string, OntologyDocument>
-let index = null;            // Inverted index object (shape from indexer.js)
+ // INDEX FEATURE: let index = null;            // Inverted index object (shape from indexer.js)
 let options = structuredClone(defaultSearchOptions);
 
 /* -----------------------------
@@ -371,7 +371,7 @@ async function buildFromGraphAndPersist(graphText, fingerprint) {
   const docs = extractDocumentsFromJsonLd(json);
 
   docsByIri = mapByIri(docs);
-  index = buildIndex(docs); // your indexer.js should export this
+ // INDEX FEATURE: index = buildIndex(docs); // your indexer.js should export this
 
   await idbPutDocuments('builtin', docs);
   await idbPutIndex('builtin', index);
