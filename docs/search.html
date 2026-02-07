@@ -3,21 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Ontology Lookup</title>
+  <title>OntoEagle - Ontology Search</title>
+  <link rel="stylesheet" href="./styles/normalize.css" />
+  <link rel="stylesheet" href="./styles/skeleton.css" />
+  <link rel="stylesheet" href="./styles/site-header.css" />
   <link rel="stylesheet" href="./styles/search-app.css" />
 </head>
 
-<body class="ont-search">
+<body data-page-id="ontoeagle" class="ont-search">
   <a class="ont-search__skip" href="#ontResults">Skip to results</a>
 
-  <header class="ont-search__header" role="banner">
-    <h1 class="ont-search__title">Ontology Lookup</h1>
-
-    <!-- Global app status (dataset load, offline/online, etc.) -->
-    <div class="ont-search__status" aria-live="polite" aria-atomic="true">
+  <header id="siteHeader" class="ont-search__header sitehdr-root" role="banner" aria-label="Site header">
+    
+  </header>
+  <div class="ont-search__status" aria-live="polite" aria-atomic="true">
       <span id="ontStatusText">Idle</span>
     </div>
-  </header>
 
   <main class="ont-search__layout" role="main">
     <!-- Left: Search + filters -->
@@ -157,6 +158,7 @@
     </aside>
   </main>
 
+  <script src="./scripts/site-header.js"></script>
   <script type="module" src="./scripts/search-main.js"></script>
 </body>
 </html>

@@ -374,7 +374,7 @@ async function buildFromGraphAndPersist(graphText, fingerprint) {
  // INDEX FEATURE: index = buildIndex(docs); // your indexer.js should export this
 
   await idbPutDocuments('builtin', docs);
-  await idbPutIndex('builtin', index);
+ // INDEX FEATURE:   await idbPutIndex('builtin', index);
   await idbPutDatasetMeta('builtin', { fingerprint, enabled: true, updatedAt: Date.now() });
 }
 

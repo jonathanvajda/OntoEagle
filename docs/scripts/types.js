@@ -1,26 +1,105 @@
 // docs/scripts/types.js
 
 /**
+ * Central typedefs + defaults for the OntoEagle search app.
+ * This file should be import-safe in both browser + Jest (Node).
+ */
+
+/**
+ * @typedef {'Ontology'|'Class'|'ObjectProperty'|'DatatypeProperty'|'AnnotationProperty'|'NamedIndividual'|'Other'} OntologyElementType
+ */
+
+/**
+ * A normalized “card” representing an ontology element.
+ *
  * @typedef {Object} OntologyDocument
  * @property {string} iri
- * @property {('Ontology'|'Class'|'ObjectProperty'|'DatatypeProperty'|'AnnotationProperty'|'NamedIndividual'|'Other')} type
+ * @property {OntologyElementType} type
  * @property {string} label
  * @property {string[]} altLabels
- * @property {string} namespace        // namespace IRI (or prefix token, but pick one and stick to it)
+ * @property {string} namespace
+ *
  * @property {string=} definition
  * @property {string[]=} citations
  * @property {string[]=} examples
  * @property {string[]=} clarifications
+ *
+ * // Stage F+ (multi-dataset foundation; safe to ignore for now)
+ * @property {string=} datasetId
+ *
+ * // Optional convenience for search/index (not required)
+ * @property {string=} text
  */
 
 /**
+ * Search options selected by the user (persisted in IndexedDB).
+ *
  * @typedef {Object} SearchOptions
  * @property {boolean} exact
  * @property {boolean} wildcard
- * @property {Array<OntologyDocument['type']>} types
+ * @property {OntologyElementType[]} types
  * @property {string[]} namespaces
+ *
  * @property {boolean} includeDefinition
  * @property {boolean} includeCitation
  * @property {boolean} includeExamples
  * @property {boolean} includeClarifications
+ */
+
+/**
+ * Default element types to include in search.
+ * Exported separately so UI and tests can reuse it.
+ *
+ * @type {OntologyElementType[]}
+ */
+export const ALL_ELEMENT_TYPES = Object.freeze([
+  'Ontology',
+  'Class',
+  'ObjectProperty',
+  'DatatypeProperty',
+  'AnnotationProperty',
+  'NamedIndividual',
+  'Other'
+]);
+
+/**
+ * Default search options used at first-run and on reset.
+ *
+ * NOTE:
+ * - wildcard: true by default for usability
+ * - exact: false by default
+ * - includeDefinition: true by default (definitions are high value)
+ * - citations/examples/clarifications default off (noise + speed)
+ *
+ * @type {SearchOptions}
+ */
+export const defaultSearchOptions = Object.freeze({
+  exact: false,
+  wildcard: true,
+  types: [...ALL_ELEMENT_TYPES],
+  namespaces: [],
+  includeDefinition: true,
+  includeCitation: false,
+  includeExamples: false,
+  includeClarifications: false
+});
+
+/**
+ * @typedef {Object} SearchResult
+ * @property {OntologyDocument} doc
+ * @property {number} score
+ * @property {number} matchedTokenCount
+ * @property {number=} labelHits
+ * @property {number=} defOnlyHits
+ * @property {string[]=} reasons
+ */
+
+/**
+ * @typedef {Object} DatasetMeta
+ * @property {string} datasetId
+ * @property {string=} name
+ * @property {('builtin'|'user')=} source
+ * @property {boolean=} enabled
+ * @property {number=} updatedAt
+ * @property {string=} fingerprint
  */

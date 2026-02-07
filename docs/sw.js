@@ -11,7 +11,7 @@ const SHELL_ASSETS = [
   './styles/search-app.css',
   './scripts/search-main.js',
   './scripts/search.js',
-  './scripts/indexer.js',
+// INDEX FEATURE:  './scripts/indexer.js',
   './scripts/normalize.js',
   './scripts/rdf_extract.js',
   './scripts/indexeddb.min.js',
