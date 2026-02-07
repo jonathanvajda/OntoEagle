@@ -9,7 +9,17 @@
       toolLogoByPageId: {
         "ontoeagle": { src: "./images/Eagle-VI_1753264913.svg", alt: "OntoEagle" },
         "iri-registry": { src: "./images/iri-registry.svg", alt: "IRI Registry" },
-        // ...
+        "ontology-tabulator": { src: "./images/ontology-tabulator.svg", alt: "Ontology Tabulator" },
+        "cq-ferret": { src: "./images/cq-ferret.svg", alt: "CQ Ferret" },
+        "bp-weaver": { src: "./images/bp-weaver.svg", alt: "BP Weaver" },
+        "controlled-vocabulary-registry": { src: "./images/controlled-vocabulary-registry.svg", alt: "Controlled Vocabulary Registry" },
+        "tom": { src: "./images/tom.svg", alt: "Tabular Ontology Maker" },
+        "table-nova": { src: "./images/table-nova.svg", alt: "Table Nova" },
+        "shacl-generator": { src: "./images/shacl-generator.svg", alt: "SHACL Generator" },
+        "axiolotl": { src: "./images/axiolotl.svg", alt: "Axiolotl SPARQL & Inference" },
+        "sparql-pattern-visualizer": { src: "./images/sparql-pattern-visualizer.svg", alt: "SPARQL Pattern Visualizer" },
+        "ontology-curation-manager": { src: "./images/ontology-curation-manager.svg", alt: "Ontology Curation Manager" },
+        "myna-iri-swapper": { src: "./images/myna-iri-swapper.svg", alt: "Myna IRI Swapper" },
       },
       defaultToolLogo: { src: "./images/default.svg", alt: "Tool" }
     },
@@ -30,9 +40,31 @@
           { label: "Business Process Weaver", href: "/bp-weaver.html", pageId: "bp-weaver" },
         ],
       },
-      // ...
-    ],
-  };
+      {
+        title: "Semantic Building Tools",
+        items: [
+          { label: "Controlled Vocabulary Registry", href: "/controlled-vocabulary-registry.html", pageId: "controlled-vocabulary-registry" },
+          { label: "Tabular Ontology Maker (TOM)", href: "/tom.html", pageId: "tom" },
+          { label: "Table Nova", href: "/table-nova.html", pageId: "table-nova" },
+          { label: "SHACL Generator", href: "/shacl-generator.html", pageId: "shacl-generator" },
+        ],
+      },
+      {
+      title: "Semantic Query Tools",
+        items: [
+          { label: "Axiolotl SPARQL & Inference", href: "/axiolotl.html", pageId: "axiolotl" },
+          { label: "SPARQL Pattern Visualizer", href: "/sparql-pattern-visualizer.html", pageId: "sparql-pattern-visualizer" },
+        ],
+      },
+      {
+        title: "Ontology Maintenance",
+            items: [
+            { label: "Ontology Curation Manager", href: "/ontology-curation-manager.html", pageId: "ontology-curation-manager" },
+            { label: "Myna IRI Swapper", href: "/myna-iri-swapper.html", pageId: "myna-iri-swapper" },
+            ],
+        },
+        ],
+    };
 
   function escapeHtml(s) {
     return String(s)
