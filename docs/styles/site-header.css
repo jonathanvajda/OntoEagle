@@ -29,13 +29,14 @@
 
 .sitehdr-brand__main {
   display: inline-flex;
-  height: 156px;   /* adjust to taste */
+  height: 160px;   /* adjust to taste */
   width: auto;
 }
 
 /* Next: tool logo */
 .sitehdr-tool {
   flex: 0 0 auto;
+  min-width: 160px;
   display: inline-flex;
   align-items: flex-start;
   justify-content: flex-start;
@@ -43,7 +44,7 @@
 
 .sitehdr-tool__img {
   display: inline-flex;
-  height: 156px;   /* match main logo height */
+  height: 160px;   /* match main logo height */
   width: auto;
 }
 
@@ -55,16 +56,16 @@
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: minmax(180px, max-content);
-  gap: 1.25rem;
+  gap: 1.5rem;
 
   overflow-x: auto;  /* if too many sections, scroll horizontally */
-  padding-bottom: 0.25rem;
+  padding-bottom: 0rem;
 }
 
 /* Each section column */
 .sitehdr-section__title {
   margin: 0 0 0.35rem;
-  font-size: 1.5rem;
+  font-size: 1.9rem;
   font-weight: 650;
   opacity: 0.90;
   white-space: nowrap;
@@ -76,14 +77,14 @@
   margin-left: 1rem;
   padding: 0;
   display: grid;
-  gap: 0.20rem;
+  gap: 0rem;
 }
 
 .sitehdr-link {
   text-decoration: none;
   color: inherit;
   display: inline-block;
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   padding: 0.1rem 0;
 }
 
@@ -92,7 +93,7 @@
 }
 
 .sitehdr-link.is-active {
-  font-weight: 600;
+  font-weight: 700;
 }
 
 /* Small screens: allow wrap so sections drop under logos */
