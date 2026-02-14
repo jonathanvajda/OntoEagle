@@ -7,14 +7,14 @@
     brand: {
       mainLogo: { href: "/", src: "./images/main-logo.png", alt: "Your org/site" },
       toolLogoByPageId: {
-        "ontoeagle": { src: "./images/Eagle-VI_1753264913.svg", alt: "OntoEagle" },
+        "ontoeagle": { src: "./images/Eagle-VI_1753264913.svg", alt: "OntoEagle Lookup" },
         "iri-registry": { src: "./images/iri-registry.svg", alt: "IRI Registry" },
         "ontology-tabulator": { src: "./images/ontology-tabulator.svg", alt: "Ontology Tabulator" },
         "cq-ferret": { src: "./images/cq-ferret.svg", alt: "CQ Ferret" },
         "bp-weaver": { src: "./images/bp-weaver.svg", alt: "BP Weaver" },
         "controlled-vocabulary-registry": { src: "./images/controlled-vocabulary-registry.svg", alt: "Controlled Vocabulary Registry" },
         "tom": { src: "./images/tom.svg", alt: "Tabular Ontology Maker" },
-        "table-nova": { src: "./images/table-nova.svg", alt: "Table Nova" },
+        "table-nova": { src: "./images/table-nova-logo.svg", alt: "Table Nova" },
         "shacl-generator": { src: "./images/shacl-generator.svg", alt: "SHACL Generator" },
         "axiolotl": { src: "./images/axiolotl.svg", alt: "Axiolotl SPARQL & Inference" },
         "sparql-pattern-visualizer": { src: "./images/sparql-pattern-visualizer.svg", alt: "SPARQL Pattern Visualizer" },
@@ -26,41 +26,43 @@
 
     groups: [
       {
-        title: "Ontology Exploration",
+        title: "Data Exploration",
         items: [
           { label: "OntoEagle", href: "/search.html", pageId: "ontoeagle" },
           { label: "IRI Registry", href: "/iri-registry.html", pageId: "iri-registry" },
-          { label: "Ontology Tabulator", href: "/ontology-tabulator.html", pageId: "ontology-tabulator" },
+          { label: "Ontology Tabulator", href: "https://jonathanvajda.github.io/ontology-tabulator/", pageId: "ontology-tabulator" },
+        ],
+      },
+{
+        title: "Domain Analysis",
+        items: [
+    /**          { label: "Competency Question Ferret", href: "/cq-ferret.html", pageId: "cq-ferret" },
+          { label: "Business Process Weaver", href: "/bp-weaver.html", pageId: "bp-weaver" },*/
+           { label: "Mermaid Diagram Builder 🔗", href: "https://skreen5hot.github.io/mermaid/", pageId: "mermaid-diagram-builder" },
         ],
       },
       {
-        title: "Requirements Gathering",
+        title: "Building Tools",
         items: [
-          { label: "Competency Question Ferret", href: "/cq-ferret.html", pageId: "cq-ferret" },
-          { label: "Business Process Weaver", href: "/bp-weaver.html", pageId: "bp-weaver" },
-        ],
-      },
-      {
-        title: "Semantic Building Tools",
-        items: [
-          { label: "Controlled Vocabulary Registry", href: "/controlled-vocabulary-registry.html", pageId: "controlled-vocabulary-registry" },
-          { label: "Tabular Ontology Maker (TOM)", href: "/tom.html", pageId: "tom" },
+        //  { label: "Controlled Vocabulary", href: "/controlled-vocabulary-registry.html", pageId: "controlled-vocabulary-registry" },
+          { label: "Tabular Ontology Maker (TOM)", href: "https://jonathanvajda.github.io/tabular-ontology-maker/", pageId: "tom" },
           { label: "Table Nova", href: "/table-nova.html", pageId: "table-nova" },
+          { label: "Knowledge Graph Modeler 🔗", href: "https://skreen5hot.github.io/kgModeler/", pageId: "kg-modeler" },
           { label: "SHACL Generator", href: "/shacl-generator.html", pageId: "shacl-generator" },
         ],
       },
       {
-      title: "Semantic Query Tools",
+      title: "Data Manipulation",
         items: [
-          { label: "Axiolotl SPARQL & Inference", href: "/axiolotl.html", pageId: "axiolotl" },
-          { label: "SPARQL Pattern Visualizer", href: "/sparql-pattern-visualizer.html", pageId: "sparql-pattern-visualizer" },
+          { label: "Axiolotl SPARQL & Inference", href: "https://jonathanvajda.github.io/axiolotl/", pageId: "axiolotl" },
+          { label: "SPARQL Pattern Visualizer", href: "https://jonathanvajda.github.io/sparql-pattern-visualizer/", pageId: "sparql-pattern-visualizer" },
         ],
       },
       {
-        title: "Ontology Maintenance",
+        title: "Maintenance",
             items: [
-            { label: "Ontology Curation Manager", href: "/ontology-curation-manager.html", pageId: "ontology-curation-manager" },
-            { label: "Myna IRI Swapper", href: "/myna-iri-swapper.html", pageId: "myna-iri-swapper" },
+            { label: "Ontology Curation Manager", href: "https://jonathanvajda.github.io/ontology-curation-manager/", pageId: "ontology-curation-manager" },
+            { label: "Myna IRI Swapper", href: "https://jonathanvajda.github.io/iri-swapper/", pageId: "myna-iri-swapper" },
             ],
         },
         ],
@@ -143,6 +145,7 @@
             <img class="sitehdr-tool__img"
                  src="${escapeHtml(toolLogo.src)}"
                  alt="${escapeHtml(toolLogo.alt)}" />
+                 <h1 class="sitehdr-tool__title">${escapeHtml(toolLogo.alt)}</h1>
           </div>
 
           ${buildSectionsHtml(pageId)}

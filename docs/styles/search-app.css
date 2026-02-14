@@ -3,31 +3,6 @@
    Stage G: Polished, scoped, accessible CSS
    ========================================================= */
 
-/* ---------- CSS variables (cool, muted palette) ---------- */
-
-:root {
-  --ont-bg: #f8fafc;
-  --ont-panel-bg: #ffffff;
-  --ont-border: #d0d7de;
-
-  --ont-text: #1f2937;          /* near-black */
-  --ont-muted: #4b5563;         /* accessible muted text */
-
-  --ont-accent: #2563eb;        /* cool blue */
-  --ont-accent-soft: #e0e7ff;
-
-  --ont-pill-bg: #eef2ff;
-  --ont-pill-text: #1e3a8a;
-
-  --ont-focus: #2563eb;
-
-  --ont-radius: 6px;
-  --ont-gap: 1rem;
-
-  --ont-font-body: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  --ont-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-}
-
 /* ---------- Global reset (scoped) ---------- */
 
 .ont-search {
@@ -99,6 +74,10 @@
 
 /* ---------- Forms ---------- */
 
+.ont-search__form {
+  margin-bottom: 0rem;
+}
+
 .ont-search__label {
   font-weight: 600;
   display: block;
@@ -124,7 +103,10 @@
 }
 
 .ont-search__btn {
-  padding: 0.5rem 0.75rem;
+  padding-top: 0rem;
+  padding-bottom: 0.5rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
   border-radius: var(--ont-radius);
   border: 1px solid var(--ont-border);
   background: var(--ont-accent);
@@ -151,19 +133,22 @@
 
 .ont-search__fieldset {
   border: none;
-  margin: 0.75rem 0;
+  margin: 0.75rem 1rem;
   padding: 0;
 }
 
 .ont-search__legend {
   font-weight: 600;
   margin-bottom: 0.25rem;
+  margin-left: -1rem;
 }
 
 .ont-search__check {
   display: flex;
   gap: 0.85rem;
-  margin: 0.25rem 0;
+  margin-bottom: -.75rem;
+  margin-top: -.25rem;
+  margin-left: 0.5rem;
   font-size: 1.25rem;
   font-weight: 400;
 }
@@ -190,7 +175,7 @@
   list-style: none;
   padding: 0;
   margin: 0.5rem 0 0 0;
-  max-height: 60vh;
+  max-height: 65vh;
   overflow-y: auto;
 }
 
@@ -217,7 +202,8 @@
 }
 
 .ont-search__resultTitle {
-  font-size: 1.75rem;
+  margin-top: 0.25rem;
+  font-size: 2rem;
   font-weight: 600;
 }
 
@@ -232,7 +218,7 @@
   font-size: 1.25rem;
   color: var(--ont-muted);
   word-break: break-all;
-  padding-bottom: 2rem;
+  padding-bottom: 1rem;
 }
 
 /* ---------- Pills ---------- */
@@ -248,7 +234,7 @@
 /* ---------- Details ---------- */
 
 .ont-search__detailsCard {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
 }
 
 .ont-search__detailsIri code {
@@ -259,8 +245,9 @@
 /* ---------- Empty / help ---------- */
 
 .ont-search__help {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   color: var(--ont-muted);
+  margin-bottom: 1.25rem;
 }
 
 .ont-search__empty {

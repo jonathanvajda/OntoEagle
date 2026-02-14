@@ -203,25 +203,26 @@ function renderResults(results) {
     li.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
 
     // Button for focus/activation
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'ont-search__resultBtn';
-    btn.dataset.iri = r.doc.iri;
+   
+    const resultDiv = document.createElement('div');
+    resultDiv.className = 'ont-search__result';
+    resultDiv.dataset.iri = r.doc.iri;
 
-    btn.innerHTML = `
+    resultDiv.innerHTML = `
       <div class="ont-search__resultTitle">${escapeHtml(r.doc.label || r.doc.iri)}</div>
       <div class="ont-search__resultMeta">
         <span class="ont-search__pill">${escapeHtml(r.doc.type)}</span>
-        <span class="ont-search__muted">${escapeHtml(r.doc.namespace || '')}</span>
+        <br />
+        <span class="ont-search__muted">Namespace: ${escapeHtml(r.doc.namespace || '')}</span>
       </div>
       <div class="ont-search__resultIri">${escapeHtml(r.doc.iri)}</div>
     `.trim();
 
-    btn.addEventListener('click', () => {
+    resultDiv.addEventListener('click', () => {
       selectResultByIri(r.doc.iri);
     });
 
-    li.appendChild(btn);
+    li.appendChild(resultDiv);
     elResultsList.appendChild(li);
   }
 
@@ -258,10 +259,10 @@ function renderDetails(doc) {
 
   elDetails.innerHTML = `
     <div class="ont-search__detailsHeader">
-      <div class="ont-search__detailsTitle">${escapeHtml(doc.label || doc.iri)}</div>
+      <div class="ont-search__detailsTitle"><strong>${escapeHtml(doc.label || doc.iri)}</strong></div>
       <div class="ont-search__detailsMeta">
         <span class="ont-search__pill">${escapeHtml(doc.type)}</span>
-        <span class="ont-search__muted">${escapeHtml(doc.namespace || '')}</span>
+        <span class="ont-search__muted">Namespace: ${escapeHtml(doc.namespace || '')}</span>
       </div>
       <div class="ont-search__detailsIri"><code>${escapeHtml(doc.iri)}</code></div>
     </div>

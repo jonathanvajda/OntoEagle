@@ -13,7 +13,7 @@
 <body data-page-id="ontoeagle" class="ont-search">
   <a class="ont-search__skip" href="#ontResults">Skip to results</a>
 
-  <header id="siteHeader" class="ont-search__header sitehdr-root" role="banner" aria-label="Site header">
+  <header id="siteHeader" class="sitehdr-root" role="banner" aria-label="Site header">
     
   </header>
   <div class="ont-search__status" aria-live="polite" aria-atomic="true">
@@ -40,11 +40,11 @@
         </div>
 
         <p id="ontQueryHelp" class="ont-search__help">
-          Quotes keep phrases together. Use filters below to narrow type/namespace and fields.
+          Quotes keep phrases together.
         </p>
 
         <details class="ont-search__details" open>
-          <summary class="ont-search__summary">Options</summary>
+          <summary class="ont-search__summary"><strong>Search filters</strong></summary>
 
           <fieldset class="ont-search__fieldset">
             <legend class="ont-search__legend">Match</legend>
@@ -98,15 +98,15 @@
           </fieldset>
 
           <fieldset class="ont-search__fieldset">
-            <legend class="ont-search__legend">Namespaces</legend>
-            <label class="ont-search__label" for="optNamespaces">Filter (comma-separated prefixes or namespace IRIs)</label>
+            <legend class="ont-search__legend">Namespaces filter</legend>
+            <!-- <label class="ont-search__label" for="optNamespaces">Filter</label> -->
             <input
               id="optNamespaces"
               class="ont-search__input"
               type="text"
               placeholder="e.g., cco, bfo, iao OR http://purl.obolibrary.org/obo/"
             />
-            <p class="ont-search__help">Leave blank to search all namespaces.</p>
+            <p class="ont-search__help">Comma-separated prefixes or namespace IRIs. Leave blank to search all namespaces.</p>
           </fieldset>
 
           <div class="ont-search__row">
