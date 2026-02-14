@@ -7,7 +7,7 @@
     brand: {
       mainLogo: { href: "/", src: "./images/main-logo.png", alt: "Your org/site" },
       toolLogoByPageId: {
-        "ontoeagle": { src: "./images/Eagle-VI_1753264913.svg", alt: "OntoEagle Lookup" },
+        "ontoeagle": { src: "./images/Eagle-VI_1753264913.svg", alt: "OntoEagle Semantic Lookup" },
         "iri-registry": { src: "./images/iri-registry.svg", alt: "IRI Registry" },
         "ontology-tabulator": { src: "./images/ontology-tabulator.svg", alt: "Ontology Tabulator" },
         "cq-ferret": { src: "./images/cq-ferret.svg", alt: "CQ Ferret" },
