@@ -4,7 +4,7 @@ import {
   inferElementType,
   computeNamespace,
   valueToStrings
-} from '../docs/scripts/rdf_extract.js';
+} from '../docs/app/rdf_extract.js';
 
 describe('rdf_extract.js', () => {
   test('parseGraphJsonLdText parses valid JSON', () => {

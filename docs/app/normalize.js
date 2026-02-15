@@ -1,5 +1,5 @@
 /**
- * docs/scripts/normalize.js
+ * docs/app/normalize.js
  * Pure functions for text normalization and tokenization.
  *
  * Goals:

@@ -1,4 +1,4 @@
-// docs/scripts/types.js
+// docs/app/types.js
 
 /**
  * Central typedefs + defaults for the OntoEagle search app.

@@ -1,5 +1,5 @@
 /**
- * docs/scripts/rdf_extract.js
+ * docs/app/rdf_extract.js
  * Pure functions:
  * - parseGraphJsonLdText(text) -> json object
  * - extractDocumentsFromJsonLd(json) -> OntologyDocument[]

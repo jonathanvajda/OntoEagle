@@ -1,5 +1,5 @@
 /**
- * docs/scripts/search-main.js
+ * docs/app/search-main.js
  * DOM + orchestration for the Ontology Lookup app.
  *
  * Responsibilities (side-effects):

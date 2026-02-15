@@ -4,7 +4,7 @@ import {
   tokenizeForIndex,
   tokenizeQuery,
   normalizeQuery
-} from '../docs/scripts/normalize.js';
+} from '../docs/app/normalize.js';
 
 describe('normalize.js', () => {
   test('normalizeText lowercases and collapses whitespace', () => {

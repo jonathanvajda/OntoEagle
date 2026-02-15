@@ -1,7 +1,7 @@
 // tests/search.test.js
-import { searchDocuments, docPassesFilters } from '../docs/scripts/search.js';
+import { searchDocuments, docPassesFilters } from '../docs/app/search.js';
 
-/** @type {import('../docs/scripts/types.js').OntologyDocument[]} */
+/** @type {import('../docs/app/types.js').OntologyDocument[]} */
 const docs = [
   {
     iri: 'http://example.org/ont#Vehicle',
@@ -40,7 +40,7 @@ const docs = [
 
 const docsByIri = new Map(docs.map((d) => [d.iri, d]));
 
-/** @type {import('../docs/scripts/types.js').SearchOptions} */
+/** @type {import('../docs/app/types.js').SearchOptions} */
 const BASE_OPTS = {
   exact: false,
   wildcard: true,

@@ -1,5 +1,5 @@
 /**
- * docs/scripts/search.js
+ * docs/app/search.js
  * Pure search + scoring + filtering. No DOM, no IndexedDB.
  *
  * Relevance model (initial, tunable):
