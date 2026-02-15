@@ -7,7 +7,7 @@ const CACHE_DATA = `ontoeagle-data-${SW_VERSION}`;
 
 // Keep this list tight and explicit (no globbing).
 const SHELL_ASSETS = [
-  './search.html',
+  './index.html',
   './styles/search-app.css',
   './app/search-main.js',
   './app/search.js',
