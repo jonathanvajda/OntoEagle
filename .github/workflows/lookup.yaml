@@ -36,7 +36,7 @@ jobs:
           mkdir -p docs/data
           python ./src/build_dataset.py \
             --input-folder ./src/ontologies \
-            --out-jsonld ./docs/data/graph.jsonld
+            --out-jsonld ./docs/data/graph.jsonld \
             --out-nq ./docs/data/graph.nq
 
       - name: Upload docs/ (site + data) as artifact for deploy job
