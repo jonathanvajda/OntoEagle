@@ -34,8 +34,8 @@ jobs:
       - name: Build consolidated dataset -> docs/data/graph.jsonld
         run: |
           mkdir -p docs/data
-          python src/build_dataset.py \
-            --input-folder ontologies \
+          python ./src/build_dataset.py \
+            --input-folder ./src/ontologies \
             --out-jsonld ./docs/data/graph.jsonld
             --out-nq ./docs/data/graph.nq
 
