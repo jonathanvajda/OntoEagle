@@ -9,13 +9,13 @@ const CACHE_DATA = `ontoeagle-data-${SW_VERSION}`;
 const SHELL_ASSETS = [
   './search.html',
   './styles/search-app.css',
-  './scripts/search-main.js',
-  './scripts/search.js',
+  './app/search-main.js',
+  './app/search.js',
 // INDEX FEATURE:  './scripts/indexer.js',
-  './scripts/normalize.js',
-  './scripts/rdf_extract.js',
-  './scripts/indexeddb.min.js',
-  './scripts/types.js',
+  './app/normalize.js',
+  './app/rdf_extract.js',
+  './app/indexeddb.min.js',
+  './app/types.js',
 ];
 
 // Single consolidated dataset produced by Python
