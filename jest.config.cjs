@@ -1,5 +1,6 @@
 // jest.config.cjs
-export default {
+
+module.exports = {
   testEnvironment: 'node',
   transform: {},
 
@@ -7,7 +8,6 @@ export default {
   coverageDirectory: 'coverage',
   coverageReporters: ['html', 'text-summary'],
 
-  // Optional: only count coverage for pure modules
   collectCoverageFrom: [
     'docs/app/**/*.js',
     '!docs/app/search-main.js',
