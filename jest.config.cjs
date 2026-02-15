@@ -9,9 +9,9 @@ export default {
 
   // Optional: only count coverage for pure modules
   collectCoverageFrom: [
-    'docs/scripts/**/*.js',
-    '!docs/scripts/search-main.js',
-    '!docs/scripts/indexeddb.min.js',
-    '!docs/scripts/types.js'
+    'docs/app/**/*.js',
+    '!docs/app/search-main.js',
+    '!docs/app/indexeddb.min.js',
+    '!docs/app/types.js'
   ]
 };
