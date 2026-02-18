@@ -71,6 +71,7 @@
         items: [
           { label: "Axiolotl SPARQL & Inference", href: "https://jonathanvajda.github.io/axiolotl/", pageId: "axiolotl" },
           { label: "SPARQL Pattern Visualizer", href: "https://jonathanvajda.github.io/sparql-pattern-visualizer/", pageId: "sparql-pattern-visualizer" },
+          { label: "Linked-Data Transformer", href: "https://jonathanvajda.github.io/visual-lynx/linked-data-transformer.html", pageId: "linked-data-transformer" },
         ],
       },
       {
