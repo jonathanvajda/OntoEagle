@@ -15,14 +15,12 @@
 
 /* One banner row */
 .sitehdr-bar {
+  align-items: center;
+  display: inline-flex;
   width: 98%;
   margin: 0 auto;
   padding: 0.75rem 1rem;
-
-  display: inline-flex;
-  align-items: flex-start;
   gap: var(--ont-gap, 1rem);
-
   flex-wrap: nowrap;   /* keep menu to the right on wide screens */
 
   background-color: var(--ont-panel-bg, #fff);
@@ -30,23 +28,20 @@
 
 /* Left: main logo */
 .sitehdr-brand {
+  padding-bottom: 3rem;
   flex: 0 0 auto;
-  display: inline-flex;
-  align-items: flex-start;
   text-decoration: none;
   color: inherit;
 }
 
 .sitehdr-brand__main {
-  display: inline-flex;
-  height: 130px;   /* adjust to taste */
-  width: auto;
+  height: 100px;   /* adjust to taste */
 }
 
 /* Next: tool logo */
 .sitehdr-tool {
   flex: 0 0 auto;
-  width: 378px;
+  width: 350px;
   display: inline-flex;
 
   align-items: flex-start;
@@ -58,19 +53,20 @@
 
 .sitehdr-tool__img {
   display: inline-flex;
-  height: 130px;   /* match main logo height */
+  height: 100px;   /* match main logo height */
   width: auto;
 }
 
 .sitehdr-tool__title {
   align-content: center;
-  height: 130px;   /* match main logo height */
+  height: 120px;   /* match main logo height */
   width: auto;
-  max-width: 160px;
+  max-width: 120px;
 
-  font-size: 3rem;
+  font-size: 2.75rem;
+  letter-spacing: 0.05rem;
   font-weight: 650;
-  padding-right: 4rem;
+  padding-right: 3.75rem;
 
   color: var(--ont-text, #111);
 }
@@ -93,7 +89,7 @@
 /* Each section column */
 .sitehdr-section__title {
   margin: 0 0 0.35rem;
-  font-size: 1.9rem;
+  font-size: 1.6rem;
   font-weight: 650;
   opacity: 0.90;
   white-space: nowrap;
@@ -141,6 +137,7 @@
 .sitehdr-link.is-active {
   font-weight: 700;
   font-style: italic;
+  background-color: var(--ont-code-border);
 }
 
 /* Small screens: allow wrap so sections drop under logos */

@@ -5,7 +5,7 @@
   // --- Your config (as you provided) ---
   const HEADER_CONFIG = {
     brand: {
-      mainLogo: { href: "/", src: "./images/main-logo.png", alt: "Your org/site" },
+      mainLogo: { href: "/", src: "./images/main-logo.png", alt: "Erhaben Semantic Solutions" },
       toolLogoByPageId: {
         "ontoeagle": { src: "./images/Eagle-VI_1753264913.svg", alt: "OntoEagle Semantic Lookup" },
         "ontology-tabulator": { src: "./images/ontology-tabulator.svg", alt: "Ontology Tabulator" },
@@ -42,7 +42,7 @@
       {
         title: "Data Exploration",
         items: [
-          { label: "OntoEagle", href: "https://jonathanvajda.github.io/OntoEagle", pageId: "ontoeagle" },
+          { label: "OntoEagle Semantic Lookup", href: "https://jonathanvajda.github.io/OntoEagle", pageId: "ontoeagle" },
         //  { label: "IRI Registry", href: "/iri-registry.html", pageId: "iri-registry" },
           { label: "Ontology Tabulator", href: "https://jonathanvajda.github.io/ontology-tabulator/", pageId: "ontology-tabulator" },
           { label: "Visual Lynx", href: "https://jonathanvajda.github.io/visual-lynx/", pageId: "visual-lynx" },
@@ -165,6 +165,24 @@
           </div>
 
           ${buildSectionsHtml(pageId)}
+
+          <div id="light-dark-toggle" style="margin-left: auto;">
+            <button
+              type="button"
+              class="theme-toggle"
+              id="themeToggle"
+              aria-label="Toggle theme"
+              aria-pressed="false"
+              title="Toggle theme"
+            >
+            <span class="theme-toggle__track" aria-hidden="true">
+              <span class="theme-toggle__icon theme-toggle__icon--sun">☀️</span>
+              <span class="theme-toggle__icon theme-toggle__icon--moon">🌙</span>
+              <span class="theme-toggle__thumb"></span>
+            </span>
+            <span class="theme-toggle__sr">Toggle theme</span>
+          </button>
+          </div>
         </div>
       </div>
     `;

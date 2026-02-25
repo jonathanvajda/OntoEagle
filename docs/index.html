@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>OntoEagle - Ontology Search</title>
+  <link rel="icon" type="image/x-icon" href="./images/block-logo.png">
+  <title>OntoEagle Lookup</title>
   <!-- Public CSS -->
-  <link rel="stylesheet" href="./styles/normalize.css" />
   <link rel="stylesheet" href="./styles/skeleton.css" />
 
   <!-- App Global CSS -->
@@ -22,6 +22,7 @@
   <header id="siteHeader" class="sitehdr-root" role="banner" aria-label="Site header">
     
   </header>
+
   <div class="ont-search__status" aria-live="polite" aria-atomic="true">
       <span id="ontStatusText">Idle</span>
     </div>
@@ -166,5 +167,58 @@
 
   <script src="./app/site-header.js"></script>
   <script type="module" src="./app/search-main.js"></script>
+  <script>// Theme toggle: sets <html data-theme="light|dark"> and persists choice.
+(() => {
+  const STORAGE_KEY = 'ont-theme'; // 'light' | 'dark'
+  const root = document.documentElement;
+  const btn = document.getElementById('themeToggle');
+
+  if (!btn) return;
+
+  const getSystemTheme = () => {
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light';
+  };
+
+  const getSavedTheme = () => {
+    const v = localStorage.getItem(STORAGE_KEY);
+    return (v === 'light' || v === 'dark') ? v : null;
+  };
+
+  const applyTheme = (theme) => {
+    root.setAttribute('data-theme', theme);
+    // aria-pressed: true when "dark" (you can invert if you prefer)
+    btn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+    btn.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+  };
+
+  const initTheme = () => {
+    const saved = getSavedTheme();
+    const theme = saved || getSystemTheme();
+    applyTheme(theme);
+  };
+
+  const toggleTheme = () => {
+    const current = root.getAttribute('data-theme') || getSystemTheme();
+    const next = current === 'dark' ? 'light' : 'dark';
+    localStorage.setItem(STORAGE_KEY, next);
+    applyTheme(next);
+  };
+
+  // Initialize once on load
+  initTheme();
+
+  // Button click toggles
+  btn.addEventListener('click', toggleTheme);
+
+  // Optional: If no saved preference, follow system changes live
+  const mql = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  if (mql) {
+    mql.addEventListener('change', () => {
+      if (!getSavedTheme()) applyTheme(getSystemTheme());
+    });
+  }
+})();</script>
 </body>
 </html>
