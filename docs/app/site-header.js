@@ -16,6 +16,7 @@
         "table-nova": { src: "./images/table-nova-logo.svg", alt: "Table Nova" },
         "axiolotl": { src: "./images/axiolotl.svg", alt: "Axiolotl SPARQL & Inference" },
         "myna-iri-swapper": { src: "./images/myna-iri-swapper.png", alt: "Myna IRI Swapper" },
+        "myna-sparql-iri-swapper": { src: "./images/myna-iri-swapper.png", alt: "Myna SPARQL IRI Swapper" },
         "visual-lynx": { src: "./images/visual-lynx.svg", alt: "Visual Lynx" },
       },
       defaultToolLogo: { src: "./images/default-logo.png", alt: "Semantic Tools" },
@@ -33,6 +34,7 @@
         "sparql-pattern-visualizer": { title: "SPARQL Pattern Visualizer" },
         "ontology-curation-manager": { title: "Ontology Curation Manager" },
         "myna-iri-swapper": { title: "Myna IRI Swapper" },
+        "myna-sparql-iri-swapper": { title: "Myna SPARQL IRI Swapper" },
         "visual-lynx": { title: "Visual Lynx" },
         "linked-data-transformer": { title: "Linked-Data Transformer" },
         }
@@ -79,6 +81,7 @@
             items: [
             { label: "Ontology Curation Manager", href: "https://jonathanvajda.github.io/ontology-curation-manager/", pageId: "ontology-curation-manager" },
             { label: "Myna IRI Swapper", href: "https://jonathanvajda.github.io/iri-swapper/", pageId: "myna-iri-swapper" },
+            { label: "Myna SPARQL IRI Swapper", href: "https://jonathanvajda.github.io/iri-swapper/sparql-iri-swapper.html", pageId: "myna-sparql-iri-swapper" }, 
             ],
         },
         ],
