@@ -188,7 +188,12 @@
     `;
   }
 
-  // Theme toggle: sets <html data-theme="light|dark"> and persists choice.
+  // script loaded at end of body => DOM is ready
+  renderHeader();
+  
+})();
+
+// Theme toggle: sets <html data-theme="light|dark"> and persists choice.
   (() => {
     const STORAGE_KEY = 'ont-theme'; // 'light' | 'dark'
     const root = document.documentElement;
@@ -241,7 +246,3 @@
       });
     }
   })();
-
-  // script loaded at end of body => DOM is ready
-  renderHeader();
-})();
