@@ -90,6 +90,7 @@
 .sitehdr-section__title {
   margin: 0 0 0.35rem;
   font-size: 1.6rem;
+  letter-spacing: .03rem;
   font-weight: 650;
   opacity: 0.90;
   white-space: nowrap;
@@ -135,8 +136,7 @@
 }
 
 .sitehdr-link.is-active {
-  font-weight: 700;
-  font-style: italic;
+  font-weight: 610;
   background-color: var(--ont-code-border);
 }
 

@@ -188,6 +188,60 @@
     `;
   }
 
+  // Theme toggle: sets <html data-theme="light|dark"> and persists choice.
+  (() => {
+    const STORAGE_KEY = 'ont-theme'; // 'light' | 'dark'
+    const root = document.documentElement;
+    const btn = document.getElementById('themeToggle');
+
+    if (!btn) return;
+
+    const getSystemTheme = () => {
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light';
+    };
+
+    const getSavedTheme = () => {
+      const v = localStorage.getItem(STORAGE_KEY);
+      return (v === 'light' || v === 'dark') ? v : null;
+    };
+
+    const applyTheme = (theme) => {
+      root.setAttribute('data-theme', theme);
+      // aria-pressed: true when "dark" (you can invert if you prefer)
+      btn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+      btn.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+    };
+
+    const initTheme = () => {
+      const saved = getSavedTheme();
+      const theme = saved || getSystemTheme();
+      applyTheme(theme);
+    };
+
+    const toggleTheme = () => {
+      const current = root.getAttribute('data-theme') || getSystemTheme();
+      const next = current === 'dark' ? 'light' : 'dark';
+      localStorage.setItem(STORAGE_KEY, next);
+      applyTheme(next);
+    };
+
+    // Initialize once on load
+    initTheme();
+
+    // Button click toggles
+    btn.addEventListener('click', toggleTheme);
+
+    // Optional: If no saved preference, follow system changes live
+    const mql = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+    if (mql) {
+      mql.addEventListener('change', () => {
+        if (!getSavedTheme()) applyTheme(getSystemTheme());
+      });
+    }
+  })();
+
   // script loaded at end of body => DOM is ready
   renderHeader();
 })();
