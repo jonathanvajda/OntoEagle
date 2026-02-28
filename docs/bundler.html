@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Bundles</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 0; padding: 16px; max-width: 1100px; margin-inline: auto; }
+      header { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+      button, select, input { font: inherit; padding: 8px 10px; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+      .card { border: 1px solid #ddd; border-radius: 12px; padding: 12px; }
+      .muted { color: #555; }
+      .bundleHeader { display:flex; align-items:center; justify-content:space-between; gap: 8px; }
+      .bundleTitle { font-weight: 650; }
+      .items { margin-top: 10px; display: grid; gap: 8px; }
+      .item { border: 1px solid #eee; border-radius: 10px; padding: 10px; }
+      .itemTop { display:flex; justify-content:space-between; gap: 8px; align-items: baseline; }
+      .itemLabel { font-weight: 600; }
+      .itemIri { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.92rem; overflow-wrap: anywhere; }
+      .row { display:flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+      details { margin-top: 6px; }
+      textarea { width: 100%; min-height: 220px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; padding: 10px; margin-top: 12px; }
+      .tiny { font-size: 0.9rem; }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      
+    </header>
+    <h2>Resource Bundles</h2>
+    <div id="app" class="grid"></div>
+
+    <div id="manage-bundles">
+    <h3>Make Slim</h3>
+      <label class="tiny">
+        Export bundle:
+        <select id="selExportBundle"></select>
+      </label>
+      <label class="tiny">
+        <input type="checkbox" id="chkIncludeLabels" checked />
+        include <code># label</code>
+      </label>
+      <button id="btnExportSeed" type="button">Export ROBOT seed (.txt)</button>
+
+      <h3>Manage Bundles</h3>
+      
+      <button id="btnCreateBundle" type="button">Create bundle</button><br />
+
+      <label class="tiny">
+        Merge bundles:
+        <select id="selMergeA"></select>
+        +
+        <select id="selMergeB"></select>
+      </label>
+      <button id="btnMerge" type="button">Merge → new bundle</button><br />
+      <button id="btnClear" type="button">Empty all bundles</button><br />
+
+      <!-- Debugging -->
+      <button id="btnSeedExample" class="debugging-element" type="button">Seed example item + bundle</button>
+    </div>
+
+    <label class="tiny debugging-element"><strong>Raw JSON-LD (for debugging)</strong></label>
+    <textarea id="txtRaw" class="debugging-element" readonly></textarea>
+
+    <script>
+      // ============================================================
+      // Storage + JSON-LD structure
+      // - Bundles are skos:Collection nodes with skos:member [{@id: ...}]
+      // - Items are nodes keyed by @id with rdfs:label / skos:definition etc.
+      // - Bundle IDs should be opaque (urn:uuid:...) and hidden from users
+      // ============================================================
+
+      const LS_KEY = "onto.bundles.jsonld";
+
+      const CONTEXT = {
+        rdf:  "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        rdfs: "http://www.w3.org/2000/01/rdf-schema#",
+        skos: "http://www.w3.org/2004/02/skos/core#",
+        owl:  "http://www.w3.org/2002/07/owl#"
+      };
+
+      // Example item (matches your intent: the @id is the IRI)
+      const EX_ITEM_IRI = "http://purl.obolibrary.org/obo/TEMP_00001";
+      const EX_ITEM_NODE = {
+        "@id": EX_ITEM_IRI,
+        "@type": ["owl:Class"],
+        "rdfs:label": "Temporary Example",
+        "skos:definition": "A thing that is mabobing",
+        "rdfs:isDefinedBy": { "@id": "http://www.w3.org/2002/07/owl#" }
+      };
+
+      // ---------- core helpers ----------
+      function emptyDoc() {
+        return { "@context": CONTEXT, "@graph": [] };
+      }
+
+      function safeParseJson(text, fallback) {
+        try { return JSON.parse(text); } catch { return fallback; }
+      }
+
+      function loadDoc() {
+        const raw = localStorage.getItem(LS_KEY);
+        if (!raw) return emptyDoc();
+        const doc = safeParseJson(raw, emptyDoc());
+        if (!doc || typeof doc !== "object") return emptyDoc();
+        if (!Array.isArray(doc["@graph"])) doc["@graph"] = [];
+        if (!doc["@context"]) doc["@context"] = CONTEXT;
+        return doc;
+      }
+
+      function saveDoc(doc) {
+        localStorage.setItem(LS_KEY, JSON.stringify(doc, null, 2));
+      }
+
+      function graph(doc) { return doc["@graph"]; }
+
+      function nodeById(doc) {
+        const map = new Map();
+        for (const n of graph(doc)) {
+          if (n && typeof n === "object" && typeof n["@id"] === "string") map.set(n["@id"], n);
+        }
+        return map;
+      }
+
+      function isSkosCollection(n) {
+        if (!n) return false;
+        const t = n["@type"];
+        if (t === "skos:Collection") return true;
+        if (Array.isArray(t) && t.includes("skos:Collection")) return true;
+        return false;
+      }
+
+      function listBundles(doc) {
+        return graph(doc).filter(isSkosCollection).map(n => n["@id"]);
+      }
+
+      function ensureArray(v) { return Array.isArray(v) ? v : []; }
+
+      function getMembers(doc, bundleId) {
+        const idx = nodeById(doc);
+        const b = idx.get(bundleId);
+        if (!b) return [];
+        const raw = ensureArray(b["skos:member"]);
+        return raw
+          .map(m => (m && typeof m === "object" && typeof m["@id"] === "string") ? m["@id"] : null)
+          .filter(Boolean);
+      }
+
+      function setMembers(doc, bundleId, memberIds) {
+        const idx = nodeById(doc);
+        const b = idx.get(bundleId);
+        if (!b) return;
+        const uniq = Array.from(new Set(memberIds));
+        b["skos:member"] = uniq.map(id => ({ "@id": id }));
+      }
+
+      function upsertNode(doc, node) {
+        const g = graph(doc);
+        const i = g.findIndex(n => n && n["@id"] === node["@id"]);
+        if (i >= 0) g[i] = { ...g[i], ...node };
+        else g.push(node);
+      }
+
+      function deleteNode(doc, id) {
+        doc["@graph"] = graph(doc).filter(n => !(n && n["@id"] === id));
+      }
+
+      function mintBundleIri() {
+        if (globalThis.crypto?.randomUUID) return `urn:uuid:${crypto.randomUUID()}`;
+        return `urn:uuid:${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      }
+
+      function createBundle(doc) {
+        const id = mintBundleIri();
+        upsertNode(doc, { "@id": id, "@type": "skos:Collection", "skos:member": [] });
+        return id;
+      }
+
+      function addMember(doc, bundleId, itemId) {
+        const members = getMembers(doc, bundleId);
+        if (!members.includes(itemId)) {
+          members.push(itemId);
+          setMembers(doc, bundleId, members);
+        }
+      }
+
+      function removeMember(doc, bundleId, itemId) {
+        setMembers(doc, bundleId, getMembers(doc, bundleId).filter(x => x !== itemId));
+      }
+
+      function copyMember(doc, fromBundleId, toBundleId, itemId) {
+        // copy = ensure in target; leave in source
+        addMember(doc, toBundleId, itemId);
+      }
+
+      function moveMember(doc, fromBundleId, toBundleId, itemId) {
+        // move = copy + remove
+        addMember(doc, toBundleId, itemId);
+        removeMember(doc, fromBundleId, itemId);
+      }
+
+      function mergeBundles(doc, bundleIds) {
+        const newId = createBundle(doc);
+        const all = [];
+        for (const bid of bundleIds) all.push(...getMembers(doc, bid));
+        setMembers(doc, newId, all);
+
+        // delete old bundle nodes (items remain)
+        for (const bid of bundleIds) deleteNode(doc, bid);
+        return newId;
+      }
+
+      function splitBundle(doc, bundleId, memberIdsToMove) {
+        // Creates a new bundle and MOVES selected members into it.
+        const newId = createBundle(doc);
+        const fromMembers = getMembers(doc, bundleId);
+        const moveSet = new Set(memberIdsToMove);
+
+        setMembers(doc, bundleId, fromMembers.filter(id => !moveSet.has(id)));
+        setMembers(doc, newId, memberIdsToMove);
+
+        return newId;
+      }
+
+      // ---------- label extraction for export ----------
+      function pickLabelValue(v) {
+        // Accept common JSON-LD forms:
+        // - "Label"
+        // - [{ "@value": "Label", "@language": "en" }, ...]
+        // - { "en": ["Label"] } (language map)
+        if (typeof v === "string") return v;
+
+        if (Array.isArray(v)) {
+          for (const x of v) {
+            if (typeof x === "string") return x;
+            if (x && typeof x === "object" && typeof x["@value"] === "string") return x["@value"];
+          }
+        }
+
+        if (v && typeof v === "object") {
+          if (typeof v["@value"] === "string") return v["@value"];
+          if (v.en && Array.isArray(v.en) && typeof v.en[0] === "string") return v.en[0];
+          const keys = Object.keys(v);
+          if (keys.length > 0 && Array.isArray(v[keys[0]]) && typeof v[keys[0]][0] === "string") return v[keys[0]][0];
+        }
+
+        return "";
+      }
+
+      function getItemLabel(doc, itemId) {
+        const idx = nodeById(doc);
+        const n = idx.get(itemId);
+        if (!n) return "";
+        const rdfsLabel = pickLabelValue(n["rdfs:label"]);
+        if (rdfsLabel) return rdfsLabel;
+        const skosPref = pickLabelValue(n["skos:prefLabel"]);
+        if (skosPref) return skosPref;
+        return "";
+      }
+
+      function toRobotSeedText(doc, bundleId, includeLabels) {
+        const members = getMembers(doc, bundleId);
+        const lines = [];
+
+        for (const iri of members) {
+          const label = includeLabels ? getItemLabel(doc, iri).trim() : "";
+          if (includeLabels && label) lines.push(`${iri} # ${label}`);
+          else lines.push(`${iri}`);
+        }
+
+        return lines.join("\n") + (lines.length ? "\n" : "");
+      }
+
+      function downloadText(filename, text) {
+        const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      // ---------- UI rendering ----------
+      const app = document.getElementById("app");
+      const txtRaw = document.getElementById("txtRaw");
+
+      const btnCreateBundle = document.getElementById("btnCreateBundle");
+      const btnSeedExample = document.getElementById("btnSeedExample");
+      const btnExportSeed = document.getElementById("btnExportSeed");
+      const btnClear = document.getElementById("btnClear");
+      const btnMerge = document.getElementById("btnMerge");
+
+      const selExportBundle = document.getElementById("selExportBundle");
+      const chkIncludeLabels = document.getElementById("chkIncludeLabels");
+      const selMergeA = document.getElementById("selMergeA");
+      const selMergeB = document.getElementById("selMergeB");
+
+      function shortId(iri) {
+        // purely UI: show last chunk of urn:uuid
+        const m = iri.match(/urn:uuid:([0-9a-f-]{8,})/i);
+        return m ? m[1].slice(0, 8) : iri.slice(-10);
+      }
+
+      function fillBundleSelect(select, bundleIds) {
+        select.innerHTML = "";
+        if (bundleIds.length === 0) {
+          const opt = document.createElement("option");
+          opt.value = "";
+          opt.textContent = "(no bundles)";
+          select.appendChild(opt);
+          select.disabled = true;
+          return;
+        }
+        select.disabled = false;
+        for (let i = 0; i < bundleIds.length; i++) {
+          const id = bundleIds[i];
+          const opt = document.createElement("option");
+          opt.value = id;
+          opt.textContent = `Bundle ${i + 1} (${shortId(id)})`;
+          select.appendChild(opt);
+        }
+      }
+
+      function render() {
+        const doc = loadDoc();
+        const bundles = listBundles(doc);
+        const idx = nodeById(doc);
+
+        fillBundleSelect(selExportBundle, bundles);
+        fillBundleSelect(selMergeA, bundles);
+        fillBundleSelect(selMergeB, bundles);
+
+        txtRaw.value = JSON.stringify(doc, null, 2);
+
+        app.innerHTML = "";
+        if (bundles.length === 0) {
+          const div = document.createElement("div");
+          div.className = "card";
+          div.innerHTML = `<div class="bundleTitle">No bundles yet</div><div class="muted">Create a bundle to get started.</div>`;
+          app.appendChild(div);
+          return;
+        }
+
+        bundles.forEach((bundleId, bundleIndex) => {
+          const members = getMembers(doc, bundleId);
+
+          const card = document.createElement("div");
+          card.className = "card";
+
+          const bundleManager = document.createElement("div");
+          bundleManager.className = "bundleManager";
+          bundleManager.innerHTML = `
+            <div>
+              <div class="bundleTitle">Bundle ${bundleIndex + 1}</div>
+              <div class="muted tiny">${members.length} item(s)</div>
+            </div>
+          `;
+
+          const actions = document.createElement("div");
+          actions.className = "row";
+
+          const btnDump = document.createElement("button");
+          btnDump.type = "button";
+          btnDump.textContent = "Dump bundle";
+          btnDump.addEventListener("click", () => {
+            const d = loadDoc();
+            deleteNode(d, bundleId);
+            saveDoc(d);
+            render();
+          });
+
+          const btnSplitHalf = document.createElement("button");
+          btnSplitHalf.type = "button";
+          btnSplitHalf.textContent = "Split ~half";
+          btnSplitHalf.addEventListener("click", () => {
+            const d = loadDoc();
+            const m = getMembers(d, bundleId);
+            const half = m.slice(0, Math.floor(m.length / 2));
+            if (half.length === 0) return;
+            splitBundle(d, bundleId, half);
+            saveDoc(d);
+            render();
+          });
+
+          actions.appendChild(btnSplitHalf);
+          actions.appendChild(btnDump);
+          bundleManager.appendChild(actions);
+
+          card.appendChild(bundleManager);
+
+          const itemsWrap = document.createElement("div");
+          itemsWrap.className = "items";
+
+          members.forEach((itemId) => {
+            const itemNode = idx.get(itemId) || { "@id": itemId };
+            const label = getItemLabel(doc, itemId) || "(no label)";
+            const defn = pickLabelValue(itemNode["skos:definition"]) || "";
+
+            const itemDiv = document.createElement("div");
+            itemDiv.className = "item";
+
+            const top = document.createElement("div");
+            top.className = "itemTop";
+            top.innerHTML = `
+              <div class="itemLabel">${escapeHtml(label)}</div>
+              <button type="button" data-act="remove">Remove</button>
+            `;
+
+            top.querySelector('button[data-act="remove"]').addEventListener("click", () => {
+              const d = loadDoc();
+              removeMember(d, bundleId, itemId);
+              saveDoc(d);
+              render();
+            });
+
+            const iriDiv = document.createElement("div");
+            iriDiv.className = "itemIri";
+            iriDiv.textContent = itemId;
+
+            const row = document.createElement("div");
+            row.className = "row";
+
+            const selMove = document.createElement("select");
+            const bundleIds = listBundles(doc).filter(b => b !== bundleId);
+            selMove.innerHTML = `<option value="">Move to…</option>` + bundleIds.map((b, i) =>
+              `<option value="${b}">Bundle ${i + 1} (${shortId(b)})</option>`
+            ).join("");
+
+            const btnMove = document.createElement("button");
+            btnMove.type = "button";
+            btnMove.textContent = "Move";
+            btnMove.addEventListener("click", () => {
+              const to = selMove.value;
+              if (!to) return;
+              const d = loadDoc();
+              moveMember(d, bundleId, to, itemId);
+              saveDoc(d);
+              render();
+            });
+
+            const btnCopy = document.createElement("button");
+            btnCopy.type = "button";
+            btnCopy.textContent = "Copy";
+            btnCopy.addEventListener("click", () => {
+              const to = selMove.value;
+              if (!to) return;
+              const d = loadDoc();
+              copyMember(d, bundleId, to, itemId);
+              saveDoc(d);
+              render();
+            });
+
+            row.appendChild(selMove);
+            row.appendChild(btnMove);
+            row.appendChild(btnCopy);
+
+            const details = document.createElement("details");
+            const sum = document.createElement("summary");
+            sum.textContent = "Expand item data";
+            details.appendChild(sum);
+
+            const pre = document.createElement("pre");
+            pre.className = "tiny";
+            pre.style.whiteSpace = "pre-wrap";
+            pre.textContent = JSON.stringify(itemNode, null, 2);
+            details.appendChild(pre);
+
+            if (defn) {
+              const d = document.createElement("div");
+              d.className = "muted tiny";
+              d.textContent = defn;
+              itemDiv.appendChild(d);
+            }
+
+            itemDiv.appendChild(top);
+            itemDiv.appendChild(iriDiv);
+            itemDiv.appendChild(row);
+            itemDiv.appendChild(details);
+
+            itemsWrap.appendChild(itemDiv);
+          });
+
+          card.appendChild(itemsWrap);
+          app.appendChild(card);
+        });
+      }
+
+      function escapeHtml(s) {
+        return String(s)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      // ---------- button wiring ----------
+      btnCreateBundle.addEventListener("click", () => {
+        const doc = loadDoc();
+        createBundle(doc);
+        saveDoc(doc);
+        render();
+      });
+
+      btnSeedExample.addEventListener("click", () => {
+        const doc = loadDoc();
+        if (listBundles(doc).length === 0) createBundle(doc);
+        const b0 = listBundles(doc)[0];
+        upsertNode(doc, EX_ITEM_NODE);
+        addMember(doc, b0, EX_ITEM_IRI);
+        saveDoc(doc);
+        render();
+      });
+
+      btnExportSeed.addEventListener("click", () => {
+        const doc = loadDoc();
+        const bundleId = selExportBundle.value;
+        if (!bundleId) return;
+
+        const includeLabels = chkIncludeLabels.checked;
+        const text = toRobotSeedText(doc, bundleId, includeLabels);
+
+        const filename = `bundle-${shortId(bundleId)}.txt`;
+        downloadText(filename, text);
+      });
+
+      btnMerge.addEventListener("click", () => {
+        const a = selMergeA.value;
+        const b = selMergeB.value;
+        if (!a || !b || a === b) return;
+        const doc = loadDoc();
+        mergeBundles(doc, [a, b]);
+        saveDoc(doc);
+        render();
+      });
+
+      btnClear.addEventListener("click", () => {
+        localStorage.removeItem(LS_KEY);
+        render();
+      });
+
+      // Initial render
+      render();
+    </script>
+  </body>
+</html>
