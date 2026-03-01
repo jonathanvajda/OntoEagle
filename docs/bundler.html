@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="icon" type="image/x-icon" href="./images/block-logo.png">
     <title>Ontology Bundler</title>
     <!-- Public CSS -->
     <link rel="stylesheet" href="./styles/skeleton.css" />  
@@ -108,7 +109,7 @@
 
     <main id="bundler-app">
         <h2>Resource Bundles</h2>
-        <div id="app" class="grid"></div>
+        <div id="app" class="grid" style="background: var(--ont-emph-bg);"></div>
 
         <div id="manage-bundles">
         <h3>Make Slim</h3>
@@ -117,7 +118,7 @@
             <select id="selExportBundle"></select>
         </label>
         <label>
-            <input type="checkbox" id="chkIncludeLabels" checked />
+            <input type="checkbox" id="chkIncludeLabels" checked style="height: 13px;" />
             include <code># label</code>
         </label>
         <button id="btnExportSeed" type="button">Export ROBOT seed (.txt)</button>
@@ -126,20 +127,21 @@
         
         <button id="btnCreateBundle" type="button">Create bundle</button><br />
 
-        <label>
-            Merge bundles:
-            <select id="selMergeA"></select>
-            +
-            <select id="selMergeB"></select>
-        </label>
-        <button id="btnMerge" type="button">Merge → new bundle</button><br />
-        <button id="btnClear" type="button">Empty all bundles</button><br />
-
+        <!-- div display none unless debugging -->
+        <div style="display: none">        <label>
+                    Merge bundles:
+                    <select id="selMergeA"></select>
+                    +
+                    <select id="selMergeB"></select>
+                </label>
+                <button id="btnMerge" type="button">Merge → new bundle</button><br />
+                <button id="btnClear" type="button">Empty all bundles</button><br />
+        </div>
         <!-- Debugging -->
         <button id="btnSeedExample" class="debugging-element" type="button">Seed example item + bundle</button>
         </div>
 
-        <label class="tiny debugging-element"><strong>Raw JSON-LD (for debugging)</strong></label>
+        <h3 class="debugging-element">Raw JSON-LD (for debugging)</h3>
         <textarea id="txtRaw" class="debugging-element" readonly></textarea>
     </main>
 

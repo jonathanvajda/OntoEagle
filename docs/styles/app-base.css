@@ -9,6 +9,7 @@
 :root {
   /* Your existing tokens (keep as-is if already defined) */
   --ont-bg: #f8fafc;
+  --ont-emph-bg: #f3f3ff;
   --ont-panel-bg: #ffffff;
   --ont-border: #d0d7de;
 
@@ -54,6 +55,7 @@
 /* ---------- 2) DARK tokens (activate with <html data-theme="dark">) ---------- */
 :root[data-theme="dark"] {
   --ont-bg: #0b1220;          /* deep slate */
+  --ont-emph-bg: #090929;
   --ont-panel-bg: #0f172a;    /* panel surface */
   --ont-border: #334155;      /* slate border */
 

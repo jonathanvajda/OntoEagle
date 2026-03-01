@@ -232,8 +232,11 @@ const btnMerge = document.getElementById("btnMerge");
 
 const selExportBundle = document.getElementById("selExportBundle");
 const chkIncludeLabels = document.getElementById("chkIncludeLabels");
-const selMergeA = document.getElementById("selMergeA");
-const selMergeB = document.getElementById("selMergeB");
+if (document.getElementById("selMergeA")){
+  const selMergeA = document.getElementById("selMergeA");
+  }
+if (document.getElementById("selMergeB")){
+const selMergeB = document.getElementById("selMergeB");}
 
 function shortId(iri) {
   // purely UI: show last chunk of urn:uuid
@@ -668,7 +671,7 @@ btnExportSeed.addEventListener("click", () => {
   downloadText(filename, text);
 });
 
-btnMerge.addEventListener("click", () => {
+if (btnMerge) {btnMerge.addEventListener("click", () => {
   const a = selMergeA.value;
   const b = selMergeB.value;
   if (!a || !b || a === b) return;
@@ -676,12 +679,13 @@ btnMerge.addEventListener("click", () => {
   mergeBundles(doc, [a, b]);
   saveDoc(doc);
   render();
-});
+});}
 
+if (btnClear){
 btnClear.addEventListener("click", () => {
   localStorage.removeItem(LS_KEY);
   render();
-});
+});}
 
 // Initial render
 render();
