@@ -489,10 +489,7 @@ async function buildFromGraphAndPersist(graphText, fingerprint) {
   const docs = extractDocumentsFromJsonLd(json);
 
   docsByIri = mapByIri(docs);
- // INDEX FEATURE: index = buildIndex(docs); // your indexer.js should export this
-
   await idbPutDocuments('builtin', docs);
- // INDEX FEATURE:   await idbPutIndex('builtin', index);
   await idbPutDatasetMeta('builtin', { fingerprint, enabled: true, updatedAt: Date.now() });
 }
 

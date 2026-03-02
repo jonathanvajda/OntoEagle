@@ -260,6 +260,7 @@ function bundlerInit() {
   });
 
   btnExportSeed?.addEventListener('click', () => {
+    console.info('Exporting bundle seed text…');
     const doc = loadDoc();
     const bundleId = selExportBundle?.value || '';
     if (!bundleId) return;
@@ -267,6 +268,7 @@ function bundlerInit() {
     const includeLabels = !!chkIncludeLabels?.checked;
     const text = toRobotSeedText(doc, bundleId, includeLabels);
     downloadText(`bundle-${shortId(bundleId)}.txt`, text);
+    console.info('Exported bundle seed text:');
   });
 
   btnMerge?.addEventListener('click', () => {
@@ -561,6 +563,3 @@ async function render() {
   setShoppingCartCount(getShoppingCartCountFromStorage());
   setStatus('Ready.');
 }
-
-
-bundlerInit();

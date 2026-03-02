@@ -1,7 +1,7 @@
 /* docs/sw.js */
 /* Offline-first SW: cache app shell + graph.jsonld */
 
-const SW_VERSION = 'v2';
+const SW_VERSION = 'v3';
 const CACHE_SHELL = `ontoeagle-shell-${SW_VERSION}`;
 const CACHE_DATA = `ontoeagle-data-${SW_VERSION}`;
 
