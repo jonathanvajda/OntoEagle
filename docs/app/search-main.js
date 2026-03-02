@@ -18,7 +18,7 @@
 import { extractDocumentsFromJsonLd, mapByIri, parseGraphJsonLdText } from './rdf_extract.js';
 import { searchDocuments } from './search.js';
 import { defaultSearchOptions } from './types.js';
-import { mintBundleIri } from './bundler.js';
+import { mintBundleIri, BUNDLE_LS_KEY, setShoppingCartCount, loadSlimBundleDoc, getShoppingCartCountFromStorage} from './bundler-core.js';
   
 
 // Minimal IDB wrappers (you can expand these in indexeddb.min.js later)
@@ -70,7 +70,6 @@ const typeCheckboxes = /** @type {NodeListOf<HTMLInputElement>} */ (document.que
  * ----------------------------- */
 
 let docsByIri = new Map();   // Map<string, OntologyDocument>
- // INDEX FEATURE: let index = null;            // Inverted index object (shape from indexer.js)
 let options = structuredClone(defaultSearchOptions);
 
 /* -----------------------------
@@ -229,27 +228,6 @@ function renderResults(results) {
   elResultsList.setAttribute('aria-activedescendant', 'ontOpt_0');
 }
 
-const BUNDLE_LS_KEY = 'ontoeagle.bundle.slim.jsonld';
-
-/**
- * @returns {any} JSON-LD object with @context + @graph
- */
-function loadSlimBundleDoc() {
-  const raw = localStorage.getItem(BUNDLE_LS_KEY);
-  if (raw) {
-    try { return JSON.parse(raw); } catch (_) { /* fall through */ }
-  }
-  return {
-    "@context": {
-      "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-      "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-      "skos": "http://www.w3.org/2004/02/skos/core#",
-      "owl": "http://www.w3.org/2002/07/owl#"
-    },
-    "@graph": []
-  };
-}
-
 /**
  * @param {any} doc
  */
@@ -318,29 +296,6 @@ function addItemToSlimBundle(bundleDoc, itemNode) {
   return { memberCount: members.length, changed };
 }
 
-/**
- * Update header shopping cart count.
- * @param {number} n
- */
-function setShoppingCartCount(n) {
-  const el = document.getElementById('ontShoppingCart');
-  if (el) el.textContent = String(Number.isFinite(n) ? n : 0);
-}
-
-/**
- * Read current member count from localStorage (safe).
- * @returns {number}
- */
-function getShoppingCartCountFromStorage() {
-  try {
-    const doc = loadSlimBundleDoc();
-    const col = doc['@graph']?.find((n) => n && n['@type'] === 'skos:Collection');
-    const members = col?.['skos:member'];
-    return Array.isArray(members) ? members.length : 0;
-  } catch {
-    return 0;
-  }
-}
 
 
 /**
@@ -397,12 +352,6 @@ function renderDetails(doc) {
       </button>
     </div>
   `.trim();
-
-  // Add a button in the details card markup somewhere.
-  // If you already build markup strings, just ensure you include:
-  // <button id="ontAddToSlimBundleBtn" type="button">Add to bundle for slim</button>
-  //
-  // Then wire it here:
 
   {const btn = document.getElementById('ontAddToSlimBundleBtn');
 
@@ -586,7 +535,7 @@ function runSearch(query) {
   }
 }
 
-async function init() {
+async function ontoEagleInit() {
   setStatus('Initializing…');
 
   await registerServiceWorker();
@@ -613,6 +562,7 @@ async function init() {
   }
 
   setStatus('Ready.');
+  setShoppingCartCount(getShoppingCartCountFromStorage());
 
   // Initial UI state
   elResultsCount.textContent = '0';
@@ -646,7 +596,7 @@ async function init() {
   setupResultsKeyboardNav();
 }
 
-init().catch((err) => {
+ontoEagleInit().catch((err) => {
   console.error(err);
   setStatus(`Error: ${errToString(err)}`);
 });

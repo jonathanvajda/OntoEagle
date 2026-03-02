@@ -98,7 +98,8 @@
         })();
         })();
     </script>
-    <link rel="stylesheet" href="styles/bundler.css" />
+    <link rel="stylesheet" href="./styles/bundler.css" />
+    <link rel="stylesheet" href="./styles/search-app.css" />
 
   </head>
 
@@ -106,6 +107,18 @@
     <header id="siteHeader" class="sitehdr-root" role="banner" aria-label="Site header">
     
     </header>
+
+  <div id="ontMetaStatus" style="display: flex; justify-content: space-between;">
+    <div class="ont-search__status" aria-live="polite" aria-atomic="true">
+        <span id="ontStatusText">Idle</span>
+      </div>
+    <div class="ont-search__status" aria-live="polite" aria-atomic="true" style="padding-right: 1.5rem; display: inline-flex;">
+        <div><img src="./images/add-to-cart.svg" height="20px" style="padding-top: 3px;">
+        </div>
+        <div><span id="ontShoppingCartCount">0</span> items bundled for a slim.
+        </div>
+    </div>
+  </div>
 
     <main id="bundler-app">
         <h2>Resource Bundles</h2>
@@ -136,13 +149,12 @@
                 </label>
                 <button id="btnMerge" type="button">Merge → new bundle</button><br />
                 <button id="btnClear" type="button">Empty all bundles</button><br />
-        </div>
+        
         <!-- Debugging -->
         <button id="btnSeedExample" class="debugging-element" type="button">Seed example item + bundle</button>
-        </div>
 
         <h3 class="debugging-element">Raw JSON-LD (for debugging)</h3>
-        <textarea id="txtRaw" class="debugging-element" readonly></textarea>
+        <textarea id="txtRaw" class="debugging-element" readonly></textarea></div>
     </main>
 
     <!-- Header JS -->
@@ -187,7 +199,6 @@
         })();
     </script>
     <!-- App JS -->
-    <script type="module" src="./app/bundler.js"></script>
-    <script src="./app/bundler-ui.js"></script>
+    <script type="module" src="./app/bundler-ui.js"></script>
   </body>
 </html>

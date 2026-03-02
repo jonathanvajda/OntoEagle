@@ -114,10 +114,12 @@
     <div class="ont-search__status" aria-live="polite" aria-atomic="true">
         <span id="ontStatusText">Idle</span>
       </div>
-    <div class="ont-search__status" aria-live="polite" aria-atomic="true" style="padding-right: 1.5rem;">
-        <span id="ontShoppingCart">0</span> items bundled.
+    <div class="ont-search__status" aria-live="polite" aria-atomic="true" style="padding-right: 1.5rem; display: inline-flex;">
+        <div><a href="./bundler.html"><img src="./images/add-to-cart.svg" height="20px" style="padding-top: 3px;"></a>
+        </div>
+        <div><a href="./bundler.html"><span id="ontShoppingCartCount">0</span> items bundled for a slim.</a>
+        </div>
     </div>
-
   </div>
 
   <main class="ont-search__layout" role="main">
@@ -169,17 +171,17 @@
             </label>
 
             <label class="ont-search__check">
-              <input id="optIncludeCitation" type="checkbox" />
+              <input id="optIncludeCitation" type="checkbox" checked />
               <span>Citations</span>
             </label>
 
             <label class="ont-search__check">
-              <input id="optIncludeExamples" type="checkbox" />
+              <input id="optIncludeExamples" type="checkbox" checked />
               <span>Examples</span>
             </label>
 
             <label class="ont-search__check">
-              <input id="optIncludeClarifications" type="checkbox" />
+              <input id="optIncludeClarifications" type="checkbox" checked />
               <span>Clarifications</span>
             </label>
           </fieldset>
@@ -300,8 +302,8 @@
       })();
     })();
   </script>
-  <!-- App JS 
-  <script type="module" src="./app/bundler.js"></script>-->
+  <!-- App JS --> 
+  <script type="module" src="./app/bundler-core.js"></script>
   <script type="module" src="./app/search-main.js"></script>
 
 </body>
