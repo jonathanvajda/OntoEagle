@@ -11,15 +11,15 @@
  * Pure logic lives in:
  * - normalize.js
  * - rdf_extract.js
- * - indexer.js // INDEX FEATURE: 
  * - search.js
  * - types.js
  */
 
 import { extractDocumentsFromJsonLd, mapByIri, parseGraphJsonLdText } from './rdf_extract.js';
- // INDEX FEATURE: import { buildIndex } from './indexer.js';
 import { searchDocuments } from './search.js';
 import { defaultSearchOptions } from './types.js';
+import { mintBundleIri } from './bundler.js';
+  
 
 // Minimal IDB wrappers (you can expand these in indexeddb.min.js later)
 import {
@@ -213,7 +213,6 @@ function renderResults(results) {
       <div class="ont-search__resultMeta">
         <span class="ont-search__pill">${escapeHtml(r.doc.type)}</span>
         <br />
-        <span class="ont-search__muted">Namespace: ${escapeHtml(r.doc.namespace || '')}</span>
       </div>
       <div class="ont-search__resultIri">${escapeHtml(r.doc.iri)}</div>
     `.trim();
@@ -230,6 +229,120 @@ function renderResults(results) {
   elResultsList.setAttribute('aria-activedescendant', 'ontOpt_0');
 }
 
+const BUNDLE_LS_KEY = 'ontoeagle.bundle.slim.jsonld';
+
+/**
+ * @returns {any} JSON-LD object with @context + @graph
+ */
+function loadSlimBundleDoc() {
+  const raw = localStorage.getItem(BUNDLE_LS_KEY);
+  if (raw) {
+    try { return JSON.parse(raw); } catch (_) { /* fall through */ }
+  }
+  return {
+    "@context": {
+      "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+      "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+      "skos": "http://www.w3.org/2004/02/skos/core#",
+      "owl": "http://www.w3.org/2002/07/owl#"
+    },
+    "@graph": []
+  };
+}
+
+/**
+ * @param {any} doc
+ */
+function saveSlimBundleDoc(doc) {
+  localStorage.setItem(BUNDLE_LS_KEY, JSON.stringify(doc, null, 2));
+}
+
+/**
+ * Find or create the bundle (skos:Collection) in @graph.
+ * @param {any} bundleDoc
+ * @returns {any} the collection node
+ */
+function ensureSlimCollection(bundleDoc) {
+  if (!bundleDoc['@graph']) bundleDoc['@graph'] = [];
+
+  let col = bundleDoc['@graph'].find(
+    (n) => n && n['@type'] === 'skos:Collection'
+  );
+
+  if (!col) {
+    col = {
+      "@id": mintBundleIri(),
+      "@type": "skos:Collection",
+      "skos:member": []
+    };
+    bundleDoc['@graph'].unshift(col);
+  }
+
+  if (!Array.isArray(col['skos:member'])) col['skos:member'] = [];
+  return col;
+}
+
+/**
+ * Upsert the member node and membership edge.
+ * @param {any} bundleDoc
+ * @param {any} itemNode JSON-LD node with @id, @type, label/definition/etc.
+ * @returns {{memberCount:number, changed:boolean}}
+ */
+function addItemToSlimBundle(bundleDoc, itemNode) {
+  if (!itemNode || typeof itemNode !== 'object' || !itemNode['@id']) {
+    return { memberCount: 0, changed: false };
+  }
+
+  const col = ensureSlimCollection(bundleDoc);
+
+  const iri = itemNode['@id'];
+  const members = col['skos:member'];
+
+  const alreadyMember = members.some((m) => m && m['@id'] === iri);
+  if (!alreadyMember) {
+    members.push({ "@id": iri });
+  }
+
+  // Upsert full node into @graph (by @id)
+  const g = bundleDoc['@graph'];
+  const idx = g.findIndex((n) => n && n['@id'] === iri);
+
+  if (idx >= 0) {
+    // merge (bundle version gets updated fields if present on itemNode)
+    g[idx] = { ...g[idx], ...itemNode };
+  } else {
+    g.push(itemNode);
+  }
+
+  const changed = !alreadyMember || idx < 0;
+  return { memberCount: members.length, changed };
+}
+
+/**
+ * Update header shopping cart count.
+ * @param {number} n
+ */
+function setShoppingCartCount(n) {
+  const el = document.getElementById('ontShoppingCart');
+  if (el) el.textContent = String(Number.isFinite(n) ? n : 0);
+}
+
+/**
+ * Read current member count from localStorage (safe).
+ * @returns {number}
+ */
+function getShoppingCartCountFromStorage() {
+  try {
+    const doc = loadSlimBundleDoc();
+    const col = doc['@graph']?.find((n) => n && n['@type'] === 'skos:Collection');
+    const members = col?.['skos:member'];
+    return Array.isArray(members) ? members.length : 0;
+  } catch {
+    return 0;
+  }
+}
+
+
 /**
  * Render details panel for a doc.
  * @param {import('./types.js').OntologyDocument} doc
@@ -240,38 +353,93 @@ function renderDetails(doc) {
     return;
   }
 
-  const def = doc.definition ? `<p><strong>Definition:</strong><br />${escapeHtml(doc.definition)}</p>` : '';
+  const def = doc.definition ? `<p class="ont-search__detailsMeta"><strong>Definition:</strong><br />${escapeHtml(doc.definition)}</p>` : '';
   const alts = (doc.altLabels && doc.altLabels.length)
-    ? `<p><strong>Alt labels:</strong><br />${escapeHtml(doc.altLabels.join(', '))}</p>`
+    ? `<p class="ont-search__detailsMeta"><strong>Alt labels:</strong><br />${escapeHtml(doc.altLabels.join(', '))}</p>`
     : '';
 
   const citations = (doc.citations && doc.citations.length)
-    ? `<p><strong>Citations:</strong><br />${escapeHtml(doc.citations.join('; '))}</p>`
+    ? `<p class="ont-search__detailsMeta"><strong>Citations:</strong><br />${escapeHtml(doc.citations.join('; '))}</p>`
     : '';
 
   const examples = (doc.examples && doc.examples.length)
-    ? `<p><strong>Examples:</strong><br />${escapeHtml(doc.examples.join('; '))}</p>`
+    ? `<p class="ont-search__detailsMeta"><strong>Examples:</strong><br />${escapeHtml(doc.examples.join('; '))}</p>`
     : '';
 
   const clarifications = (doc.clarifications && doc.clarifications.length)
-    ? `<p><strong>Notes:</strong><br />${escapeHtml(doc.clarifications.join('; '))}</p>`
+    ? `<p class="ont-search__detailsMeta"><strong>Notes:</strong><br />${escapeHtml(doc.clarifications.join('; '))}</p>`
     : '';
 
+  const curated_in = (doc.curated_in && doc.curated_in.length)
+    ? `<p class="ont-search__detailsMeta"><strong>Curated in:</strong><br />${escapeHtml(doc.curated_in.join('; '))}</p>`
+    : '';
+
+    
   elDetails.innerHTML = `
     <div class="ont-search__detailsHeader">
-      <div class="ont-search__detailsTitle"><strong>${escapeHtml(doc.label || doc.iri)}</strong></div>
-      <div class="ont-search__detailsMeta">
-        <span class="ont-search__pill">${escapeHtml(doc.type)}</span>
-        <span class="ont-search__muted">Namespace: ${escapeHtml(doc.namespace || '')}</span>
+      <div class="ont-search__detailsTitle"><strong>Label:</strong> <span style="font-size: 2rem; font-weight: 600">${escapeHtml(doc.label || doc.iri)}</span></div>
+      <div class="ont-search__detailsMeta"><strong>Type:</strong> <span class="ont-search__pill">${escapeHtml(doc.type)}</span>
       </div>
-      <div class="ont-search__detailsIri"><code>${escapeHtml(doc.iri)}</code></div>
+      <div class="ont-search__detailsIri"><strong>IRI:</strong> <code>${escapeHtml(doc.iri)}</code>
+      </div>
+      <div class="ont-search__detailsIri"><strong>Namespace:</strong> <code>${escapeHtml(doc.namespace || '')}</code>
+      </div>
     </div>
     ${def}
     ${alts}
     ${citations}
     ${examples}
     ${clarifications}
+    ${curated_in}
+    <div class="ont-search__row" style="margin-top:0.75rem;">
+      <button id="ontAddToSlimBundleBtn" class="ont-search__btn" type="button">
+        Add to bundle for slim
+      </button>
+    </div>
   `.trim();
+
+  // Add a button in the details card markup somewhere.
+  // If you already build markup strings, just ensure you include:
+  // <button id="ontAddToSlimBundleBtn" type="button">Add to bundle for slim</button>
+  //
+  // Then wire it here:
+
+  {const btn = document.getElementById('ontAddToSlimBundleBtn');
+
+  if (btn) {
+    btn.onclick = () => {
+      // Build the JSON-LD node to store. Use your doc object as the source of truth.
+      // Map your OntologyDocument-ish object into JSON-LD node shape.
+      const itemNode = {
+        "@id": doc.iri,
+        "@type": Array.isArray(doc.type)
+          ? doc.type
+          : doc.type
+            ? [`owl:${doc.type}`] // simple mapping; ok for your example
+            : [],
+        "rdfs:label": doc.label || doc.iri
+      };
+
+      // Optional fields (only write if present)
+      if (doc.definition) itemNode["skos:definition"] = doc.definition;
+      if (doc.curatedIn) itemNode["rdfs:isDefinedBy"] = { "@id": doc.curatedIn }; // if you store that
+      // If you store citations/examples/clarifications, you can map them too.
+
+      const bundleDoc = loadSlimBundleDoc();
+      const { memberCount } = addItemToSlimBundle(bundleDoc, itemNode);
+      saveSlimBundleDoc(bundleDoc);
+      setShoppingCartCount(memberCount);
+
+      // Optional: give the user feedback
+      btn.textContent = 'Added ✓';
+      btn.disabled = true;
+      setTimeout(() => {
+        btn.textContent = 'Add to bundle for slim';
+        btn.disabled = false;
+      }, 800);
+    };
+  }
+}
 }
 
 /**

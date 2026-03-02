@@ -14,6 +14,9 @@ const OWL = 'http://www.w3.org/2002/07/owl#';
 const RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
 const RDFS = 'http://www.w3.org/2000/01/rdf-schema#';
 const SKOS = 'http://www.w3.org/2004/02/skos/core#';
+const CCEO = 'http://www.ontologyrepository.com/CommonCoreOntologies/';
+const CCO2 = 'https://www.commoncoreontologies.org/';
+const DCTERMS = 'http://purl.org/dc/terms/';
 
 /** Common predicate keys (full IRIs + compact forms) */
 const P = Object.freeze({
@@ -21,15 +24,17 @@ const P = Object.freeze({
   label: [`${RDFS}label`, 'rdfs:label', 'label'],
   prefLabel: [`${SKOS}prefLabel`, 'skos:prefLabel', 'prefLabel'],
   altLabel: [`${SKOS}altLabel`, 'skos:altLabel', 'altLabel'],
-  definition: [`${SKOS}definition`, 'skos:definition', 'definition', `${OWL}IAO_0000115`, 'IAO_0000115'],
+  definition: [`${SKOS}definition`, 'skos:definition', 'definition', `${OWL}IAO_0000115`, 'IAO_0000115', `${CCEO}definition`],
   citation: [
-    'dcterms:bibliographicCitation',
+    `${DCTERMS}bibliographicCitation`,
     'dc:bibliographicCitation',
     `${RDFS}seeAlso`,
-    'rdfs:seeAlso'
+    'rdfs:seeAlso',
+    `${CCEO}definition_source`,
   ],
-  example: [`${SKOS}example`, 'skos:example', 'example'],
+  example: [`${SKOS}example`, 'skos:example', 'example', `${CCEO}example_of_usage`],
   note: [`${SKOS}note`, 'skos:note', 'note'],
+  curated_in: [`${CCEO}is_curated_in_ontology`, `${RDFS}isDefinedBy`, `${CCO2}ont00001760`],
 });
 
 /**
@@ -164,6 +169,7 @@ export function extractDocumentsFromJsonLd(jsonld) {
     const citations = valueToStrings(getAny(node, P.citation));
     const examples = valueToStrings(getAny(node, P.example));
     const clarifications = valueToStrings(getAny(node, P.note)); // treat skos:note as clarifications for now
+    const curated_in = valueToStrings(getAny(node, P.curated_in));
 
     docs.push({
       iri,
@@ -175,6 +181,7 @@ export function extractDocumentsFromJsonLd(jsonld) {
       citations: citations.length ? citations : undefined,
       examples: examples.length ? examples : undefined,
       clarifications: clarifications.length ? clarifications : undefined,
+      curated_in: curated_in.length ? curated_in : undefined,
       // If you’re still carrying `text` elsewhere, you can omit it in Stage E.
       text: ''
     });

@@ -50,7 +50,7 @@
 
 .ont-search__layout {
   display: grid;
-  grid-template-columns: 320px 1fr 360px;
+  grid-template-columns: 1.5fr 3fr 2.5fr;
   gap: var(--ont-gap);
   padding: 1rem;
 }
@@ -163,7 +163,7 @@
 
 .ont-search__h2 {
   margin: 0;
-  font-size: 2.25rem;
+  font-size: 2.75rem;
 }
 
 .ont-search__resultsMeta {
@@ -181,6 +181,7 @@
 
 .ont-search__result {
   margin-bottom: 2rem;
+  background-image: linear-gradient(to bottom, var(--ont-panel-bg), var(--ont-code-bg));
 }
 
 .ont-search__resultBtn {
@@ -228,7 +229,7 @@
   color: var(--ont-pill-text);
   border-radius: 999px;
   padding: 0.125rem 0.5rem;
-  font-size: 1.25rem;
+  font-size: 1.6rem;
 }
 
 /* ---------- Details ---------- */
@@ -237,9 +238,14 @@
   font-size: 1.5rem;
 }
 
+.ont-search__detailsHeader {
+  margin-bottom: 1rem;
+  font-size: 2rem;
+}
+
 .ont-search__detailsIri code {
   font-family: var(--ont-font-mono);
-  font-size: 1.25rem;
+  font-size: 1.5rem;
 }
 
 /* ---------- Empty / help ---------- */

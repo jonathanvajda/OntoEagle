@@ -106,15 +106,19 @@
 </head>
 
 <body data-page-id="ontoeagle" class="ont-search">
-  <a class="ont-search__skip" href="#ontResults">Skip to results</a>
-
   <header id="siteHeader" class="sitehdr-root" role="banner" aria-label="Site header">
     
   </header>
 
-  <div class="ont-search__status" aria-live="polite" aria-atomic="true">
-      <span id="ontStatusText">Idle</span>
+  <div id="ontMetaStatus" style="display: flex; justify-content: space-between;">
+    <div class="ont-search__status" aria-live="polite" aria-atomic="true">
+        <span id="ontStatusText">Idle</span>
+      </div>
+    <div class="ont-search__status" aria-live="polite" aria-atomic="true" style="padding-right: 1.5rem;">
+        <span id="ontShoppingCart">0</span> items bundled.
     </div>
+
+  </div>
 
   <main class="ont-search__layout" role="main">
     <!-- Left: Search + filters -->
@@ -220,6 +224,8 @@
     <section class="ont-search__results" aria-label="Search results">
       <header class="ont-search__resultsHeader">
         <h2 class="ont-search__h2" id="ontResults">Results</h2>
+        <br />
+        <br />
 
         <!-- Live region for result count/time -->
         <div class="ont-search__resultsMeta" aria-live="polite" aria-atomic="true">
@@ -247,6 +253,7 @@
     <!-- Right: Details -->
     <aside class="ont-search__detailsPanel" aria-label="Selected element details">
       <h2 class="ont-search__h2">Details</h2>
+      <br />
       <div id="ontDetails" class="ont-search__detailsCard">
         <p class="ont-search__help">Select a result to view details.</p>
       </div>
@@ -293,6 +300,8 @@
       })();
     })();
   </script>
+  <!-- App JS 
+  <script type="module" src="./app/bundler.js"></script>-->
   <script type="module" src="./app/search-main.js"></script>
 
 </body>

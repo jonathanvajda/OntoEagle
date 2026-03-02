@@ -7,7 +7,7 @@ import { inferElementType } from './rdf_extract.js';
 // - Bundle IDs should be opaque (urn:uuid:...) and hidden from users
 // ============================================================
 
-const LS_KEY = "onto.bundles.jsonld";
+const BUNDLE_LS_KEY = "onto.bundles.jsonld";
 
 const CONTEXT = {
   rdf:  "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
@@ -36,7 +36,7 @@ function safeParseJson(text, fallback) {
 }
 
 function loadDoc() {
-  const raw = localStorage.getItem(LS_KEY);
+  const raw = localStorage.getItem(BUNDLE_LS_KEY);
   if (!raw) return emptyDoc();
   const doc = safeParseJson(raw, emptyDoc());
   if (!doc || typeof doc !== "object") return emptyDoc();
@@ -46,7 +46,7 @@ function loadDoc() {
 }
 
 function saveDoc(doc) {
-  localStorage.setItem(LS_KEY, JSON.stringify(doc, null, 2));
+  localStorage.setItem(BUNDLE_LS_KEY, JSON.stringify(doc, null, 2));
 }
 
 function graph(doc) { return doc["@graph"]; }
@@ -102,12 +102,12 @@ function deleteNode(doc, id) {
   doc["@graph"] = graph(doc).filter(n => !(n && n["@id"] === id));
 }
 
-function mintBundleIri() {
+export function mintBundleIri() {
   if (globalThis.crypto?.randomUUID) return `urn:uuid:${crypto.randomUUID()}`;
   return `urn:uuid:${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-function createBundle(doc) {
+export function createBundle(doc) {
   const id = mintBundleIri();
   upsertNode(doc, { "@id": id, "@type": "skos:Collection", "skos:member": [] });
   return id;
@@ -219,24 +219,6 @@ function downloadText(filename, text) {
   a.remove();
   URL.revokeObjectURL(url);
 }
-
-// ---------- UI rendering ----------
-const app = document.getElementById("app");
-const txtRaw = document.getElementById("txtRaw");
-
-const btnCreateBundle = document.getElementById("btnCreateBundle");
-const btnSeedExample = document.getElementById("btnSeedExample");
-const btnExportSeed = document.getElementById("btnExportSeed");
-const btnClear = document.getElementById("btnClear");
-const btnMerge = document.getElementById("btnMerge");
-
-const selExportBundle = document.getElementById("selExportBundle");
-const chkIncludeLabels = document.getElementById("chkIncludeLabels");
-if (document.getElementById("selMergeA")){
-  const selMergeA = document.getElementById("selMergeA");
-  }
-if (document.getElementById("selMergeB")){
-const selMergeB = document.getElementById("selMergeB");}
 
 function shortId(iri) {
   // purely UI: show last chunk of urn:uuid
@@ -457,6 +439,71 @@ function renderIriRow(iri) {
   return row;
 }
 
+/** UI Wiring for bundler app */ 
+
+const app = document.getElementById("app");
+const txtRaw = document.getElementById("txtRaw");
+
+const btnCreateBundle = document.getElementById("btnCreateBundle");
+const btnSeedExample = document.getElementById("btnSeedExample");
+const btnExportSeed = document.getElementById("btnExportSeed");
+const btnClear = document.getElementById("btnClear");
+const btnMerge = document.getElementById("btnMerge");
+
+const selExportBundle = document.getElementById("selExportBundle");
+const chkIncludeLabels = document.getElementById("chkIncludeLabels");
+if (document.getElementById("selMergeA")){
+  const selMergeA = document.getElementById("selMergeA");
+  }
+if (document.getElementById("selMergeB")){
+const selMergeB = document.getElementById("selMergeB");}
+
+// ---------- button wiring ----------
+btnCreateBundle.addEventListener("click", () => {
+  const doc = loadDoc();
+  createBundle(doc);
+  saveDoc(doc);
+  render();
+});
+
+btnSeedExample.addEventListener("click", () => {
+  const doc = loadDoc();
+  if (listBundles(doc).length === 0) createBundle(doc);
+  const b0 = listBundles(doc)[0];
+  upsertNode(doc, EX_ITEM_NODE);
+  addMember(doc, b0, EX_ITEM_IRI);
+  saveDoc(doc);
+  render();
+});
+
+btnExportSeed.addEventListener("click", () => {
+  const doc = loadDoc();
+  const bundleId = selExportBundle.value;
+  if (!bundleId) return;
+
+  const includeLabels = chkIncludeLabels.checked;
+  const text = toRobotSeedText(doc, bundleId, includeLabels);
+
+  const filename = `bundle-${shortId(bundleId)}.txt`;
+  downloadText(filename, text);
+});
+
+if (btnMerge) {btnMerge.addEventListener("click", () => {
+  const a = selMergeA.value;
+  const b = selMergeB.value;
+  if (!a || !b || a === b) return;
+  const doc = loadDoc();
+  mergeBundles(doc, [a, b]);
+  saveDoc(doc);
+  render();
+});}
+
+if (btnClear){
+btnClear.addEventListener("click", () => {
+  localStorage.removeItem(BUNDLE_LS_KEY);
+  render();
+});}
+
 function render() {
   const doc = loadDoc();
   const bundles = listBundles(doc);
@@ -640,52 +687,6 @@ function escapeHtml(s) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
-
-// ---------- button wiring ----------
-btnCreateBundle.addEventListener("click", () => {
-  const doc = loadDoc();
-  createBundle(doc);
-  saveDoc(doc);
-  render();
-});
-
-btnSeedExample.addEventListener("click", () => {
-  const doc = loadDoc();
-  if (listBundles(doc).length === 0) createBundle(doc);
-  const b0 = listBundles(doc)[0];
-  upsertNode(doc, EX_ITEM_NODE);
-  addMember(doc, b0, EX_ITEM_IRI);
-  saveDoc(doc);
-  render();
-});
-
-btnExportSeed.addEventListener("click", () => {
-  const doc = loadDoc();
-  const bundleId = selExportBundle.value;
-  if (!bundleId) return;
-
-  const includeLabels = chkIncludeLabels.checked;
-  const text = toRobotSeedText(doc, bundleId, includeLabels);
-
-  const filename = `bundle-${shortId(bundleId)}.txt`;
-  downloadText(filename, text);
-});
-
-if (btnMerge) {btnMerge.addEventListener("click", () => {
-  const a = selMergeA.value;
-  const b = selMergeB.value;
-  if (!a || !b || a === b) return;
-  const doc = loadDoc();
-  mergeBundles(doc, [a, b]);
-  saveDoc(doc);
-  render();
-});}
-
-if (btnClear){
-btnClear.addEventListener("click", () => {
-  localStorage.removeItem(LS_KEY);
-  render();
-});}
 
 // Initial render
 render();
