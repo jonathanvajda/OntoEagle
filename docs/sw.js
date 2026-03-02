@@ -1,21 +1,29 @@
 /* docs/sw.js */
 /* Offline-first SW: cache app shell + graph.jsonld */
 
-const SW_VERSION = 'v1';
+const SW_VERSION = 'v2';
 const CACHE_SHELL = `ontoeagle-shell-${SW_VERSION}`;
 const CACHE_DATA = `ontoeagle-data-${SW_VERSION}`;
 
 // Keep this list tight and explicit (no globbing).
 const SHELL_ASSETS = [
   './index.html',
+  './bundler.html',
+  './styles/skeleton.css',
+  './styles/app-base.css',
   './styles/search-app.css',
+  './styles/bundler.css',
   './app/search-main.js',
   './app/search.js',
-// INDEX FEATURE:  './scripts/indexer.js',
   './app/normalize.js',
   './app/rdf_extract.js',
   './app/indexeddb.min.js',
   './app/types.js',
+  './app/bundler-core.js',
+  './app/bundler-ui.js',
+  './images/add-to-cart.svg',
+  './images/default-logo.png',
+  './images/block-logo.png',
 ];
 
 // Single consolidated dataset produced by Python
