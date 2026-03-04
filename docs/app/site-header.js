@@ -5,7 +5,7 @@
   // --- Your config (as you provided) ---
   const HEADER_CONFIG = {
     brand: {
-      mainLogo: { href: "/", src: "./images/main-logo.png", alt: "Erhaben Semantic Solutions" },
+      mainLogo: { href: "https://jonathanvajda.github.io/OntoEagle/about.html", src: "./images/main-logo.png", alt: "Erhaben Semantic Solutions" },
       toolLogoByPageId: {
         "ontoeagle": { src: "./images/Eagle-VI_1753264913.svg", alt: "OntoEagle Semantic Lookup" },
         "ontology-tabulator": { src: "./images/ontology-tabulator.svg", alt: "Ontology Tabulator" },

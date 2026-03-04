@@ -104,6 +104,17 @@
 
     <!-- App Local CSS -->
     <link rel="stylesheet" href="./styles/search-app.css" />
+    <style>
+        .social img { 
+        width: 50px; 
+        height: 50px; 
+        }
+
+        /* Correct selector: No space between .invert and img */
+        :root[data-theme="dark"] .social img.invert { 
+        filter: invert(100%); 
+        }
+    </style>
 </head>
 
 <body data-page-id="about-page" class="ont-search">
@@ -118,47 +129,66 @@
         <h2 style="justify-self: center;">Development Team</h2>
         <div id="development-team" style="justify-self: center; margin:auto; display: flex;grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div id="jonathan-vajda" class="team-members" style="max-width: 60%; display: flex-inline; gap: 1rem;">
-                        <div class="avatar" style="justify-self: center; margin:auto;">
-                            <a href="https://github.com/jonathanvajda">
-                                <img style="height:150px; width:auto;" alt="View jonathanvajda's GitHub page" src="https://avatars.githubusercontent.com/u/36548200?v=4"></a>
-                        </div>
-                        <div class="title" style="justify-self: center; margin:auto;">
-                            <h3>Jonathan Vajda</h3>
-                        </div>
-                        <div class="bio" style="max-width: 80%; justify-self: center; margin:auto;">Ontologist. PhD in Philosophy (historical and theoretical ontology) at University at Buffalo. Background in philosophy, psychology, theology, and IT
-                        </div>
-                        <div class="social" style="justify-self: center; margin:auto;">
-                            <a href="https://github.com/jonathanvajda">
-                            <img src="./images/GitHub_Invertocat_White_Clearspace.svg" alt="GitHub Invertocat Logo" width="48" height="48"></a>
-                    <a href="https://www.linkedin.com/in/jonathan-vajda-165720b0/">
-                        <img srcset="https://img.icons8.com/?size=250&amp;id=xuvGCOXi8Wyg" alt="LinkedIn" width="48" height="48">
+                <div class="avatar" style="justify-self: center; margin:auto;">
+                    <a href="https://github.com/jonathanvajda" style="text-decoration: none;">
+                        <img style="height:150px; width:auto; border-radius: 10%; border: 2px solid var(--ont-border);" alt="View jonathanvajda's GitHub page" src="https://avatars.githubusercontent.com/u/36548200?v=4"></a>
+                </div>
+                <div class="title" style="justify-self: center; margin:auto;">
+                    <h3>Jonathan Vajda</h3>
+                </div>
+                <div class="bio" style="max-width: 80%; justify-self: center; margin:auto;">
+                    Ontologist. PhD in Philosophy (historical and theoretical ontology) at University at Buffalo. Background in philosophy, psychology, theology, and IT
+                </div>
+                <br />
+                <div class="social" style="justify-self: center; margin:auto;">
+                    <a href="https://github.com/jonathanvajda" style="text-decoration: none;">
+                        <img class="social invert svg" src="./images/GitHub_Invertocat_Black_Clearspace.svg" alt="GitHub Invertocat Logo">
+                    </a>
+                    &nbsp;
+                    <a href="https://www.linkedin.com/in/jonathan-vajda-165720b0/" style="text-decoration: none;">
+                        <img class="social" srcset="https://img.icons8.com/?size=250&amp;id=xuvGCOXi8Wyg" alt="LinkedIn">
+                    </a>
+                    &nbsp;
+                    <a href="https://jonathanvajda.com/" style="text-decoration: none;">
+                        <img class="social" src="./images/phi-vajda2.jpg" alt="Icon for Jonathan Vajda's website, for philosophy, theology, and technology. Go to https://jonathanvajda.com/">
+                    </a>
+                    &nbsp;
+                    <a href="mailto:jonathan.vajda@gmail.com" style="text-decoration: none;">
+                        <img class="social invert svg" src="./images/email-1-svgrepo-com.svg" alt="Mail to jonathan.vajda@gmail.com">
                     </a>
                 </div>
-                <div class="website" style="justify-self: center; margin:auto;"><a href="https://jonathanvajda.com/"><span style="background: var(--ont-pill-bg); color: var(--ont-pill-text); border-radius: 999px; padding: 0.125rem 0.5rem;">https://jonathanvajda.com/</span></a></div>
-                <div contact="email" style="justify-self: center; margin:auto;">jonathan[dot]vajda[at]gmail[dot]com</div>
             </div>
 
             <div id="aaron-damiano" class="team-members" style="max-width: 60%; display: flex-inline; gap: 1rem;">
-                    <div class="avatar" style="justify-self: center; margin:auto;">
-                        <a href="https://github.com/Skreen5hot/">
-                            <img style="height:150px;" alt="View Skreen5hot's GitHub page"
-                                src="https://avatars.githubusercontent.com/u/4684931?v=4"></a>
-                    </div>
-                    <div class="title" style="justify-self: center; margin:auto;">
-                        <h3>Aaron Damiano</h3>
-                    </div>  
-                    <div class="bio" style="max-width: 80%; justify-self: center; margin:auto;">I am a human who has the role of a Ontologist/Programmer Analyst while enacting my
-                        role at CBP/DHS. I have a passion for Ontology and AI.</div>
-                    <div class="social" style="justify-self: center; margin:auto;">
-                        <a href="https://github.com/Skreen5hot">
-                            <img src="./images/GitHub_Invertocat_White_Clearspace.svg" alt="GitHub Invertocat Logo" width="48" height="48"></a>
-                    
-                    <a href="https://www.linkedin.com/in/aaron-a-damiano">
-                        <img srcset="https://img.icons8.com/?size=250&amp;id=xuvGCOXi8Wyg" alt="LinkedIn" width="48" height="48">
+                <div class="avatar" style="justify-self: center; margin:auto;">
+                    <a href="https://github.com/Skreen5hot/" style="text-decoration: none;">
+                        <img style="height:150px; width:auto; border-radius: 10%; border: 2px solid var(--ont-border);" alt="View Skreen5hot's GitHub page"
+                            src="https://avatars.githubusercontent.com/u/4684931?v=4"></a>
+                </div>
+                <div class="title" style="justify-self: center; margin:auto;">
+                    <h3>Aaron Damiano</h3>
+                </div>  
+                <div class="bio" style="max-width: 80%; justify-self: center; margin:auto;">
+                    I am a human who has the role of a Ontologist/Programmer Analyst while enacting my
+                    role at CBP/DHS. I have a passion for Ontology and AI.</div>
+                <br />
+                <div class="social" style="justify-self: center; margin:auto;">
+                    <a href="https://github.com/Skreen5hot" style="text-decoration: none;">
+                        <img class="social invert svg" src="./images/GitHub_Invertocat_Black_Clearspace.svg" alt="GitHub Invertocat Logo" width="48" height="48">
+                    </a>
+                    &nbsp;
+                    <a href="https://www.linkedin.com/in/aaron-a-damiano" style="text-decoration: none;">
+                        <img class="social" srcset="https://img.icons8.com/?size=250&amp;id=xuvGCOXi8Wyg" alt="LinkedIn" width="48" height="48">
+                    </a>
+                    &nbsp;
+                    <a href="https://fandaws.com/" style="text-decoration: none;">
+                        <img class="social" src="https://fandaws.com/images/icon-ainimate.gif" alt="Icon for Fact and Answer Web Service (Fandaws) is an Ontology Building Service (OBS). Go to https://fandaws.com/" width="48" height="48">
+                    </a>
+                    &nbsp;
+                    <a href="mailto:aaron.damiano@gmail.com" style="text-decoration: none;">
+                        <img class="social invert svg"src="./images/email-1-svgrepo-com.svg" alt="Mail to aaron.damiano@gmail.com" width="48" height="48">
                     </a>
                 </div>
-                <div class="website" style="justify-self: center; margin:auto;"><a href="https://fandaws.com/"><span style="background: var(--ont-pill-bg); color: var(--ont-pill-text); border-radius: 999px; padding: 0.125rem 0.5rem;">https://fandaws.com/</span></a></div>
-                <div contact="email" style="justify-self: center; margin:auto;">aaron[dot]a[dot]damiano[at]gmail[dot]com</div>
             </div>
         </div>
         </div>
