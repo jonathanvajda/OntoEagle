@@ -131,6 +131,7 @@
 
 /* Base */
 html, body {
+  margin: 0 0;
   background: var(--ont-bg);
   color: var(--ont-text);
   font-family: var(--ont-font-body);
