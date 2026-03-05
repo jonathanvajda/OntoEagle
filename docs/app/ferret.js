@@ -52,6 +52,15 @@
     // ======================================================
     // SECTION 4: UI & STATE MANAGEMENT
     // ======================================================
+ 
+    // Helper
+    const hasType = (node, iri) => {
+  const t = node?.["@type"];
+  if (Array.isArray(t)) return t.includes(iri);
+  if (typeof t === "string") return t === iri;
+  return false; // undefined/null/other
+};
+    
     async function initialLoad() {
       allNodesCache = await readFromIndexedDB();
       renderSidebarFromCache();
@@ -63,9 +72,8 @@ function renderSidebarFromCache() {
     cqList.innerHTML = "";
     
     // Add safety checks before calling .includes()
-    const cqNodes = allNodesCache.filter(node => 
-        node["@type"] && Array.isArray(node["@type"]) && // <-- Added check
-        node["@type"].includes("https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity")
+    const cqNodes = allNodesCache.filter(n =>
+      hasType(n, "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity")
     );
     
     const titleProperty = "http://www.w3.org/2000/01/rdf-schema#label";
@@ -136,9 +144,10 @@ function renderSidebarFromCache() {
       personsList.innerHTML = '';
       const participantLinks = cq["http://purl.org/dc/terms/contributor"] || [];
       console.log("Found Contributor Links:", participantLinks);
+      // Process Contributors
       const participantNodes = allNodesCache.filter(n =>
-        participantLinks.some(p => p["@id"] === n["@id"]) &&
-        n["@type"].includes("https://www.commoncoreontologies.org/ont00001262")
+        participantLinks.some(p => p?.["@id"] === n?.["@id"]) &&
+        hasType(n, "https://www.commoncoreontologies.org/ont00001262")
       );
       console.log("Found Participant Nodes:", participantNodes);
       participantNodes.forEach(pNode => {
@@ -163,12 +172,14 @@ function renderSidebarFromCache() {
       if (personsList.children.length === 0) {
         addPersonItem();
       }
+
       const subquestionsList = document.getElementById('subquestions-list');
       subquestionsList.innerHTML = '';
       const subquestionNodes = allNodesCache.filter(n =>
         (cq["http://purl.obolibrary.org/obo/BFO_0000178"] || []).some(item => item["@id"] === n["@id"]) &&
         n["@type"].includes("https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity")
       );
+
       subquestionNodes.forEach(node => addSubquestionItem(node["https://www.commoncoreontologies.org/ont00001761"][0]["@value"]));
       if (subquestionsList.children.length === 0) addSubquestionItem();
       const decisionLogicList = document.getElementById('decision-logic-list');
@@ -177,6 +188,7 @@ function renderSidebarFromCache() {
         (cq["http://purl.obolibrary.org/obo/BFO_0000178"] || []).some(item => item["@id"] === n["@id"]) &&
         n["@type"].includes("https://jonathanvajda.com/ontology/DecisionLogic")
       );
+
       logicNodes.forEach(node => addDecisionLogicItem(node["https://www.commoncoreontologies.org/ont00001761"][0]["@value"]));
       if (decisionLogicList.children.length === 0) addDecisionLogicItem();
       const dataRequirementsList = document.getElementById('data-requirements-list');
@@ -185,6 +197,7 @@ function renderSidebarFromCache() {
         (cq["http://purl.org/dc/terms/requires"] || []).some(item => item["@id"] === n["@id"]) &&
         n["@type"].includes("https://www.commoncoreontologies.org/ont00000756")
       );
+
       dataSourceNodes.forEach(dsNode => {
         const sourceText = dsNode["https://www.commoncoreontologies.org/ont00001761"]?.[0]?.["@value"] ?? '';
         const qualityText = dsNode["http://www.w3.org/2000/01/rdf-schema#comment"]?.[0]?.["@value"] ?? '';
@@ -669,7 +682,9 @@ async function performSave() {
       };
 
       // 2. Find all the master CQ nodes
-      const cqNodes = allNodesCache.filter(n => n["@type"].includes("https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity"));
+      const cqNodes = allNodesCache.filter(n =>
+        hasType(n, "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity")
+      );
 
       // 3. Process each CQ and its related items
       cqNodes.forEach(cq => {
@@ -722,8 +737,10 @@ async function performSave() {
         ];
 
         itemTypes.forEach(config => {
+          // Process other item types
           const itemNodes = allNodesCache.filter(n =>
-            (cq[config.link] || []).some(item => item["@id"] === n["@id"]) && n["@type"].includes(config.iri)
+            (cq[config.link] || []).some(item => item?.["@id"] === n?.["@id"]) &&
+            hasType(n, config.iri)
           );
           itemNodes.forEach(node => {
             itemsFound++;
