@@ -1,0 +1,1338 @@
+[
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000023/role_Approver",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000023",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "https://www.commoncoreontologies.org/ont00001761": [
+      {
+        "@value": "Approver"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000023/role_Approver"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000023/role_Creator",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000023",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "https://www.commoncoreontologies.org/ont00001761": [
+      {
+        "@value": "Creator"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000023/role_Creator"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000023/role_Executor",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000023",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "https://www.commoncoreontologies.org/ont00001761": [
+      {
+        "@value": "Executor"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000023/role_Executor"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000023/role_Reviewer",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000023",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "https://www.commoncoreontologies.org/ont00001761": [
+      {
+        "@value": "Reviewer"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000023/role_Reviewer"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000023/role_SubjectMatterExpert",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000023",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "https://www.commoncoreontologies.org/ont00001761": [
+      {
+        "@value": "Subject Matter Expert"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000023/role_SubjectMatterExpert"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/1005512447",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "output"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000031/1005512447"
+      },
+      {
+        "@id": "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674481627"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/1005512447"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/101574",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "foo"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000031/101574"
+      },
+      {
+        "@id": "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674481627"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/101574"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/1028554796",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "creator"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000023/role_Creator"
+      },
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000031/1028554796"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/1028554796"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/103149406",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "logic"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_1"
+      },
+      {
+        "@id": "https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_2"
+      },
+      {
+        "@id": "https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_3"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/103149406"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/105",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "i"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_1"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/105"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/1086949762",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "then not infer"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_3"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/1086949762"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/109267",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "not"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_3"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/109267"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/1185244869",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "approver"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000023/role_Approver"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/1185244869"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/1235054899",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "moo foo"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674595386"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/1235054899"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/1298275357",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "entity"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000031/1298275357"
+      },
+      {
+        "@id": "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674312092"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/1298275357"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/143312594",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "many bar"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000031/143312594"
+      },
+      {
+        "@id": "https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity_IterrogativeICE_1772674259251_2"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/143312594"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/143316869",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "many foo"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000031/143316869"
+      },
+      {
+        "@id": "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674259251"
+      },
+      {
+        "@id": "https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity_IterrogativeICE_1772674259251_1"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/143316869"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/1494800501",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Subject Matter expert"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000023/role_SubjectMatterExpert"
+      },
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000031/1494800501"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/1494800501"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/1709636412",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "logixbase"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "https://www.commoncoreontologies.org/ont00000756/Database_1772674595386_1"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/1709636412"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/1725790701",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "are also"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000031/1725790701"
+      },
+      {
+        "@id": "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674259251"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/1725790701"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/1923357361",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "interested party"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674595386"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/1923357361"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/2043017427",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "executor"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000023/role_Executor"
+      },
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000031/2043017427"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/2043017427"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/261190139",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "reviewer"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000023/role_Reviewer"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/261190139"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/284687150",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "many bingo"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000031/284687150"
+      },
+      {
+        "@id": "https://dhs.gov/ontology/ONT_00001017/DecisionSupportQuestion_1772671599804"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/284687150"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/286534192",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "many dingo"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000031/286534192"
+      },
+      {
+        "@id": "https://dhs.gov/ontology/ONT_00001017/DecisionSupportQuestion_1772671770789"
+      },
+      {
+        "@id": "https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity_IterrogativeICE_1772674481627_1"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/286534192"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/3195240",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "have"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_1"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/3195240"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/3242771",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "item"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674595386"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/3242771"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/361793769",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "jonathan gmail"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000031/361793769"
+      },
+      {
+        "@id": "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674481627"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/361793769"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/529610613",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "then infer"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_2"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/529610613"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/570402602",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "interest"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674595386"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/570402602"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/617577982",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Dingo system"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000031/617577982"
+      },
+      {
+        "@id": "https://www.commoncoreontologies.org/ont00000756/Database_1772674312092_1"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/617577982"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/704933811",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "data is foobar"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "https://www.commoncoreontologies.org/ont00000756/Database_1772674595386_1"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/704933811"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/93503799",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "bango"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000031/93503799"
+      },
+      {
+        "@id": "https://dhs.gov/ontology/ONT_00001017/DecisionSupportQuestion_1772671599804"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/93503799"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/951441132",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "agents in foo process"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000031/951441132"
+      },
+      {
+        "@id": "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674312092"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/951441132"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/95350841",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "dango"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000031/95350841"
+      },
+      {
+        "@id": "https://dhs.gov/ontology/ONT_00001017/DecisionSupportQuestion_1772671770789"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/95350841"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/96852",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "are"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000031/96852"
+      },
+      {
+        "@id": "https://dhs.gov/ontology/ONT_00001017/DecisionSupportQuestion_1772671599804"
+      },
+      {
+        "@id": "https://dhs.gov/ontology/ONT_00001017/DecisionSupportQuestion_1772671770789"
+      },
+      {
+        "@id": "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674312092"
+      },
+      {
+        "@id": "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674481627"
+      },
+      {
+        "@id": "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674595386"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/96852"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/97299",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "bar"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000031/97299"
+      },
+      {
+        "@id": "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674259251"
+      },
+      {
+        "@id": "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674481627"
+      },
+      {
+        "@id": "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674595387"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/97299"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/97730",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "boo"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674595387"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/97730"
+  },
+  {
+    "@id": "http://purl.obolibrary.org/obo/BFO_0000031/98689",
+    "@type": [
+      "http://purl.obolibrary.org/obo/BFO_0000031"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "com"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000176": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000031/98689"
+      },
+      {
+        "@id": "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674481627"
+      },
+      {
+        "@id": "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674595386"
+      },
+      {
+        "@id": "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674595387"
+      }
+    ],
+    "id": "http://purl.obolibrary.org/obo/BFO_0000031/98689"
+  },
+  {
+    "@id": "https://dhs.gov/ontology/ONT_00001017/DecisionSupportQuestion_1772671599804",
+    "@type": [
+      "https://dhs.gov/ontology/ONT_00001017",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "How many bingos are in a bango?"
+      }
+    ],
+    "http://purl.org/dc/terms/description": [
+      {
+        "@value": ""
+      }
+    ],
+    "http://purl.org/dc/terms/created": [
+      {
+        "@value": "2026-03-05T00:46:39.805Z",
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+      }
+    ],
+    "http://purl.org/dc/terms/modified": [
+      {
+        "@value": "2026-03-05T00:46:39.805Z",
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+      }
+    ],
+    "http://example.com/ns/status": [
+      {
+        "@value": "Draft"
+      }
+    ],
+    "http://purl.org/dc/terms/contributor": [],
+    "http://purl.org/dc/terms/requires": [],
+    "http://purl.obolibrary.org/obo/BFO_0000178": [],
+    "id": "https://dhs.gov/ontology/ONT_00001017/DecisionSupportQuestion_1772671599804"
+  },
+  {
+    "@id": "https://dhs.gov/ontology/ONT_00001017/DecisionSupportQuestion_1772671770789",
+    "@type": [
+      "https://dhs.gov/ontology/ONT_00001017",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "How many dingos are in a Dango?"
+      }
+    ],
+    "http://purl.org/dc/terms/description": [
+      {
+        "@value": ""
+      }
+    ],
+    "http://purl.org/dc/terms/created": [
+      {
+        "@value": "2026-03-05T00:49:30.789Z",
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+      }
+    ],
+    "http://purl.org/dc/terms/modified": [
+      {
+        "@value": "2026-03-05T00:49:30.789Z",
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+      }
+    ],
+    "http://example.com/ns/status": [
+      {
+        "@value": "Draft"
+      }
+    ],
+    "http://purl.org/dc/terms/contributor": [],
+    "http://purl.org/dc/terms/requires": [],
+    "http://purl.obolibrary.org/obo/BFO_0000178": [],
+    "id": "https://dhs.gov/ontology/ONT_00001017/DecisionSupportQuestion_1772671770789"
+  },
+  {
+    "@id": "https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_1",
+    "@type": [
+      "https://jonathanvajda.com/ontology/DecisionLogic",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "https://www.commoncoreontologies.org/ont00001761": [
+      {
+        "@value": "I have a logic"
+      }
+    ],
+    "id": "https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_1"
+  },
+  {
+    "@id": "https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_2",
+    "@type": [
+      "https://jonathanvajda.com/ontology/DecisionLogic",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "https://www.commoncoreontologies.org/ont00001761": [
+      {
+        "@value": "If logic, then infer"
+      }
+    ],
+    "id": "https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_2"
+  },
+  {
+    "@id": "https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_3",
+    "@type": [
+      "https://jonathanvajda.com/ontology/DecisionLogic",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "https://www.commoncoreontologies.org/ont00001761": [
+      {
+        "@value": "If not logic, then not infer"
+      }
+    ],
+    "id": "https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_3"
+  },
+  {
+    "@id": "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674259251",
+    "@type": [
+      "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "How many foo are also bar?"
+      }
+    ],
+    "http://purl.org/dc/terms/description": [
+      {
+        "@value": ""
+      }
+    ],
+    "http://purl.org/dc/terms/created": [
+      {
+        "@value": "2026-03-05T01:30:59.251Z",
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+      }
+    ],
+    "http://purl.org/dc/terms/modified": [
+      {
+        "@value": "2026-03-05T01:30:59.251Z",
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+      }
+    ],
+    "http://example.com/ns/status": [
+      {
+        "@value": "Draft"
+      }
+    ],
+    "http://purl.org/dc/terms/contributor": [
+      {
+        "@id": "https://www.commoncoreontologies.org/ont00001262/Person_1772674259251"
+      }
+    ],
+    "http://purl.org/dc/terms/requires": [],
+    "http://purl.obolibrary.org/obo/BFO_0000178": [
+      {
+        "@id": "https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity_IterrogativeICE_1772674259251_1"
+      },
+      {
+        "@id": "https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity_IterrogativeICE_1772674259251_2"
+      }
+    ],
+    "id": "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674259251"
+  },
+  {
+    "@id": "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674312092",
+    "@type": [
+      "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "What entities are agents in foo processes?"
+      }
+    ],
+    "http://purl.org/dc/terms/description": [
+      {
+        "@value": ""
+      }
+    ],
+    "http://purl.org/dc/terms/created": [
+      {
+        "@value": "2026-03-05T01:31:52.092Z",
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+      }
+    ],
+    "http://purl.org/dc/terms/modified": [
+      {
+        "@value": "2026-03-05T01:31:52.092Z",
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+      }
+    ],
+    "http://example.com/ns/status": [
+      {
+        "@value": "Draft"
+      }
+    ],
+    "http://purl.org/dc/terms/contributor": [
+      {
+        "@id": "https://www.commoncoreontologies.org/ont00001262/Person_1772674312092"
+      }
+    ],
+    "http://purl.org/dc/terms/requires": [
+      {
+        "@id": "https://www.commoncoreontologies.org/ont00000756/Database_1772674312092_1"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000178": [],
+    "id": "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674312092"
+  },
+  {
+    "@id": "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674481627",
+    "@type": [
+      "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "What bar are outputs of foo?"
+      }
+    ],
+    "http://purl.org/dc/terms/description": [
+      {
+        "@value": ""
+      }
+    ],
+    "http://purl.org/dc/terms/created": [
+      {
+        "@value": "2026-03-05T01:34:41.627Z",
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+      }
+    ],
+    "http://purl.org/dc/terms/modified": [
+      {
+        "@value": "2026-03-05T01:34:41.627Z",
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+      }
+    ],
+    "http://example.com/ns/status": [
+      {
+        "@value": "Draft"
+      }
+    ],
+    "http://purl.org/dc/terms/contributor": [
+      {
+        "@id": "https://www.commoncoreontologies.org/ont00001262/Person_1772674481627"
+      }
+    ],
+    "http://purl.org/dc/terms/requires": [],
+    "http://purl.obolibrary.org/obo/BFO_0000178": [
+      {
+        "@id": "https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity_IterrogativeICE_1772674481627_1"
+      }
+    ],
+    "id": "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674481627"
+  },
+  {
+    "@id": "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674595386",
+    "@type": [
+      "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "What items are of interest?"
+      }
+    ],
+    "http://purl.org/dc/terms/description": [
+      {
+        "@value": "Some items are interesting to some interested parties"
+      }
+    ],
+    "http://purl.org/dc/terms/created": [
+      {
+        "@value": "2026-03-05T01:36:35.386Z",
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+      }
+    ],
+    "http://purl.org/dc/terms/modified": [
+      {
+        "@value": "2026-03-05T01:36:35.386Z",
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+      }
+    ],
+    "http://example.com/ns/status": [
+      {
+        "@value": "Draft"
+      }
+    ],
+    "http://purl.org/dc/terms/contributor": [
+      {
+        "@id": "https://www.commoncoreontologies.org/ont00001262/Person_1772674595386"
+      },
+      {
+        "@id": "https://www.commoncoreontologies.org/ont00001262/Person_1772674595387"
+      }
+    ],
+    "http://purl.org/dc/terms/requires": [
+      {
+        "@id": "https://www.commoncoreontologies.org/ont00000756/Database_1772674595386_1"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000178": [
+      {
+        "@id": "https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_1"
+      },
+      {
+        "@id": "https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_2"
+      },
+      {
+        "@id": "https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_3"
+      }
+    ],
+    "id": "https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674595386"
+  },
+  {
+    "@id": "https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity_IterrogativeICE_1772674259251_1",
+    "@type": [
+      "https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "https://www.commoncoreontologies.org/ont00001761": [
+      {
+        "@value": "How many foo?"
+      }
+    ],
+    "id": "https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity_IterrogativeICE_1772674259251_1"
+  },
+  {
+    "@id": "https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity_IterrogativeICE_1772674259251_2",
+    "@type": [
+      "https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "https://www.commoncoreontologies.org/ont00001761": [
+      {
+        "@value": "How many bar?"
+      }
+    ],
+    "id": "https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity_IterrogativeICE_1772674259251_2"
+  },
+  {
+    "@id": "https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity_IterrogativeICE_1772674481627_1",
+    "@type": [
+      "https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "https://www.commoncoreontologies.org/ont00001761": [
+      {
+        "@value": "How many dingo?"
+      }
+    ],
+    "id": "https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity_IterrogativeICE_1772674481627_1"
+  },
+  {
+    "@id": "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674259251",
+    "@type": [
+      "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "https://www.commoncoreontologies.org/ont00001761": [
+      {
+        "@value": ""
+      }
+    ],
+    "id": "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674259251"
+  },
+  {
+    "@id": "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674312092",
+    "@type": [
+      "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "https://www.commoncoreontologies.org/ont00001761": [
+      {
+        "@value": ""
+      }
+    ],
+    "id": "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674312092"
+  },
+  {
+    "@id": "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674481627",
+    "@type": [
+      "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "https://www.commoncoreontologies.org/ont00001761": [
+      {
+        "@value": "jonathan@gmail.com"
+      }
+    ],
+    "id": "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674481627"
+  },
+  {
+    "@id": "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674595386",
+    "@type": [
+      "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "https://www.commoncoreontologies.org/ont00001761": [
+      {
+        "@value": "moo@foo.com"
+      }
+    ],
+    "id": "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674595386"
+  },
+  {
+    "@id": "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674595387",
+    "@type": [
+      "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "https://www.commoncoreontologies.org/ont00001761": [
+      {
+        "@value": "boo@bar.com"
+      }
+    ],
+    "id": "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674595387"
+  },
+  {
+    "@id": "https://www.commoncoreontologies.org/ont00000756/Database_1772674312092_1",
+    "@type": [
+      "https://www.commoncoreontologies.org/ont00000756",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "https://www.commoncoreontologies.org/ont00001761": [
+      {
+        "@value": "Dingo System"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#comment": [
+      {
+        "@value": ""
+      }
+    ],
+    "id": "https://www.commoncoreontologies.org/ont00000756/Database_1772674312092_1"
+  },
+  {
+    "@id": "https://www.commoncoreontologies.org/ont00000756/Database_1772674595386_1",
+    "@type": [
+      "https://www.commoncoreontologies.org/ont00000756",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "https://www.commoncoreontologies.org/ont00001761": [
+      {
+        "@value": "LogixBase"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#comment": [
+      {
+        "@value": "This data is foobar"
+      }
+    ],
+    "id": "https://www.commoncoreontologies.org/ont00000756/Database_1772674595386_1"
+  },
+  {
+    "@id": "https://www.commoncoreontologies.org/ont00001262/Person_1772674259251",
+    "@type": [
+      "https://www.commoncoreontologies.org/ont00001262",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Jimmy Hendrix"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#comment": [
+      {
+        "@value": ""
+      }
+    ],
+    "https://www.commoncoreontologies.org/ont00001801": [
+      {
+        "@id": "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674259251"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000196": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000023/role_SubjectMatterExpert"
+      }
+    ],
+    "id": "https://www.commoncoreontologies.org/ont00001262/Person_1772674259251"
+  },
+  {
+    "@id": "https://www.commoncoreontologies.org/ont00001262/Person_1772674312092",
+    "@type": [
+      "https://www.commoncoreontologies.org/ont00001262",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Elon"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#comment": [
+      {
+        "@value": ""
+      }
+    ],
+    "https://www.commoncoreontologies.org/ont00001801": [
+      {
+        "@id": "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674312092"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000196": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000023/role_Executor"
+      }
+    ],
+    "id": "https://www.commoncoreontologies.org/ont00001262/Person_1772674312092"
+  },
+  {
+    "@id": "https://www.commoncoreontologies.org/ont00001262/Person_1772674481627",
+    "@type": [
+      "https://www.commoncoreontologies.org/ont00001262",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Jonathan"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#comment": [
+      {
+        "@value": ""
+      }
+    ],
+    "https://www.commoncoreontologies.org/ont00001801": [
+      {
+        "@id": "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674481627"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000196": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000023/role_Creator"
+      }
+    ],
+    "id": "https://www.commoncoreontologies.org/ont00001262/Person_1772674481627"
+  },
+  {
+    "@id": "https://www.commoncoreontologies.org/ont00001262/Person_1772674595386",
+    "@type": [
+      "https://www.commoncoreontologies.org/ont00001262",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Matt"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#comment": [
+      {
+        "@value": "Bar bar bar"
+      }
+    ],
+    "https://www.commoncoreontologies.org/ont00001801": [
+      {
+        "@id": "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674595386"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000196": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000023/role_Reviewer"
+      }
+    ],
+    "id": "https://www.commoncoreontologies.org/ont00001262/Person_1772674595386"
+  },
+  {
+    "@id": "https://www.commoncoreontologies.org/ont00001262/Person_1772674595387",
+    "@type": [
+      "https://www.commoncoreontologies.org/ont00001262",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Killian"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#comment": [
+      {
+        "@value": "Foo foo foo"
+      }
+    ],
+    "https://www.commoncoreontologies.org/ont00001801": [
+      {
+        "@id": "https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674595387"
+      }
+    ],
+    "http://purl.obolibrary.org/obo/BFO_0000196": [
+      {
+        "@id": "http://purl.obolibrary.org/obo/BFO_0000023/role_Approver"
+      }
+    ],
+    "id": "https://www.commoncoreontologies.org/ont00001262/Person_1772674595387"
+  },
+  {
+    "@id": "sync_state",
+    "id": "sync_state",
+    "http://purl.org/dc/terms/modified": "2026-03-05T01:36:35.386Z"
+  }
+]

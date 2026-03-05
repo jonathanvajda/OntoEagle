@@ -1,0 +1,210 @@
+<http://purl.obolibrary.org/obo/BFO_0000023/role_Approver> a <http://purl.obolibrary.org/obo/BFO_0000023>, <http://www.w3.org/2002/07/owl#NamedIndividual>;
+    <https://www.commoncoreontologies.org/ont00001761> "Approver".
+<http://purl.obolibrary.org/obo/BFO_0000023/role_Creator> a <http://purl.obolibrary.org/obo/BFO_0000023>, <http://www.w3.org/2002/07/owl#NamedIndividual>;
+    <https://www.commoncoreontologies.org/ont00001761> "Creator".
+<http://purl.obolibrary.org/obo/BFO_0000023/role_Executor> a <http://purl.obolibrary.org/obo/BFO_0000023>, <http://www.w3.org/2002/07/owl#NamedIndividual>;
+    <https://www.commoncoreontologies.org/ont00001761> "Executor".
+<http://purl.obolibrary.org/obo/BFO_0000023/role_Reviewer> a <http://purl.obolibrary.org/obo/BFO_0000023>, <http://www.w3.org/2002/07/owl#NamedIndividual>;
+    <https://www.commoncoreontologies.org/ont00001761> "Reviewer".
+<http://purl.obolibrary.org/obo/BFO_0000023/role_SubjectMatterExpert> a <http://purl.obolibrary.org/obo/BFO_0000023>, <http://www.w3.org/2002/07/owl#NamedIndividual>;
+    <https://www.commoncoreontologies.org/ont00001761> "Subject Matter Expert".
+<http://purl.obolibrary.org/obo/BFO_0000031/1005512447> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <http://purl.obolibrary.org/obo/BFO_0000031/1005512447>, <https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674481627>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "output".
+<https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674481627> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "What bar are outputs of foo?";
+    <http://example.com/ns/status> "Draft";
+    <http://purl.org/dc/terms/created> "2026-03-05T01:34:41.627Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>;
+    <http://purl.org/dc/terms/description> "";
+    <http://purl.org/dc/terms/modified> "2026-03-05T01:34:41.627Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>;
+    <http://purl.obolibrary.org/obo/BFO_0000178> <https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity_IterrogativeICE_1772674481627_1>;
+    <http://purl.org/dc/terms/contributor> <https://www.commoncoreontologies.org/ont00001262/Person_1772674481627>.
+<http://purl.obolibrary.org/obo/BFO_0000031/101574> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674481627>, <http://purl.obolibrary.org/obo/BFO_0000031/101574>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "foo".
+<http://purl.obolibrary.org/obo/BFO_0000031/1028554796> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <http://purl.obolibrary.org/obo/BFO_0000023/role_Creator>, <http://purl.obolibrary.org/obo/BFO_0000031/1028554796>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "creator".
+<http://purl.obolibrary.org/obo/BFO_0000031/103149406> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_1>, <https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_2>, <https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_3>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "logic".
+<https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_1> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://jonathanvajda.com/ontology/DecisionLogic>;
+    <https://www.commoncoreontologies.org/ont00001761> "I have a logic".
+<https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_2> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://jonathanvajda.com/ontology/DecisionLogic>;
+    <https://www.commoncoreontologies.org/ont00001761> "If logic, then infer".
+<https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_3> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://jonathanvajda.com/ontology/DecisionLogic>;
+    <https://www.commoncoreontologies.org/ont00001761> "If not logic, then not infer".
+<http://purl.obolibrary.org/obo/BFO_0000031/105> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_1>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "i".
+<http://purl.obolibrary.org/obo/BFO_0000031/1086949762> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_3>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "then not infer".
+<http://purl.obolibrary.org/obo/BFO_0000031/109267> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_3>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "not".
+<http://purl.obolibrary.org/obo/BFO_0000031/1185244869> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <http://purl.obolibrary.org/obo/BFO_0000023/role_Approver>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "approver".
+<http://purl.obolibrary.org/obo/BFO_0000031/1235054899> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674595386>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "moo foo".
+<https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674595386> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress>;
+    <https://www.commoncoreontologies.org/ont00001761> "moo@foo.com".
+<http://purl.obolibrary.org/obo/BFO_0000031/1298275357> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <http://purl.obolibrary.org/obo/BFO_0000031/1298275357>, <https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674312092>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "entity".
+<https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674312092> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "What entities are agents in foo processes?";
+    <http://example.com/ns/status> "Draft";
+    <http://purl.org/dc/terms/created> "2026-03-05T01:31:52.092Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>;
+    <http://purl.org/dc/terms/description> "";
+    <http://purl.org/dc/terms/modified> "2026-03-05T01:31:52.092Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>;
+    <http://purl.org/dc/terms/contributor> <https://www.commoncoreontologies.org/ont00001262/Person_1772674312092>;
+    <http://purl.org/dc/terms/requires> <https://www.commoncoreontologies.org/ont00000756/Database_1772674312092_1>.
+<http://purl.obolibrary.org/obo/BFO_0000031/143312594> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <http://purl.obolibrary.org/obo/BFO_0000031/143312594>, <https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity_IterrogativeICE_1772674259251_2>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "many bar".
+<https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity_IterrogativeICE_1772674259251_2> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity>;
+    <https://www.commoncoreontologies.org/ont00001761> "How many bar?".
+<http://purl.obolibrary.org/obo/BFO_0000031/143316869> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <http://purl.obolibrary.org/obo/BFO_0000031/143316869>, <https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674259251>, <https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity_IterrogativeICE_1772674259251_1>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "many foo".
+<https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674259251> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "How many foo are also bar?";
+    <http://example.com/ns/status> "Draft";
+    <http://purl.org/dc/terms/created> "2026-03-05T01:30:59.251Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>;
+    <http://purl.org/dc/terms/description> "";
+    <http://purl.org/dc/terms/modified> "2026-03-05T01:30:59.251Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>;
+    <http://purl.obolibrary.org/obo/BFO_0000178> <https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity_IterrogativeICE_1772674259251_2>, <https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity_IterrogativeICE_1772674259251_1>;
+    <http://purl.org/dc/terms/contributor> <https://www.commoncoreontologies.org/ont00001262/Person_1772674259251>.
+<https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity_IterrogativeICE_1772674259251_1> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity>;
+    <https://www.commoncoreontologies.org/ont00001761> "How many foo?".
+<http://purl.obolibrary.org/obo/BFO_0000031/1494800501> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <http://purl.obolibrary.org/obo/BFO_0000023/role_SubjectMatterExpert>, <http://purl.obolibrary.org/obo/BFO_0000031/1494800501>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "Subject Matter expert".
+<http://purl.obolibrary.org/obo/BFO_0000031/1709636412> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <https://www.commoncoreontologies.org/ont00000756/Database_1772674595386_1>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "logixbase".
+<https://www.commoncoreontologies.org/ont00000756/Database_1772674595386_1> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://www.commoncoreontologies.org/ont00000756>;
+    <https://www.commoncoreontologies.org/ont00001761> "LogixBase";
+    <http://www.w3.org/2000/01/rdf-schema#comment> "This data is foobar".
+<http://purl.obolibrary.org/obo/BFO_0000031/1725790701> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674259251>, <http://purl.obolibrary.org/obo/BFO_0000031/1725790701>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "are also".
+<http://purl.obolibrary.org/obo/BFO_0000031/1923357361> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674595386>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "interested party".
+<https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674595386> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "What items are of interest?";
+    <http://example.com/ns/status> "Draft";
+    <http://purl.org/dc/terms/created> "2026-03-05T01:36:35.386Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>;
+    <http://purl.org/dc/terms/description> "Some items are interesting to some interested parties";
+    <http://purl.org/dc/terms/modified> "2026-03-05T01:36:35.386Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>;
+    <http://purl.obolibrary.org/obo/BFO_0000178> <https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_1>, <https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_2>, <https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_3>;
+    <http://purl.org/dc/terms/contributor> <https://www.commoncoreontologies.org/ont00001262/Person_1772674595386>, <https://www.commoncoreontologies.org/ont00001262/Person_1772674595387>;
+    <http://purl.org/dc/terms/requires> <https://www.commoncoreontologies.org/ont00000756/Database_1772674595386_1>.
+<http://purl.obolibrary.org/obo/BFO_0000031/2043017427> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <http://purl.obolibrary.org/obo/BFO_0000023/role_Executor>, <http://purl.obolibrary.org/obo/BFO_0000031/2043017427>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "executor".
+<http://purl.obolibrary.org/obo/BFO_0000031/261190139> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <http://purl.obolibrary.org/obo/BFO_0000023/role_Reviewer>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "reviewer".
+<http://purl.obolibrary.org/obo/BFO_0000031/284687150> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <http://purl.obolibrary.org/obo/BFO_0000031/284687150>, <https://dhs.gov/ontology/ONT_00001017/DecisionSupportQuestion_1772671599804>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "many bingo".
+<https://dhs.gov/ontology/ONT_00001017/DecisionSupportQuestion_1772671599804> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://dhs.gov/ontology/ONT_00001017>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "How many bingos are in a bango?";
+    <http://example.com/ns/status> "Draft";
+    <http://purl.org/dc/terms/created> "2026-03-05T00:46:39.805Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>;
+    <http://purl.org/dc/terms/description> "";
+    <http://purl.org/dc/terms/modified> "2026-03-05T00:46:39.805Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>.
+<http://purl.obolibrary.org/obo/BFO_0000031/286534192> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <http://purl.obolibrary.org/obo/BFO_0000031/286534192>, <https://dhs.gov/ontology/ONT_00001017/DecisionSupportQuestion_1772671770789>, <https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity_IterrogativeICE_1772674481627_1>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "many dingo".
+<https://dhs.gov/ontology/ONT_00001017/DecisionSupportQuestion_1772671770789> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://dhs.gov/ontology/ONT_00001017>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "How many dingos are in a Dango?";
+    <http://example.com/ns/status> "Draft";
+    <http://purl.org/dc/terms/created> "2026-03-05T00:49:30.789Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>;
+    <http://purl.org/dc/terms/description> "";
+    <http://purl.org/dc/terms/modified> "2026-03-05T00:49:30.789Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>.
+<https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity_IterrogativeICE_1772674481627_1> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity>;
+    <https://www.commoncoreontologies.org/ont00001761> "How many dingo?".
+<http://purl.obolibrary.org/obo/BFO_0000031/3195240> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_1>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "have".
+<http://purl.obolibrary.org/obo/BFO_0000031/3242771> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674595386>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "item".
+<http://purl.obolibrary.org/obo/BFO_0000031/361793769> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <http://purl.obolibrary.org/obo/BFO_0000031/361793769>, <https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674481627>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "jonathan gmail".
+<https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674481627> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress>;
+    <https://www.commoncoreontologies.org/ont00001761> "jonathan@gmail.com".
+<http://purl.obolibrary.org/obo/BFO_0000031/529610613> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <https://jonathanvajda.com/ontology/BusinessRule_BR_1772674595386_2>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "then infer".
+<http://purl.obolibrary.org/obo/BFO_0000031/570402602> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674595386>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "interest".
+<http://purl.obolibrary.org/obo/BFO_0000031/617577982> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <http://purl.obolibrary.org/obo/BFO_0000031/617577982>, <https://www.commoncoreontologies.org/ont00000756/Database_1772674312092_1>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "Dingo system".
+<https://www.commoncoreontologies.org/ont00000756/Database_1772674312092_1> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://www.commoncoreontologies.org/ont00000756>;
+    <https://www.commoncoreontologies.org/ont00001761> "Dingo System";
+    <http://www.w3.org/2000/01/rdf-schema#comment> "".
+<http://purl.obolibrary.org/obo/BFO_0000031/704933811> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <https://www.commoncoreontologies.org/ont00000756/Database_1772674595386_1>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "data is foobar".
+<http://purl.obolibrary.org/obo/BFO_0000031/93503799> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <https://dhs.gov/ontology/ONT_00001017/DecisionSupportQuestion_1772671599804>, <http://purl.obolibrary.org/obo/BFO_0000031/93503799>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "bango".
+<http://purl.obolibrary.org/obo/BFO_0000031/951441132> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674312092>, <http://purl.obolibrary.org/obo/BFO_0000031/951441132>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "agents in foo process".
+<http://purl.obolibrary.org/obo/BFO_0000031/95350841> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <https://dhs.gov/ontology/ONT_00001017/DecisionSupportQuestion_1772671770789>, <http://purl.obolibrary.org/obo/BFO_0000031/95350841>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "dango".
+<http://purl.obolibrary.org/obo/BFO_0000031/96852> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674481627>, <https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674312092>, <https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674595386>, <https://dhs.gov/ontology/ONT_00001017/DecisionSupportQuestion_1772671599804>, <https://dhs.gov/ontology/ONT_00001017/DecisionSupportQuestion_1772671770789>, <http://purl.obolibrary.org/obo/BFO_0000031/96852>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "are".
+<http://purl.obolibrary.org/obo/BFO_0000031/97299> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674481627>, <https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_1772674259251>, <http://purl.obolibrary.org/obo/BFO_0000031/97299>, <https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674595387>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "bar".
+<https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674595387> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress>;
+    <https://www.commoncoreontologies.org/ont00001761> "boo@bar.com".
+<http://purl.obolibrary.org/obo/BFO_0000031/97730> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674595387>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "boo".
+<http://purl.obolibrary.org/obo/BFO_0000031/98689> a <http://purl.obolibrary.org/obo/BFO_0000031>;
+    <http://purl.obolibrary.org/obo/BFO_0000176> <https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674595386>, <https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674481627>, <https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674595387>, <http://purl.obolibrary.org/obo/BFO_0000031/98689>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "com".
+<https://www.commoncoreontologies.org/ont00001262/Person_1772674259251> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://www.commoncoreontologies.org/ont00001262>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "Jimmy Hendrix";
+    <http://www.w3.org/2000/01/rdf-schema#comment> "";
+    <http://purl.obolibrary.org/obo/BFO_0000196> <http://purl.obolibrary.org/obo/BFO_0000023/role_SubjectMatterExpert>;
+    <https://www.commoncoreontologies.org/ont00001801> <https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674259251>.
+<https://www.commoncoreontologies.org/ont00001262/Person_1772674312092> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://www.commoncoreontologies.org/ont00001262>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "Elon";
+    <http://www.w3.org/2000/01/rdf-schema#comment> "";
+    <http://purl.obolibrary.org/obo/BFO_0000196> <http://purl.obolibrary.org/obo/BFO_0000023/role_Executor>;
+    <https://www.commoncoreontologies.org/ont00001801> <https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674312092>.
+<https://www.commoncoreontologies.org/ont00001262/Person_1772674481627> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://www.commoncoreontologies.org/ont00001262>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "Jonathan";
+    <http://www.w3.org/2000/01/rdf-schema#comment> "";
+    <http://purl.obolibrary.org/obo/BFO_0000196> <http://purl.obolibrary.org/obo/BFO_0000023/role_Creator>;
+    <https://www.commoncoreontologies.org/ont00001801> <https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674481627>.
+<https://www.commoncoreontologies.org/ont00001262/Person_1772674595386> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://www.commoncoreontologies.org/ont00001262>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "Matt";
+    <http://www.w3.org/2000/01/rdf-schema#comment> "Bar bar bar";
+    <http://purl.obolibrary.org/obo/BFO_0000196> <http://purl.obolibrary.org/obo/BFO_0000023/role_Reviewer>;
+    <https://www.commoncoreontologies.org/ont00001801> <https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674595386>.
+<https://www.commoncoreontologies.org/ont00001262/Person_1772674595387> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://www.commoncoreontologies.org/ont00001262>;
+    <http://www.w3.org/2000/01/rdf-schema#label> "Killian";
+    <http://www.w3.org/2000/01/rdf-schema#comment> "Foo foo foo";
+    <http://purl.obolibrary.org/obo/BFO_0000196> <http://purl.obolibrary.org/obo/BFO_0000023/role_Approver>;
+    <https://www.commoncoreontologies.org/ont00001801> <https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674595387>.
+<https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674259251> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress>;
+    <https://www.commoncoreontologies.org/ont00001761> "".
+<https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_1772674312092> a <http://www.w3.org/2002/07/owl#NamedIndividual>, <https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress>;
+    <https://www.commoncoreontologies.org/ont00001761> "".

@@ -65,7 +65,7 @@ function renderSidebarFromCache() {
     // Add safety checks before calling .includes()
     const cqNodes = allNodesCache.filter(node => 
         node["@type"] && Array.isArray(node["@type"]) && // <-- Added check
-        node["@type"].includes("https://dhs.gov/ontology/ONT_00001017")
+        node["@type"].includes("https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity")
     );
     
     const titleProperty = "http://www.w3.org/2000/01/rdf-schema#label";
@@ -167,7 +167,7 @@ function renderSidebarFromCache() {
       subquestionsList.innerHTML = '';
       const subquestionNodes = allNodesCache.filter(n =>
         (cq["http://purl.obolibrary.org/obo/BFO_0000178"] || []).some(item => item["@id"] === n["@id"]) &&
-        n["@type"].includes("https://dhs.gov/ontology/ONT_00001016")
+        n["@type"].includes("https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity")
       );
       subquestionNodes.forEach(node => addSubquestionItem(node["https://www.commoncoreontologies.org/ont00001761"][0]["@value"]));
       if (subquestionsList.children.length === 0) addSubquestionItem();
@@ -175,7 +175,7 @@ function renderSidebarFromCache() {
       decisionLogicList.innerHTML = '';
       const logicNodes = allNodesCache.filter(n =>
         (cq["http://purl.obolibrary.org/obo/BFO_0000178"] || []).some(item => item["@id"] === n["@id"]) &&
-        n["@type"].includes("https://dhs.gov/ontology/ONT_00001018")
+        n["@type"].includes("https://jonathanvajda.com/ontology/DecisionLogic")
       );
       logicNodes.forEach(node => addDecisionLogicItem(node["https://www.commoncoreontologies.org/ont00001761"][0]["@value"]));
       if (decisionLogicList.children.length === 0) addDecisionLogicItem();
@@ -456,7 +456,7 @@ if (!personId && p.name) {
                 emailId = `https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress_${Date.now() + index}`;
             }
 
-            const roleId = `http://purl.obolibrary.org/obo/BFO_0000023/role_${p.role.replace(/\s+/g, '')}`;
+            const roleId = `http://purl.obolibrary.org/obo/BFO_0000023_role_${p.role.replace(/\s+/g, '')}`;
 
             // Add the contributor link for the CQ node
             contributorLinks.push({ "@id": personId });
@@ -503,15 +503,15 @@ if (!personId && p.name) {
              "http://www.w3.org/2000/01/rdf-schema#comment": [{ "@value": dr.quality }]
         }));
         const subquestionNodes = subquestions.map((sq, index) => ({
-             "@id": `https://dhs.gov/ontology/ONT_00001016/InterrogativeInformationContentEntity_${cqUniqueId}_${index + 1}`,
+             "@id": `https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity_IterrogativeICE_${cqUniqueId}_${index + 1}`,
              // ... rest of subquestion node ...
-             "@type": ["https://dhs.gov/ontology/ONT_00001016", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+             "@type": ["https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity", "http://www.w3.org/2002/07/owl#NamedIndividual"],
              "https://www.commoncoreontologies.org/ont00001761": [{ "@value": sq }],
         }));
         const decisionLogicNodes = decisionLogic.map((dl, index) => ({
-             "@id": `https://dhs.gov/ontology/ONT_00001018/BusinessRule_${cqUniqueId}_${index + 1}`,
+             "@id": `https://jonathanvajda.com/ontology/BusinessRule_BR_${cqUniqueId}_${index + 1}`,
              // ... rest of logic node ...
-             "@type": ["https://dhs.gov/ontology/ONT_00001018", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+             "@type": ["https://jonathanvajda.com/ontology/DecisionLogic", "http://www.w3.org/2002/07/owl#NamedIndividual"],
              "https://www.commoncoreontologies.org/ont00001761": [{ "@value": dl }],
         }));
         
@@ -528,8 +528,8 @@ if (!personId && p.name) {
             ...subquestionNodes,
             ...decisionLogicNodes,
             {
-                "@id": `https://dhs.gov/ontology/ONT_00001017/DecisionSupportQuestion_${cqUniqueId}`,
-                "@type": ["https://dhs.gov/ontology/ONT_00001017", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+                "@id": `https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity_CQ_${cqUniqueId}`,
+                "@type": ["https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity", "http://www.w3.org/2002/07/owl#NamedIndividual"],
                 "http://www.w3.org/2000/01/rdf-schema#label": [{ "@value": title }],
                 "http://purl.org/dc/terms/description": [{ "@value": description }],
                 "http://purl.org/dc/terms/created": createdTimestamp,
@@ -574,7 +574,7 @@ async function performSave() {
       const result = await performSave();
       if (result.success) {
         const isUpdate = !!currentCQId;
-        const savedDsqId = isUpdate ? currentCQId : result.newJsonLD.find(n => n["@type"].includes("https://dhs.gov/ontology/ONT_00001017"))["@id"];
+        const savedDsqId = isUpdate ? currentCQId : result.newJsonLD.find(n => n["@type"].includes("https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity"))["@id"];
         allNodesCache = await readFromIndexedDB();
         const cqNode = allNodesCache.find(n => n['@id'] === savedDsqId);
         if (!cqNode) {
@@ -669,7 +669,7 @@ async function performSave() {
       };
 
       // 2. Find all the master CQ nodes
-      const cqNodes = allNodesCache.filter(n => n["@type"].includes("https://dhs.gov/ontology/ONT_00001017"));
+      const cqNodes = allNodesCache.filter(n => n["@type"].includes("https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity"));
 
       // 3. Process each CQ and its related items
       cqNodes.forEach(cq => {
@@ -716,8 +716,8 @@ async function performSave() {
 
         // Process other item types (Subquestions, Logic, Data Sources)
         const itemTypes = [
-          { type: 'Subquestion', iri: 'https://dhs.gov/ontology/ONT_00001016', link: 'http://purl.obolibrary.org/obo/BFO_0000178' },
-          { type: 'DecisionLogic', iri: 'https://dhs.gov/ontology/ONT_00001018', link: 'http://purl.obolibrary.org/obo/BFO_0000178' },
+          { type: 'Subquestion', iri: 'https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity', link: 'http://purl.obolibrary.org/obo/BFO_0000178' },
+          { type: 'DecisionLogic', iri: 'https://jonathanvajda.com/ontology/DecisionLogic', link: 'http://purl.obolibrary.org/obo/BFO_0000178' },
           { type: 'DataSource', iri: 'https://www.commoncoreontologies.org/ont00000756', link: 'http://purl.org/dc/terms/requires' }
         ];
 
@@ -812,7 +812,7 @@ async function performSave() {
 
           const cqNode = {
             "@id": baseRow.cq_id,
-            "@type": ["https://dhs.gov/ontology/ONT_00001017", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+            "@type": ["https://jonathanvajda.com/ontology/CompetencyQuestionContentEntity", "http://www.w3.org/2002/07/owl#NamedIndividual"],
             "http://www.w3.org/2000/01/rdf-schema#label": [{ "@value": baseRow.cq_title }],
             "http://purl.org/dc/terms/description": [{ "@value": baseRow.cq_description }],
             "http://purl.org/dc/terms/created": [{ "@value": baseRow.cq_created_date, "@type": "http://www.w3.org/2001/XMLSchema#dateTime" }],
@@ -864,7 +864,7 @@ async function performSave() {
               case 'Subquestion':
                 if (!processedNodeIds.has(row.item_id)) {
                   const sqNode = {
-                    "@id": row.item_id, "@type": ["https://dhs.gov/ontology/ONT_00001016", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+                    "@id": row.item_id, "@type": ["https://jonathanvajda.com/ontology/InterrogativeInformationContentEntity", "http://www.w3.org/2002/07/owl#NamedIndividual"],
                     "https://www.commoncoreontologies.org/ont00001761": [{ "@value": row.item_text }],
                   };
                   newGraph.push(sqNode);
@@ -876,7 +876,7 @@ async function performSave() {
               case 'DecisionLogic':
                 if (!processedNodeIds.has(row.item_id)) {
                   const dlNode = {
-                    "@id": row.item_id, "@type": ["https://dhs.gov/ontology/ONT_00001018", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+                    "@id": row.item_id, "@type": ["https://jonathanvajda.com/ontology/DecisionLogic", "http://www.w3.org/2002/07/owl#NamedIndividual"],
                     "https://www.commoncoreontologies.org/ont00001761": [{ "@value": row.item_text }],
                   };
                   newGraph.push(dlNode);

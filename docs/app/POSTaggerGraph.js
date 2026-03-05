@@ -1734,7 +1734,7 @@ class GDCService {
                     } else {
                         const gdcId = this.hashCode(mapKey);
                         const newNode = {
-                            '@id': `${this.GDC_BASE_IRI}/${gdcId}`,
+                            '@id': `${this.GDC_BASE_IRI}_${gdcId}`,
                             '@type': [this.GDC_TYPE_IRI],
                             [this.RDFS_LABEL_IRI]: [{ '@value': lemmatizedText }],
                             [this.CONTINUANT_PART_OF]: [{ '@id': sourceNodeIri }]
