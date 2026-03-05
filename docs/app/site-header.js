@@ -24,7 +24,7 @@
         "ontoeagle": { title: "OntoEagle Semantic Lookup" },
         "iri-registry": { title: "IRI Registry" },
         "ontology-tabulator": { title: "Ontology Tabulator" },
-        "cq-ferret": { title: "CQ Ferret" },
+        "cq-ferret": { title: "Competency Question Ferret" },
         "bp-weaver": { title: "BP Weaver" },
         "controlled-vocabulary-registry": { title: "Controlled Vocabulary Registry" },
         "tom": { title: "Tabular Ontology Maker" },

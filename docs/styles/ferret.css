@@ -10,7 +10,7 @@
       flex-direction: column;
       /* Stack children vertically */
       padding: 1rem;
-      height: calc(100vh - 230px);
+      height: calc(100vh - 200px);
       /* Full viewport height MINUS the HEADER*/
       box-sizing: border-box;
       /* Include padding in width/height */
@@ -32,7 +32,7 @@
     }
 
     .main {
-      padding: 2rem;
+      padding: 3rem;
       overflow-y: auto;
       height: calc(100vh - 200px);
     }
@@ -47,7 +47,6 @@
 
     .section h3 {
       margin-top: 0;
-      color: #2c3e50;
     }
 
     label {
@@ -76,7 +75,7 @@
     }
 
 
-    .dsq-list {
+    .cq-list {
       font-size: 0.9rem;
       line-height: 1.4;
       flex-grow: 1;
@@ -87,7 +86,7 @@
       /* Add spacing between the list and buttons */
     }
 
-    .dsq-list-item {
+    .cq-list-item {
       padding: 0.5rem;
       border-radius: 4px;
       margin-bottom: 0.5rem;
@@ -95,7 +94,7 @@
       border: 1px solid #00416a;
     }
 
-    .dsq-list-item:hover {
+    .cq-list-item:hover {
       background-color: var(--ont-bg-panel);
     }
 
