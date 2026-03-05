@@ -2,7 +2,7 @@
     // ======================================================
     // SECTION 1: GLOBAL STATE
     // ======================================================
-    let currentDSQId = null;
+    let currentCQId = null;
     let allNodesCache = [];
     const tagger = new POSTagger(window.POSTAGGER_LEXICON);
     const gdcManager = new GDCManager(tagger, allNodesCache);
@@ -12,10 +12,10 @@
     // ======================================================
     function initIndexedDB() {
       return new Promise((resolve, reject) => {
-        const request = indexedDB.open("DSQDatabase", 1);
+        const request = indexedDB.open("CQDatabase", 1);
         request.onupgradeneeded = (event) => {
-          if (!event.target.result.objectStoreNames.contains("DSQStore")) {
-            event.target.result.createObjectStore("DSQStore", { keyPath: "id" });
+          if (!event.target.result.objectStoreNames.contains("CQStore")) {
+            event.target.result.createObjectStore("CQStore", { keyPath: "id" });
           }
         };
         request.onsuccess = (event) => resolve(event.target.result);
@@ -25,8 +25,8 @@
 
     async function readFromIndexedDB() {
       const db = await initIndexedDB();
-      const transaction = db.transaction("DSQStore", "readonly");
-      const store = transaction.objectStore("DSQStore");
+      const transaction = db.transaction("CQStore", "readonly");
+      const store = transaction.objectStore("CQStore");
       return new Promise((resolve, reject) => {
         const request = store.getAll();
         request.onsuccess = () => resolve(request.result.map(node => ({ ...node, "@id": node.id })));
@@ -47,7 +47,7 @@
       return debouncedFunc;
     }
 
-    const debouncedAutoSave = debounce(() => autoSaveDSQ(), 2000);
+    const debouncedAutoSave = debounce(() => autoSaveCQ(), 2000);
 
     // ======================================================
     // SECTION 4: UI & STATE MANAGEMENT
@@ -55,86 +55,86 @@
     async function initialLoad() {
       allNodesCache = await readFromIndexedDB();
       renderSidebarFromCache();
-      document.getElementById("new-dsq-button").click();
+      document.getElementById("new-cq-button").click();
     }
 
 function renderSidebarFromCache() {
-    const dsqList = document.getElementById("dsq-list");
-    dsqList.innerHTML = "";
+    const cqList = document.getElementById("cq-list");
+    cqList.innerHTML = "";
     
     // Add safety checks before calling .includes()
-    const dsqNodes = allNodesCache.filter(node => 
+    const cqNodes = allNodesCache.filter(node => 
         node["@type"] && Array.isArray(node["@type"]) && // <-- Added check
         node["@type"].includes("https://dhs.gov/ontology/ONT_00001017")
     );
     
     const titleProperty = "http://www.w3.org/2000/01/rdf-schema#label";
-    dsqNodes.sort((a, b) => {
+    cqNodes.sort((a, b) => {
         const titleA = a[titleProperty]?.[0]?.['@value'] ?? '';
         const titleB = b[titleProperty]?.[0]?.['@value'] ?? '';
         return titleA.localeCompare(titleB);
     });
-    dsqNodes.forEach(addDSQToSidebar);
+    cqNodes.forEach(addCQToSidebar);
 }
-    function addDSQToSidebar(dsq) {
-      const dsqList = document.getElementById("dsq-list");
+    function addCQToSidebar(cq) {
+      const cqList = document.getElementById("cq-list");
       const listItem = document.createElement("div");
-      listItem.className = "dsq-list-item";
-      listItem.dataset.id = dsq["@id"];
+      listItem.className = "cq-list-item";
+      listItem.dataset.id = cq["@id"];
       listItem.onclick = () => {
-        loadDSQIntoForm(dsq["@id"]);
+        loadCQIntoForm(cq["@id"]);
         if (window.innerWidth <= 768) {
           document.querySelector('.main').scrollIntoView({ behavior: 'smooth' });
         }
       };
       const titleSpan = document.createElement("span");
       const titleProperty = "http://www.w3.org/2000/01/rdf-schema#label";
-      titleSpan.textContent = dsq[titleProperty]?.[0]?.['@value'] ?? 'Untitled DSQ';
+      titleSpan.textContent = cq[titleProperty]?.[0]?.['@value'] ?? 'Untitled CQ';
       const deleteBtn = document.createElement("button");
       deleteBtn.textContent = "✖";
       deleteBtn.style.cssText = "float: right; border: none; background: transparent; cursor: pointer; color: gray; margin: 0;margin-top: 0;padding: 0;";
       deleteBtn.onclick = (event) => {
         event.stopPropagation();
         if (confirm(`Are you sure you want to delete "${titleSpan.textContent}"?`)) {
-          deleteDSQ(dsq["@id"]);
+          deleteCQ(cq["@id"]);
         }
       };
       listItem.appendChild(titleSpan);
       listItem.appendChild(deleteBtn);
-      dsqList.appendChild(listItem);
+      cqList.appendChild(listItem);
     }
 
-    function updateDSQInSidebar(dsq) {
-      const listItem = document.querySelector(`.dsq-list-item[data-id="${dsq['@id']}"]`);
+    function updateCQInSidebar(cq) {
+      const listItem = document.querySelector(`.cq-list-item[data-id="${cq['@id']}"]`);
       if (listItem) {
         const titleProperty = "http://www.w3.org/2000/01/rdf-schema#label";
-        listItem.querySelector('span').textContent = dsq[titleProperty]?.[0]?.['@value'] ?? 'Untitled DSQ';
+        listItem.querySelector('span').textContent = cq[titleProperty]?.[0]?.['@value'] ?? 'Untitled CQ';
       }
     }
 
-    function removeDSQFromSidebar(dsqId) {
-      const listItem = document.querySelector(`.dsq-list-item[data-id="${dsqId}"]`);
+    function removeCQFromSidebar(cqId) {
+      const listItem = document.querySelector(`.cq-list-item[data-id="${cqId}"]`);
       if (listItem) listItem.remove();
     }
 
-    function loadDSQIntoForm(dsqId) {
-      console.log(`--- Loading DSQ: ${dsqId} ---`);
+    function loadCQIntoForm(cqId) {
+      console.log(`--- Loading CQ: ${cqId} ---`);
       debouncedAutoSave.cancel();
       document.getElementById('save-status').textContent = '';
-      const dsq = allNodesCache.find(node => node["@id"] === dsqId);
-      if (!dsq) {
-        console.error("DSQ node not found in cache.");
+      const cq = allNodesCache.find(node => node["@id"] === cqId);
+      if (!cq) {
+        console.error("CQ node not found in cache.");
         return;
       }
-      console.log("Found DSQ Node:", dsq);
+      console.log("Found CQ Node:", cq);
 
-      currentDSQId = dsqId;
-      document.getElementById("dsq-title").value = dsq["http://www.w3.org/2000/01/rdf-schema#label"]?.[0]?.['@value'] ?? '';
-      document.getElementById("dsq-description").value = dsq["http://purl.org/dc/terms/description"]?.[0]?.['@value'] ?? '';
-      document.getElementById("dsq-status").value = dsq["http://example.com/ns/status"]?.[0]?.['@value'] ?? 'Draft';
+      currentCQId = cqId;
+      document.getElementById("cq-title").value = cq["http://www.w3.org/2000/01/rdf-schema#label"]?.[0]?.['@value'] ?? '';
+      document.getElementById("cq-description").value = cq["http://purl.org/dc/terms/description"]?.[0]?.['@value'] ?? '';
+      document.getElementById("cq-status").value = cq["http://example.com/ns/status"]?.[0]?.['@value'] ?? 'Draft';
       const personsList = document.getElementById('persons-list');
       personsList.innerHTML = '';
-      const participantLinks = dsq["http://purl.org/dc/terms/contributor"] || [];
+      const participantLinks = cq["http://purl.org/dc/terms/contributor"] || [];
       console.log("Found Contributor Links:", participantLinks);
       const participantNodes = allNodesCache.filter(n =>
         participantLinks.some(p => p["@id"] === n["@id"]) &&
@@ -166,7 +166,7 @@ function renderSidebarFromCache() {
       const subquestionsList = document.getElementById('subquestions-list');
       subquestionsList.innerHTML = '';
       const subquestionNodes = allNodesCache.filter(n =>
-        (dsq["http://purl.obolibrary.org/obo/BFO_0000178"] || []).some(item => item["@id"] === n["@id"]) &&
+        (cq["http://purl.obolibrary.org/obo/BFO_0000178"] || []).some(item => item["@id"] === n["@id"]) &&
         n["@type"].includes("https://dhs.gov/ontology/ONT_00001016")
       );
       subquestionNodes.forEach(node => addSubquestionItem(node["https://www.commoncoreontologies.org/ont00001761"][0]["@value"]));
@@ -174,7 +174,7 @@ function renderSidebarFromCache() {
       const decisionLogicList = document.getElementById('decision-logic-list');
       decisionLogicList.innerHTML = '';
       const logicNodes = allNodesCache.filter(n =>
-        (dsq["http://purl.obolibrary.org/obo/BFO_0000178"] || []).some(item => item["@id"] === n["@id"]) &&
+        (cq["http://purl.obolibrary.org/obo/BFO_0000178"] || []).some(item => item["@id"] === n["@id"]) &&
         n["@type"].includes("https://dhs.gov/ontology/ONT_00001018")
       );
       logicNodes.forEach(node => addDecisionLogicItem(node["https://www.commoncoreontologies.org/ont00001761"][0]["@value"]));
@@ -182,7 +182,7 @@ function renderSidebarFromCache() {
       const dataRequirementsList = document.getElementById('data-requirements-list');
       dataRequirementsList.innerHTML = '';
       const dataSourceNodes = allNodesCache.filter(n =>
-        (dsq["http://purl.org/dc/terms/requires"] || []).some(item => item["@id"] === n["@id"]) &&
+        (cq["http://purl.org/dc/terms/requires"] || []).some(item => item["@id"] === n["@id"]) &&
         n["@type"].includes("https://www.commoncoreontologies.org/ont00000756")
       );
       dataSourceNodes.forEach(dsNode => {
@@ -394,15 +394,15 @@ const allPeople = allNodesCache.filter(n =>
     // SECTION 6: DATA TRANSFORMATION & ACTIONS
     // ======================================================
 function generateJSONLD() {
-        const dsqUniqueId = currentDSQId ? currentDSQId.split('/').pop().split('_').pop() : Date.now();
-        const title = document.getElementById("dsq-title").value;
+        const cqUniqueId = currentCQId ? currentCQId.split('/').pop().split('_').pop() : Date.now();
+        const title = document.getElementById("cq-title").value;
         if (!title.trim()) {
             console.warn("Save aborted: Title is a required field.");
             return null;
         }
         // ... (get description, status, subquestions, decisionLogic - unchanged) ...
-        const description = document.getElementById("dsq-description").value;
-        const status = document.getElementById("dsq-status").value;
+        const description = document.getElementById("cq-description").value;
+        const status = document.getElementById("cq-status").value;
         const subquestions = Array.from(document.querySelectorAll('.subquestion-input')).map(input => input.value.trim()).filter(Boolean);
         const decisionLogic = Array.from(document.querySelectorAll('.decision-logic-input')).map(input => input.value.trim()).filter(Boolean);
 
@@ -424,7 +424,7 @@ function generateJSONLD() {
         })).filter(dr => dr.source);
 
         let personRelatedNodes = [];
-        const contributorLinks = []; // Store links to add to the DSQ node
+        const contributorLinks = []; // Store links to add to the CQ node
 
         // --- START MODIFIED PERSON LOGIC ---
         personsData.forEach((p, index) => {
@@ -458,7 +458,7 @@ if (!personId && p.name) {
 
             const roleId = `http://purl.obolibrary.org/obo/BFO_0000023/role_${p.role.replace(/\s+/g, '')}`;
 
-            // Add the contributor link for the DSQ node
+            // Add the contributor link for the CQ node
             contributorLinks.push({ "@id": personId });
 
             // Create/Update Person Node (only add if not already in cache or if it's new)
@@ -496,20 +496,20 @@ if (!personId && p.name) {
 
 
         const dataSourceNodes = dataRequirements.map((dr, index) => ({
-             "@id": `https://www.commoncoreontologies.org/ont00000756/Database_${dsqUniqueId}_${index + 1}`,
+             "@id": `https://www.commoncoreontologies.org/ont00000756/Database_${cqUniqueId}_${index + 1}`,
              // ... rest of data source node ...
              "@type": ["https://www.commoncoreontologies.org/ont00000756", "http://www.w3.org/2002/07/owl#NamedIndividual"],
              "https://www.commoncoreontologies.org/ont00001761": [{ "@value": dr.source }],
              "http://www.w3.org/2000/01/rdf-schema#comment": [{ "@value": dr.quality }]
         }));
         const subquestionNodes = subquestions.map((sq, index) => ({
-             "@id": `https://dhs.gov/ontology/ONT_00001016/InterrogativeInformationContentEntity_${dsqUniqueId}_${index + 1}`,
+             "@id": `https://dhs.gov/ontology/ONT_00001016/InterrogativeInformationContentEntity_${cqUniqueId}_${index + 1}`,
              // ... rest of subquestion node ...
              "@type": ["https://dhs.gov/ontology/ONT_00001016", "http://www.w3.org/2002/07/owl#NamedIndividual"],
              "https://www.commoncoreontologies.org/ont00001761": [{ "@value": sq }],
         }));
         const decisionLogicNodes = decisionLogic.map((dl, index) => ({
-             "@id": `https://dhs.gov/ontology/ONT_00001018/BusinessRule_${dsqUniqueId}_${index + 1}`,
+             "@id": `https://dhs.gov/ontology/ONT_00001018/BusinessRule_${cqUniqueId}_${index + 1}`,
              // ... rest of logic node ...
              "@type": ["https://dhs.gov/ontology/ONT_00001018", "http://www.w3.org/2002/07/owl#NamedIndividual"],
              "https://www.commoncoreontologies.org/ont00001761": [{ "@value": dl }],
@@ -519,7 +519,7 @@ if (!personId && p.name) {
         const nowISO = new Date().toISOString();
         const lastModifiedTimestamp = [{ "@value": nowISO, "@type": "http://www.w3.org/2001/XMLSchema#dateTime" }];
         let createdTimestamp;
-        if (currentDSQId) { const existingDSQ = allNodesCache.find(n => n['@id'] === currentDSQId); if (existingDSQ && existingDSQ["http://purl.org/dc/terms/created"]) { createdTimestamp = existingDSQ["http://purl.org/dc/terms/created"]; } }
+        if (currentCQId) { const existingCQ = allNodesCache.find(n => n['@id'] === currentCQId); if (existingCQ && existingCQ["http://purl.org/dc/terms/created"]) { createdTimestamp = existingCQ["http://purl.org/dc/terms/created"]; } }
         if (!createdTimestamp) { createdTimestamp = [{ "@value": nowISO, "@type": "http://www.w3.org/2001/XMLSchema#dateTime" }]; }
 
         const jsonLD = [
@@ -528,7 +528,7 @@ if (!personId && p.name) {
             ...subquestionNodes,
             ...decisionLogicNodes,
             {
-                "@id": `https://dhs.gov/ontology/ONT_00001017/DecisionSupportQuestion_${dsqUniqueId}`,
+                "@id": `https://dhs.gov/ontology/ONT_00001017/DecisionSupportQuestion_${cqUniqueId}`,
                 "@type": ["https://dhs.gov/ontology/ONT_00001017", "http://www.w3.org/2002/07/owl#NamedIndividual"],
                 "http://www.w3.org/2000/01/rdf-schema#label": [{ "@value": title }],
                 "http://purl.org/dc/terms/description": [{ "@value": description }],
@@ -547,7 +547,7 @@ if (!personId && p.name) {
     }
     
 async function performSave() {
-    // 1. Generate the fresh DSQ data from the form.
+    // 1. Generate the fresh CQ data from the form.
     const newJsonLD = generateJSONLD(); // <-- Make sure this line exists and is uncommented
 
     // Check if generation failed (e.g., missing title)
@@ -566,70 +566,70 @@ async function performSave() {
     const nodesToSave = [...newJsonLD, syncNode];
 
     // 4. Pass the data and current cache to the manager.
-    return await gdcManager.updateAndSave(nodesToSave, allNodesCache, currentDSQId);
+    return await gdcManager.updateAndSave(nodesToSave, allNodesCache, currentCQId);
 }
     
     async function saveJSONLD() {
       debouncedAutoSave.cancel();
       const result = await performSave();
       if (result.success) {
-        const isUpdate = !!currentDSQId;
-        const savedDsqId = isUpdate ? currentDSQId : result.newJsonLD.find(n => n["@type"].includes("https://dhs.gov/ontology/ONT_00001017"))["@id"];
+        const isUpdate = !!currentCQId;
+        const savedDsqId = isUpdate ? currentCQId : result.newJsonLD.find(n => n["@type"].includes("https://dhs.gov/ontology/ONT_00001017"))["@id"];
         allNodesCache = await readFromIndexedDB();
-        const dsqNode = allNodesCache.find(n => n['@id'] === savedDsqId);
-        if (!dsqNode) {
-          console.error("Could not find the saved DSQ in the cache after saving:", savedDsqId);
+        const cqNode = allNodesCache.find(n => n['@id'] === savedDsqId);
+        if (!cqNode) {
+          console.error("Could not find the saved CQ in the cache after saving:", savedDsqId);
           alert("An error occurred after saving. Could not update the UI.");
           return;
         }
         if (!isUpdate) {
-          currentDSQId = savedDsqId;
-          addDSQToSidebar(dsqNode);
+          currentCQId = savedDsqId;
+          addCQToSidebar(cqNode);
         } else {
-          updateDSQInSidebar(dsqNode);
+          updateCQInSidebar(cqNode);
         }
-        const dsqList = document.getElementById("dsq-list");
-        Array.from(dsqList.children)
+        const cqList = document.getElementById("cq-list");
+        Array.from(cqList.children)
           .sort((a, b) => a.textContent.localeCompare(b.textContent))
-          .forEach(node => dsqList.appendChild(node));
+          .forEach(node => cqList.appendChild(node));
         document.getElementById('save-status').textContent = '';
-        alert(isUpdate ? "DSQ updated successfully!" : "New DSQ saved successfully!");
+        alert(isUpdate ? "CQ updated successfully!" : "New CQ saved successfully!");
       } else {
-        alert(`Error saving DSQ: ${result.reason}`);
+        alert(`Error saving CQ: ${result.reason}`);
       }
     }
 
-    async function autoSaveDSQ() {
-      if (!currentDSQId) return;
+    async function autoSaveCQ() {
+      if (!currentCQId) return;
       const statusEl = document.getElementById('save-status');
       statusEl.textContent = 'Saving...';
       const result = await performSave();
       if (result.success) {
         statusEl.textContent = `All changes saved. (${new Date().toLocaleTimeString()})`;
         allNodesCache = await readFromIndexedDB();
-        const updatedDsqNode = allNodesCache.find(n => n['@id'] === currentDSQId);
-        if (updatedDsqNode) updateDSQInSidebar(updatedDsqNode);
+        const updatedDsqNode = allNodesCache.find(n => n['@id'] === currentCQId);
+        if (updatedDsqNode) updateCQInSidebar(updatedDsqNode);
       } else {
         statusEl.textContent = `Save failed: ${result.reason}`;
       }
     }
 
-    async function deleteDSQ(dsqId) {
+    async function deleteCQ(cqId) {
       debouncedAutoSave.cancel();
       const db = await initIndexedDB();
-      const transaction = db.transaction("DSQStore", "readwrite");
-      const store = transaction.objectStore("DSQStore");
-      const uniqueId = dsqId.split('_').pop();
+      const transaction = db.transaction("CQStore", "readwrite");
+      const store = transaction.objectStore("CQStore");
+      const uniqueId = cqId.split('_').pop();
       const request = store.getAllKeys();
       request.onsuccess = () => {
         request.result.filter(key => key.includes(`_${uniqueId}`)).forEach(key => store.delete(key));
       };
       transaction.oncomplete = () => {
         allNodesCache = allNodesCache.filter(node => !node['@id'].includes(`_${uniqueId}`));
-        removeDSQFromSidebar(dsqId);
-        alert("DSQ deleted successfully.");
-        if (currentDSQId === dsqId) {
-          document.getElementById("new-dsq-button").click();
+        removeCQFromSidebar(cqId);
+        alert("CQ deleted successfully.");
+        if (currentCQId === cqId) {
+          document.getElementById("new-cq-button").click();
         }
       };
     }
@@ -639,7 +639,7 @@ async function performSave() {
       const blob = new Blob([jsonLD], { type: "application/json" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = "DSQDatabase.jsonld";
+      a.download = "CQDatabase.jsonld";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -650,7 +650,7 @@ async function performSave() {
 
       // 1. Define the columns for our normalized CSV
       const headers = [
-        'dsq_id', 'dsq_title', 'dsq_description', 'dsq_created_date', 'dsq_modified_date', 'dsq_status',
+        'cq_id', 'cq_title', 'cq_description', 'cq_created_date', 'cq_modified_date', 'cq_status',
         'item_type', 'item_id', 'item_text',
         'contributor_role', 'contributor_contact', 'contributor_notes',
         'contributor_email_id', 'contributor_role_id',
@@ -668,24 +668,24 @@ async function performSave() {
         return `"${text}"`;
       };
 
-      // 2. Find all the master DSQ nodes
-      const dsqNodes = allNodesCache.filter(n => n["@type"].includes("https://dhs.gov/ontology/ONT_00001017"));
+      // 2. Find all the master CQ nodes
+      const cqNodes = allNodesCache.filter(n => n["@type"].includes("https://dhs.gov/ontology/ONT_00001017"));
 
-      // 3. Process each DSQ and its related items
-      dsqNodes.forEach(dsq => {
+      // 3. Process each CQ and its related items
+      cqNodes.forEach(cq => {
         const baseRow = {
-          dsq_id: dsq['@id'] || '',
-          dsq_title: dsq["http://www.w3.org/2000/01/rdf-schema#label"]?.[0]?.['@value'] ?? '',
-          dsq_description: dsq["http://purl.org/dc/terms/description"]?.[0]?.['@value'] ?? '',
-          dsq_created_date: dsq["http://purl.org/dc/terms/created"]?.[0]?.['@value'] ?? '',
-          dsq_modified_date: dsq["http://purl.org/dc/terms/modified"]?.[0]?.['@value'] ?? '',
-          dsq_status: dsq["http://example.com/ns/status"]?.[0]?.['@value'] ?? '',
+          cq_id: cq['@id'] || '',
+          cq_title: cq["http://www.w3.org/2000/01/rdf-schema#label"]?.[0]?.['@value'] ?? '',
+          cq_description: cq["http://purl.org/dc/terms/description"]?.[0]?.['@value'] ?? '',
+          cq_created_date: cq["http://purl.org/dc/terms/created"]?.[0]?.['@value'] ?? '',
+          cq_modified_date: cq["http://purl.org/dc/terms/modified"]?.[0]?.['@value'] ?? '',
+          cq_status: cq["http://example.com/ns/status"]?.[0]?.['@value'] ?? '',
         };
 
         let itemsFound = 0;
 
         // Process Contributors (Persons/Roles)
-        const participantLinks = dsq["http://purl.org/dc/terms/contributor"] || [];
+        const participantLinks = cq["http://purl.org/dc/terms/contributor"] || [];
         const participantNodes = allNodesCache.filter(n =>
           participantLinks.some(p => p["@id"] === n["@id"]) && n["@type"].includes("https://www.commoncoreontologies.org/ont00001262")
         );
@@ -723,7 +723,7 @@ async function performSave() {
 
         itemTypes.forEach(config => {
           const itemNodes = allNodesCache.filter(n =>
-            (dsq[config.link] || []).some(item => item["@id"] === n["@id"]) && n["@type"].includes(config.iri)
+            (cq[config.link] || []).some(item => item["@id"] === n["@id"]) && n["@type"].includes(config.iri)
           );
           itemNodes.forEach(node => {
             itemsFound++;
@@ -741,9 +741,9 @@ async function performSave() {
           });
         });
 
-        // If a DSQ has no items, create a single row for it.
+        // If a CQ has no items, create a single row for it.
         if (itemsFound === 0) {
-          const row = { ...baseRow, item_type: 'DSQ', item_id: baseRow.dsq_id };
+          const row = { ...baseRow, item_type: 'CQ', item_id: baseRow.cq_id };
           csvRows.push(headers.map(header => escapeCSV(row[header] || '')).join(','));
         }
       });
@@ -754,7 +754,7 @@ async function performSave() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `DSQ_Export_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.download = `CQ_Export_${new Date().toISOString().slice(0, 10)}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -794,36 +794,36 @@ async function performSave() {
         // --- 2. RECONSTRUCT THE GRAPH FROM THE FLAT DATA ---
         let newGraph = [];
         const processedNodeIds = new Set();
-        const dsqGroups = data.reduce((acc, row) => {
-          const dsqId = row.dsq_id;
-          if (dsqId) { // Only process rows that have a dsq_id
-            if (!acc[dsqId]) acc[dsqId] = [];
-            acc[dsqId].push(row);
+        const cqGroups = data.reduce((acc, row) => {
+          const cqId = row.cq_id;
+          if (cqId) { // Only process rows that have a cq_id
+            if (!acc[cqId]) acc[cqId] = [];
+            acc[cqId].push(row);
           }
           return acc;
         }, {});
-        console.log("Grouped by DSQ:", dsqGroups);
+        console.log("Grouped by CQ:", cqGroups);
 
         
 
-        for (const dsqId in dsqGroups) {
-          const groupRows = dsqGroups[dsqId];
+        for (const cqId in cqGroups) {
+          const groupRows = cqGroups[cqId];
           const baseRow = groupRows[0];
 
-          const dsqNode = {
-            "@id": baseRow.dsq_id,
+          const cqNode = {
+            "@id": baseRow.cq_id,
             "@type": ["https://dhs.gov/ontology/ONT_00001017", "http://www.w3.org/2002/07/owl#NamedIndividual"],
-            "http://www.w3.org/2000/01/rdf-schema#label": [{ "@value": baseRow.dsq_title }],
-            "http://purl.org/dc/terms/description": [{ "@value": baseRow.dsq_description }],
-            "http://purl.org/dc/terms/created": [{ "@value": baseRow.dsq_created_date, "@type": "http://www.w3.org/2001/XMLSchema#dateTime" }],
-            "http://purl.org/dc/terms/modified": [{ "@value": baseRow.dsq_modified_date, "@type": "http://www.w3.org/2001/XMLSchema#dateTime" }],
-            "http://example.com/ns/status": [{ "@value": baseRow.dsq_status }],
+            "http://www.w3.org/2000/01/rdf-schema#label": [{ "@value": baseRow.cq_title }],
+            "http://purl.org/dc/terms/description": [{ "@value": baseRow.cq_description }],
+            "http://purl.org/dc/terms/created": [{ "@value": baseRow.cq_created_date, "@type": "http://www.w3.org/2001/XMLSchema#dateTime" }],
+            "http://purl.org/dc/terms/modified": [{ "@value": baseRow.cq_modified_date, "@type": "http://www.w3.org/2001/XMLSchema#dateTime" }],
+            "http://example.com/ns/status": [{ "@value": baseRow.cq_status }],
             "http://purl.org/dc/terms/contributor": [],
             "http://purl.org/dc/terms/requires": [],
             "http://purl.obolibrary.org/obo/BFO_0000178": []
           };
 
-          // Process each item row within the DSQ group
+          // Process each item row within the CQ group
           groupRows.forEach(row => {
             if (!row.item_id || !row.item_type) return;
 
@@ -857,7 +857,7 @@ async function performSave() {
                   newGraph.push(rNode);
                   processedNodeIds.add(row.contributor_role_id);
                 }
-                dsqNode["http://purl.org/dc/terms/contributor"].push({ "@id": row.item_id });
+                cqNode["http://purl.org/dc/terms/contributor"].push({ "@id": row.item_id });
                 break;
 
               // --- ADDED MISSING CASES ---
@@ -870,7 +870,7 @@ async function performSave() {
                   newGraph.push(sqNode);
                   processedNodeIds.add(row.item_id);
                 }
-                dsqNode["http://purl.obolibrary.org/obo/BFO_0000178"].push({ "@id": row.item_id });
+                cqNode["http://purl.obolibrary.org/obo/BFO_0000178"].push({ "@id": row.item_id });
                 break;
 
               case 'DecisionLogic':
@@ -882,7 +882,7 @@ async function performSave() {
                   newGraph.push(dlNode);
                   processedNodeIds.add(row.item_id);
                 }
-                dsqNode["http://purl.obolibrary.org/obo/BFO_0000178"].push({ "@id": row.item_id });
+                cqNode["http://purl.obolibrary.org/obo/BFO_0000178"].push({ "@id": row.item_id });
                 break;
 
               case 'DataSource':
@@ -895,11 +895,11 @@ async function performSave() {
                   newGraph.push(dsNode);
                   processedNodeIds.add(row.item_id);
                 }
-                dsqNode["http://purl.org/dc/terms/requires"].push({ "@id": row.item_id });
+                cqNode["http://purl.org/dc/terms/requires"].push({ "@id": row.item_id });
                 break;
             }
           });
-          newGraph.push(dsqNode);
+          newGraph.push(cqNode);
         }
         console.log("Reconstructed graph:", newGraph);
 
@@ -908,7 +908,7 @@ async function performSave() {
           // The manager handles GDC generation, deletion, and saving for the CSV data.
           const result = await gdcManager.updateAndSave(newGraph, allNodesCache);
           if (result.success) {
-            alert(`Successfully processed ${Object.keys(dsqGroups).length} DSQs from the CSV! The application will now reload with the new data.`);
+            alert(`Successfully processed ${Object.keys(cqGroups).length} CQs from the CSV! The application will now reload with the new data.`);
             initialLoad(); // Reload the application state from the updated database
           } else {
             throw new Error(result.reason);
@@ -955,12 +955,12 @@ async function performSave() {
       });
       document.getElementById("csv-upload-input").addEventListener("change", handleCSVUpload);
 
-      document.getElementById("new-dsq-button").addEventListener("click", () => {
+      document.getElementById("new-cq-button").addEventListener("click", () => {
         debouncedAutoSave.cancel();
-        currentDSQId = null;
-        document.getElementById("dsq-title").value = "";
-        document.getElementById("dsq-description").value = "";
-        document.getElementById("dsq-status").value = "Draft";
+        currentCQId = null;
+        document.getElementById("cq-title").value = "";
+        document.getElementById("cq-description").value = "";
+        document.getElementById("cq-status").value = "Draft";
         document.getElementById('save-status').textContent = '';
         document.getElementById("subquestions-list").innerHTML = "";
         document.getElementById("decision-logic-list").innerHTML = "";

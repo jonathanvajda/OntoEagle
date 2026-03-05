@@ -77,7 +77,6 @@
 
 
     .cq-list {
-      font-size: 0.9rem;
       line-height: 1.4;
       flex-grow: 1;
       /* Allow the list to grow and take available space */

@@ -1761,8 +1761,8 @@ class GDCManager {
         // REMOVED: this.allNodesCache = initialGraph;
     }
 
-    async updateAndSave(nodesToUpsert, currentAllNodesCache, currentDSQIdForUpdate = null) { // <-- ADDED currentAllNodesCache argument
-        const isUpdate = !!currentDSQIdForUpdate;
+    async updateAndSave(nodesToUpsert, currentAllNodesCache, currentCQIdForUpdate = null) { // <-- ADDED currentAllNodesCache argument
+        const isUpdate = !!currentCQIdForUpdate;
         console.log(`[GDCManager] Starting update...`);
 
         // Use the PASSED-IN cache now
@@ -1777,8 +1777,8 @@ class GDCManager {
 
         // --- Step 4: Perform the database transaction ---
         const db = await initIndexedDB(); // Assuming initIndexedDB is globally accessible or passed in
-        const transaction = db.transaction("DSQStore", "readwrite");
-        const store = transaction.objectStore("DSQStore");
+        const transaction = db.transaction("CQStore", "readwrite");
+        const store = transaction.objectStore("CQStore");
 
         return new Promise((resolve) => {
             const getAllKeysReq = store.getAllKeys();
@@ -1801,22 +1801,22 @@ class GDCManager {
                 keysToDelete = existingGdcKeys.filter(key => !newGdcIds.has(key));
 
                 // --- START RESTORED LOGIC ---
-                // D. If updating a specific DSQ, mark its old *child nodes* for deletion.
-                if (isUpdate && currentDSQIdForUpdate) {
-                    const dsqUniqueId = currentDSQIdForUpdate.split('/').pop().split('_').pop();
+                // D. If updating a specific CQ, mark its old *child nodes* for deletion.
+                if (isUpdate && currentCQIdForUpdate) {
+                    const cqUniqueId = currentCQIdForUpdate.split('/').pop().split('_').pop();
                     const oldOwnedChildKeys = allKeys.filter(key => {
-                        // Check if the key belongs to the DSQ being updated
-                        const isOwned = key.includes(`_${dsqUniqueId}_`);
+                        // Check if the key belongs to the CQ being updated
+                        const isOwned = key.includes(`_${cqUniqueId}_`);
                         // Ensure it's not a shared node (like Person, Email, Role)
                         const isShared = key.includes('/Person_') || key.includes('/EmailAddress_') || key.includes('/role_');
-                        // Ensure it's not the main DSQ node itself or the sync node
-                        const isMainOrSync = key === currentDSQIdForUpdate || key === 'sync_state';
+                        // Ensure it's not the main CQ node itself or the sync node
+                        const isMainOrSync = key === currentCQIdForUpdate || key === 'sync_state';
                         // Ensure it's not a GDC node (already handled above)
                         const isGDC = key.startsWith(this.gdcService.GDC_BASE_IRI);
 
                         return isOwned && !isShared && !isMainOrSync && !isGDC;
                     });
-                    console.log(`[GDCManager] Marking ${oldOwnedChildKeys.length} old child nodes for deletion for DSQ ${currentDSQIdForUpdate}.`);
+                    console.log(`[GDCManager] Marking ${oldOwnedChildKeys.length} old child nodes for deletion for CQ ${currentCQIdForUpdate}.`);
                     keysToDelete.push(...oldOwnedChildKeys);
                 }
                 // --- END RESTORED LOGIC ---
@@ -1826,13 +1826,13 @@ class GDCManager {
                 console.log(`[GDCManager] Deleting ${uniqueKeysToDelete.length} nodes (old GDCs and/or old children).`);
                 uniqueKeysToDelete.forEach(key => store.delete(key));
 
-                console.log(`[GDCManager] Upserting ${finalGraphToSave.length} nodes (DSQ, children, GDCs, sync).`);
+                console.log(`[GDCManager] Upserting ${finalGraphToSave.length} nodes (CQ, children, GDCs, sync).`);
                 finalGraphToSave.forEach(node => store.put({ ...node, id: node["@id"] }));
             };
 
             transaction.oncomplete = () => {
                 console.log("[GDCManager] Database update complete.");
-                resolve({ success: true, newJsonLD: nodesToUpsert }); // Return only the nodes that were upserted (DSQ + children + sync)
+                resolve({ success: true, newJsonLD: nodesToUpsert }); // Return only the nodes that were upserted (CQ + children + sync)
             };
             transaction.onerror = (event) => {
                 console.error("Save transaction failed:", event.target.error);
