@@ -79,9 +79,9 @@ export const defaultSearchOptions = Object.freeze({
   types: [...ALL_ELEMENT_TYPES],
   namespaces: [],
   includeDefinition: true,
-  includeCitation: false,
-  includeExamples: false,
-  includeClarifications: false
+  includeCitation: true,
+  includeExamples: true,
+  includeClarifications: true
 });
 
 /**

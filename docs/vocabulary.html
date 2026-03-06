@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Extracted Vocabulary</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/x-icon" href="./images/block-logo.png">
+
+      <!-- Public CSS -->
+    <link rel="stylesheet" href="./styles/skeleton.css" />
+
+    <!-- App Global CSS -->
+    <script>
+        (function () {
+            const APPBASE_CSS_SOURCES = [
+                "./styles/app-base.css", /* local dev copy first */
+                "https://jonathanvajda.github.io/OntoEagle/styles/app-base.css",
+                "https://jonathanvajda.github.io/table-nova/styles/app-base.css",
+            ];
+
+            function loadCss(href) {
+                return new Promise((resolve, reject) => {
+                    const link = document.createElement("link");
+                    link.rel = "stylesheet";
+                    link.href = href;
+
+                    link.onload = () => resolve(href);
+                    link.onerror = () => reject(new Error("CSS failed: " + href));
+
+                    document.head.appendChild(link);
+                });
+            }
+
+            function showFailure(msg) {
+                console.error(msg);
+                // Optional user-visible banner
+                const style = document.createElement("style");
+                style.textContent =
+                    ".asset-fail-banner{position:fixed;left:0;right:0;top:0;z-index:9999;" +
+                    "padding:.5rem .75rem;font:14px system-ui;background:#ffe8e8;color:#400;" +
+                    "border-bottom:1px solid rgba(0,0,0,.2)}";
+                document.head.appendChild(style);
+
+                const div = document.createElement("div");
+                div.className = "asset-fail-banner";
+                div.textContent = msg;
+                document.body ? document.body.prepend(div) : document.addEventListener("DOMContentLoaded", () => document.body.prepend(div));
+            }
+
+            (async () => {
+                for (const href of APPBASE_CSS_SOURCES) {
+                    try { await loadCss(href); return; } catch (_) { }
+                }
+                showFailure("Failed to load app base CSS from all sources.");
+            })();
+        })();
+    </script>
+    <script>
+        (function () {
+            const HEADER_CSS_SOURCES = [
+                "./styles/site-header.css", /* local dev copy first */
+                "https://jonathanvajda.github.io/OntoEagle/styles/site-header.css",
+                "https://jonathanvajda.github.io/table-nova/styles/site-header.css",
+            ];
+
+            function loadCss(href) {
+                return new Promise((resolve, reject) => {
+                    const link = document.createElement("link");
+                    link.rel = "stylesheet";
+                    link.href = href;
+
+                    link.onload = () => resolve(href);
+                    link.onerror = () => reject(new Error("CSS failed: " + href));
+
+                    document.head.appendChild(link);
+                });
+            }
+
+            function showFailure(msg) {
+                console.error(msg);
+                // Optional user-visible banner
+                const style = document.createElement("style");
+                style.textContent =
+                    ".asset-fail-banner{position:fixed;left:0;right:0;top:0;z-index:9999;" +
+                    "padding:.5rem .75rem;font:14px system-ui;background:#ffe8e8;color:#400;" +
+                    "border-bottom:1px solid rgba(0,0,0,.2)}";
+                document.head.appendChild(style);
+
+                const div = document.createElement("div");
+                div.className = "asset-fail-banner";
+                div.textContent = msg;
+                document.body ? document.body.prepend(div) : document.addEventListener("DOMContentLoaded", () => document.body.prepend(div));
+            }
+
+            (async () => {
+                for (const href of HEADER_CSS_SOURCES) {
+                    try { await loadCss(href); return; } catch (_) { }
+                }
+                showFailure("Failed to load header CSS from all sources.");
+            })();
+        })();
+    </script>
+
+  <!-- 
+<style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 16px; }
+    .bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+    button { padding: 6px 10px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ddd; padding: 6px; vertical-align: top; }
+    th { background: #f6f6f6; position: sticky; top: 0; z-index: 1; }
+    textarea, input, select { font: inherit; }
+  </style>
+  -->
+
+</head>
+<body data-page-id="cq-ferret">
+    <header id="siteHeader" class="sitehdr-root" role="banner" aria-label="Site header">
+
+    </header>
+
+  <h1>Extracted Vocabulary</h1>
+
+  <div class="bar">
+    <button id="btnRebuild" type="button">Rebuild from CQ graph</button>
+    <button id="btnExportCsv" type="button">Export CSV</button>
+    <span id="count"></span>
+    <span id="status" style="margin-left:auto;"></span>
+  </div>
+
+  <table id="vocabTable">
+    <thead></thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- Required: lexicon provides window.POSTAGGER_LEXICON -->
+  <script src="./app/lexicon.js"></script>
+
+  <!-- Required: POSTaggerGraph defines POSTagger, Lemmatizer, etc. -->
+  <script src="./app/POSTaggerGraph.js"></script>
+
+  <!-- New append-only modules -->
+  <script src="./app/vocab-extract-core.js"></script>
+  <script src="./app/extracted-vocabulary-page.js"></script>
+</body>
+</html>
