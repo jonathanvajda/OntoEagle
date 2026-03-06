@@ -53,7 +53,7 @@
       {
         title: "Domain Analysis",
         items: [
-          { label: "Competency Question Ferret", href: "./cq-ferret.html", pageId: "cq-ferret" },
+          { label: "Competency Question Ferret", href: "https://jonathanvajda.github.io/OntoEagle/cq-ferret.html", pageId: "cq-ferret" },
           /*{ label: "Business Process Weaver", href: "/bp-weaver.html", pageId: "bp-weaver" },*/
           { label: "Mermaid Diagram Builder 🔗", href: "https://skreen5hot.github.io/mermaid/", pageId: "mermaid-diagram-builder" },
         ],
