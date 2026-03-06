@@ -100,8 +100,8 @@
             })();
         })();
     </script>
-
     <link rel="stylesheet" href="./styles/ferret.css">
+    <link rel="stylesheet" href="./styles/tabulator.min.css">
 </head>
 
 <body data-page-id="cq-ferret">
@@ -109,7 +109,7 @@
 
     </header>
 
-    <div style="display: grid;grid-template-columns: .66fr 2.5fr .33fr; gap: 1rem;">
+    <div style="display: grid;grid-template-columns: 1fr 4fr; gap: 1rem;">
         <div class="sidebar">
             <div class="tabs" role="tablist">
                 <button class="tab-btn" role="tab" data-tab="tab-cq-form" aria-controls="tab-cq-form">Competency Questions</button>
@@ -123,7 +123,7 @@
                 style="display: none;">
         </div>
         <div class="main" role="main">
-            <div id="tab-cq-form" class="tab-panel" role="tabpanel">
+            <div id="tab-cq-form" class="tab-panel" role="tabpanel" style="max-width: 67%;">
                 <div class="section">
                     <button id="save-button-top" class="save-btn">Save</button>
                     <button id="new-cq-button" class="new-btn">New CQ</button>
@@ -224,14 +224,11 @@
                     <button id="btnRebuild" type="button">Rebuild from CQ graph</button>
                     <button id="btnExportCsv" type="button">Export CSV</button>
                     <span id="count"></span>
-                    <span id="status" style="margin-left:auto;"></span>
+                    <span id="status" aria-live="polite" style="margin-left:auto;"></span>
                 </div>
 
-                <table id="vocabTable">
-                    <thead></thead>
-                    <tbody></tbody>
-                </table>
-
+                <!-- Tabulator mounts here -->
+                <div id="vocabGrid"></div>
             </div>
         </div>
     </div>
@@ -279,8 +276,9 @@
         })();
     </script>
     <!-- Vocabulary modules -->
+    <script src="./app/tabulator.min.js"></script>
     <script src="./app/vocab-extract-core.js"></script>
-    <script src="./app/extracted-vocabulary-page.js"></script>
+    <script src="./app/extracted-vocabulary-tabulator.js"></script>
 
 </body>
 </html>
