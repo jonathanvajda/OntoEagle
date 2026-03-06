@@ -941,6 +941,47 @@ async function handleCSVUpload(event) {
 // SECTION 7: INITIALIZATION & EVENT LISTENERS
 // ======================================================
 
+// Call this whenever you switch tabs
+function activateTab(panelId) {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    const isActive = btn.dataset.tab === panelId;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    btn.tabIndex = isActive ? 0 : -1;
+  });
+
+  document.querySelectorAll('.tab-panel').forEach(p => {
+    p.classList.toggle('active', p.id === panelId);
+  });
+}
+
+// Initialize tab buttons
+function initTabs() {
+  const btns = document.querySelectorAll('.tab-btn');
+  if (!btns.length) return;
+
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => activateTab(btn.dataset.tab));
+  });
+
+  // Default: first tab or hash
+  const initial = location.hash && document.getElementById(location.hash.slice(1))
+    ? location.hash.slice(1)
+    : btns[0].dataset.tab;
+
+  activateTab(initial);
+}
+
+// Tab switching
+document.querySelectorAll('.tab').forEach((tab, idx) => {
+  tab.onclick = () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.tab-content')[idx].classList.add('active');
+  };
+});
+
 function setupEventListeners() {
   document.querySelector('.main').addEventListener('input', debouncedAutoSave);
   document.getElementById('add-subquestion-btn').addEventListener('click', () => {
@@ -991,4 +1032,5 @@ function setupEventListeners() {
 document.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
   initialLoad();
+  initTabs();
 });

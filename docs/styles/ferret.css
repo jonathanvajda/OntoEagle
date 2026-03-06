@@ -318,6 +318,28 @@
       display: block;
     }
 
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0.7em;
+      justify-content: center;
+      margin-top: 0.5em;
+      margin-bottom: 0.5em;
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    /* Optional “pressed” look */
+    .tab-btn.active:active { transform: none; }
+
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
     /* ========================================= */
     /* TABLET RESPONSIVE STYLES             */
     /* ========================================= */
