@@ -201,7 +201,7 @@
                 </div>
 
                 <div class="section">
-                    <h3>What data does this question rely on?</h3>
+                    <h3>What data sources are relevant to finding the answer?</h3>
 
                     <div id="data-requirements-list">
                         <div class="data-requirement-item"><button class="delete-item-btn"
@@ -210,18 +210,38 @@
                                 Notes (If you know)</label><textarea class="data-quality-input" rows="2"
                                 placeholder="Note any known issues or limitations for this source..."></textarea></div>
                     </div>
-
                     <button type="button" id="add-data-requirement-btn" class="add-item-btn">+ Add Data
                         Requirement</button>
-                    <div id="mermaid-area" class="section">
-                        <h3>Process Linkage</h3>
-                        <textarea id="mermaid-text" placeholder="graph TD;
-    A-->B"></textarea>
-                    </div>
-                    <div id="query-area" class="section">
-                        <h3>Associated Query</h3>
-                        <textarea id="query-text" placeholder="SELECT *
-WHERE {?subj ?pred ?obj}"></textarea>
+                </div>
+                <div class="section">
+                    <h3>Operational Context</h3>
+                    <div class="columns">
+                        <div class="column">
+                            <label>Process Diagram</label>
+                            <small>What business processes diagrams represent the use case?</small>
+                            <div id="mermaid-diagram-list" class="dynamic-list-container">
+                                <div class="list-item-container"><textarea class="mermaid-diagram-input" placeholder="graph TD;
+    A-->B"></textarea><button class="delete-item-btn" type="button">✖</button><small>(Expects Mermaid syntax)</small>
+                                </div>
+                            </div>
+                            <button type="button" id="add-mermaid-diagram-btn" class="add-item-btn">+ Add Diagram</button>
+                        </div>
+                        <div class="column">
+                            <label>Associated Query</label>
+                            <small>What database queries are used to support this CQ?
+                            </small>
+                            <div id="database-query-list" class="dynamic-list-container">
+                                <div class="list-item-container"><textarea class="database-query-input" placeholder="SELECT *
+WHERE {?subj ?pred ?obj}"></textarea><button class="delete-item-btn" type="button">✖</button>
+                                <select class="database-query-syntax-select">
+                                    <option value="SPARQL">SPARQL</option>
+                                    <option value="SQL">SQL</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                                </div>
+                            </div>
+                            <button type="button" id="add-database-query-btn" class="add-item-btn">+ Add Query</button>
+                        </div>
                     </div>
                 </div>
                 <button id="save-button-bottom" class="save-btn">Save</button>

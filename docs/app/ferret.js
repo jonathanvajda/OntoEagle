@@ -7,6 +7,72 @@ let allNodesCache = [];
 const tagger = new POSTagger(window.POSTAGGER_LEXICON);
 const gdcManager = new GDCManager(tagger, allNodesCache);
 
+const SEMARTO = {
+  CQ: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000002",
+  INTERROGATIVE_ICE: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000001",
+  BUSINESS_RULE: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000009",
+  MERMAID_DIAGRAM: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000004",
+  DATABASE_QUERY: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000016",
+  SPARQL_QUERY: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000007",
+  SQL_QUERY: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000005",
+
+  HAS_MERMAID_DIAGRAM: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000012",
+  HAS_FORMALIZATION: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000014",
+
+  HAS_MERMAID_TEXT: "https://github.com/jonathanvajda/SemanticArtifactOntology/has_mermaid_diagram_text_value",
+  HAS_QUERY_TEXT: "https://github.com/jonathanvajda/SemanticArtifactOntology/has_query_text_value",
+  HAS_SPARQL_QUERY_TEXT: "https://github.com/jonathanvajda/SemanticArtifactOntology/has_sparql_query_text_value",
+  HAS_SQL_QUERY_TEXT: "https://github.com/jonathanvajda/SemanticArtifactOntology/has_sql_query_text_value",
+
+  HAS_TEXT_VALUE_CCO: "https://www.commoncoreontologies.org/ont00001761"
+};
+
+function getDatabaseQuerySemantics(syntax) {
+  switch (syntax) {
+    case 'SPARQL':
+      return {
+        classIri: SEMARTO.SPARQL_QUERY,
+        textPredicate: SEMARTO.HAS_SPARQL_QUERY_TEXT
+      };
+    case 'SQL':
+      return {
+        classIri: SEMARTO.SQL_QUERY,
+        textPredicate: SEMARTO.HAS_SQL_QUERY_TEXT
+      };
+    case 'Other':
+    default:
+      return {
+        classIri: SEMARTO.DATABASE_QUERY,
+        textPredicate: SEMARTO.HAS_QUERY_TEXT
+      };
+  }
+}
+
+function getDatabaseQueryTextAndSyntax(node) {
+  if (hasType(node, SEMARTO.SPARQL_QUERY)) {
+    return {
+      syntax: 'SPARQL',
+      text: node[SEMARTO.HAS_SPARQL_QUERY_TEXT]?.[0]?.['@value']
+        ?? node[SEMARTO.HAS_QUERY_TEXT]?.[0]?.['@value']
+        ?? ''
+    };
+  }
+
+  if (hasType(node, SEMARTO.SQL_QUERY)) {
+    return {
+      syntax: 'SQL',
+      text: node[SEMARTO.HAS_SQL_QUERY_TEXT]?.[0]?.['@value']
+        ?? node[SEMARTO.HAS_QUERY_TEXT]?.[0]?.['@value']
+        ?? ''
+    };
+  }
+
+  return {
+    syntax: 'Other',
+    text: node[SEMARTO.HAS_QUERY_TEXT]?.[0]?.['@value'] ?? ''
+  };
+}
+
 // ======================================================
 // SECTION 2: CORE DATABASE LOGIC
 // ======================================================
@@ -204,6 +270,42 @@ function loadCQIntoForm(cqId) {
     addDataRequirementItem(sourceText, qualityText);
   });
   if (dataRequirementsList.children.length === 0) addDataRequirementItem();
+
+    // Load Mermaid diagrams
+  const mermaidDiagramList = document.getElementById('mermaid-diagram-list');
+  mermaidDiagramList.innerHTML = '';
+
+  const mermaidNodes = allNodesCache.filter(n =>
+    (cq[SEMARTO.HAS_MERMAID_DIAGRAM] || []).some(item => item["@id"] === n["@id"]) &&
+    hasType(n, SEMARTO.MERMAID_DIAGRAM)
+  );
+
+  mermaidNodes.forEach(node => {
+    const diagramText = node[SEMARTO.HAS_MERMAID_TEXT]?.[0]?.["@value"] ?? '';
+    addMermaidDiagramItem(diagramText);
+  });
+
+  if (mermaidDiagramList.children.length === 0) addMermaidDiagramItem();
+
+  // Load database queries
+  const databaseQueryList = document.getElementById('database-query-list');
+  databaseQueryList.innerHTML = '';
+
+  const databaseQueryNodes = allNodesCache.filter(n =>
+    (cq[SEMARTO.HAS_FORMALIZATION] || []).some(item => item["@id"] === n["@id"]) &&
+    (
+      hasType(n, SEMARTO.SPARQL_QUERY) ||
+      hasType(n, SEMARTO.SQL_QUERY) ||
+      hasType(n, SEMARTO.DATABASE_QUERY)
+    )
+  );
+
+  databaseQueryNodes.forEach(node => {
+    const queryData = getDatabaseQueryTextAndSyntax(node);
+    addDatabaseQueryItem(queryData.text, queryData.syntax);
+  });
+
+  if (databaseQueryList.children.length === 0) addDatabaseQueryItem();
 }
 
 // ======================================================
@@ -291,6 +393,81 @@ function addDecisionLogicItem(text = '') {
   };
   item.appendChild(textarea);
   item.appendChild(deleteBtn);
+  listContainer.appendChild(item);
+}
+
+// Operational Context: Business Process Mermaid Diagram
+function addMermaidDiagramItem(text = '') {
+  const listContainer = document.getElementById('mermaid-diagram-list');
+  const item = document.createElement('div');
+  item.className = 'list-item-container';
+
+  const textarea = document.createElement('textarea');
+  textarea.className = 'mermaid-diagram-input';
+  textarea.placeholder = `graph TD;
+    A-->B`;
+  textarea.value = text;
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.className = 'delete-item-btn';
+  deleteBtn.textContent = '✖';
+  deleteBtn.type = 'button';
+  deleteBtn.onclick = () => {
+    if (confirm('Are you sure you want to delete this process diagram?')) {
+      item.remove();
+      if (listContainer.children.length === 0) addMermaidDiagramItem();
+      debouncedAutoSave();
+    }
+  };
+
+  const helper = document.createElement('small');
+  helper.textContent = '(Expects Mermaid syntax)';
+
+  item.appendChild(textarea);
+  item.appendChild(deleteBtn);
+  item.appendChild(helper);
+  listContainer.appendChild(item);
+}
+
+//
+function addDatabaseQueryItem(text = '', syntax = 'SPARQL') {
+  const listContainer = document.getElementById('database-query-list');
+  const item = document.createElement('div');
+  item.className = 'list-item-container';
+
+  const textarea = document.createElement('textarea');
+  textarea.className = 'database-query-input';
+  textarea.rows = 3;
+  textarea.placeholder = `SELECT *
+WHERE {?subj ?pred ?obj}`;
+  textarea.value = text;
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.className = 'delete-item-btn';
+  deleteBtn.textContent = '✖';
+  deleteBtn.type = 'button';
+  deleteBtn.onclick = () => {
+    if (confirm('Are you sure you want to delete this query?')) {
+      item.remove();
+      if (listContainer.children.length === 0) addDatabaseQueryItem();
+      debouncedAutoSave();
+    }
+  };
+
+  const syntaxSelect = document.createElement('select');
+  syntaxSelect.className = 'database-query-syntax-select';
+
+  ['SPARQL', 'SQL', 'Other'].forEach(optionValue => {
+    const option = document.createElement('option');
+    option.value = optionValue;
+    option.textContent = optionValue;
+    if (optionValue === syntax) option.selected = true;
+    syntaxSelect.appendChild(option);
+  });
+
+  item.appendChild(textarea);
+  item.appendChild(deleteBtn);
+  item.appendChild(syntaxSelect);
   listContainer.appendChild(item);
 }
 
@@ -418,6 +595,18 @@ function generateJSONLD() {
   const status = document.getElementById("cq-status").value;
   const subquestions = Array.from(document.querySelectorAll('.subquestion-input')).map(input => input.value.trim()).filter(Boolean);
   const decisionLogic = Array.from(document.querySelectorAll('.decision-logic-input')).map(input => input.value.trim()).filter(Boolean);
+  const mermaidDiagram = Array.from(document.querySelectorAll('.mermaid-diagram-input'))
+    .map(input => input.value.trim())
+    .filter(Boolean);
+
+  const databaseQuery = Array.from(document.querySelectorAll('#database-query-list .list-item-container'))
+    .map(item => {
+      const text = item.querySelector('.database-query-input')?.value.trim() ?? '';
+      const syntax = item.querySelector('.database-query-syntax-select')?.value ?? 'SPARQL';
+      if (!text) return null;
+      return { text, syntax };
+    })
+    .filter(Boolean);
 
 
   const personItems = Array.from(document.querySelectorAll('.person-entry'));
@@ -535,12 +724,15 @@ function generateJSONLD() {
     "https://github.com/jonathanvajda/SemanticArtifactOntology/has_mermaid_diagram_text_value": [{ "@value": dl }],
   }));
   
-  const databaseQueryNodes = databaseQuery.map((dl, index) => ({
-    "@id": `https://github.com/jonathanvajda/SemanticArtifactOntology/ont000016_DatabaseQuery_${cqUniqueId}_${index + 1}`,
-    // ... rest of logic node ...
-    "@type": ["https://github.com/jonathanvajda/SemanticArtifactOntology/ont000016", "http://www.w3.org/2002/07/owl#NamedIndividual"],
-    "https://github.com/jonathanvajda/SemanticArtifactOntology/has_query_text_value": [{ "@value": dl }],
-  }));
+  const databaseQueryNodes = databaseQuery.map((dq, index) => {
+    const semantics = getDatabaseQuerySemantics(dq.syntax);
+
+    return {
+      "@id": `https://github.com/jonathanvajda/SemanticArtifactOntology/ont000016_DatabaseQuery_${cqUniqueId}_${index + 1}`,
+      "@type": [semantics.classIri, "http://www.w3.org/2002/07/owl#NamedIndividual"],
+      [semantics.textPredicate]: [{ "@value": dq.text }]
+    };
+  });
 
   // ... (timestamp logic unchanged) ...
   const nowISO = new Date().toISOString();
@@ -568,10 +760,10 @@ function generateJSONLD() {
       "http://purl.org/dc/terms/requires": dataSourceNodes.map(dsn => ({ "@id": dsn['@id'] })),
       "http://purl.obolibrary.org/obo/BFO_0000178": [
         ...decisionLogicNodes.map(n => ({ "@id": n['@id'] })),
-        ...subquestionNodes.map(n => ({ "@id": n['@id'] })),
-        ...mermaidDiagramNodes.map(n => ({ "@id": n['@id'] })),
-        ...databaseQueryNodes.map(n => ({ "@id": n['@id'] })),
+        ...subquestionNodes.map(n => ({ "@id": n['@id'] }))
       ],
+      [SEMARTO.HAS_MERMAID_DIAGRAM]: mermaidDiagramNodes.map(n => ({ "@id": n['@id'] })),
+      [SEMARTO.HAS_FORMALIZATION]: databaseQueryNodes.map(n => ({ "@id": n['@id'] })),
     },
   ];
   return jsonLD;
@@ -764,21 +956,45 @@ function downloadCSV() {
         (cq[config.link] || []).some(item => item?.["@id"] === n?.["@id"]) &&
         hasType(n, config.iri)
       );
-      itemNodes.forEach(node => {
+            itemNodes.forEach(node => {
         itemsFound++;
+
         const row = {
           ...baseRow,
           item_type: config.type,
           item_id: node['@id'],
-          item_text: node["https://www.commoncoreontologies.org/ont00001761"]?.[0]?.['@value'] ?? '',
+          item_text: '',
           contributor_role: '',
           contributor_contact: '',
           contributor_notes: '',
-          datasource_quality_notes: node["http://www.w3.org/2000/01/rdf-schema#comment"]?.[0]?.['@value'] ?? ''
+          contributor_email_id: '',
+          contributor_role_id: '',
+          datasource_quality_notes: '',
+          mermaid_diagram_text: '',
+          database_query_text: ''
         };
+
+        if (config.type === 'Subquestion' || config.type === 'DecisionLogic' || config.type === 'DataSource') {
+          row.item_text = node["https://www.commoncoreontologies.org/ont00001761"]?.[0]?.['@value'] ?? '';
+        }
+
+        if (config.type === 'DataSource') {
+          row.datasource_quality_notes = node["http://www.w3.org/2000/01/rdf-schema#comment"]?.[0]?.['@value'] ?? '';
+        }
+
+        if (config.type === 'MermaidDiagram') {
+          row.item_text = node["https://github.com/jonathanvajda/SemanticArtifactOntology/has_mermaid_diagram_text_value"]?.[0]?.['@value'] ?? '';
+          row.mermaid_diagram_text = row.item_text;
+        }
+
+        if (config.type === 'DatabaseQuery') {
+          row.item_text = node["https://github.com/jonathanvajda/SemanticArtifactOntology/has_query_text_value"]?.[0]?.['@value'] ?? '';
+          row.database_query_text = row.item_text;
+        }
+
         csvRows.push(headers.map(header => escapeCSV(row[header])).join(','));
       });
-    });
+  });
 
     // If a CQ has no items, create a single row for it.
     if (itemsFound === 0) {
@@ -925,7 +1141,8 @@ async function handleCSVUpload(event) {
           case 'DataSource':
             if (!processedNodeIds.has(row.item_id)) {
               const dsNode = {
-                "@id": row.item_id, "@type": ["https://www.commoncoreontologies.org/ont00000756", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+                "@id": row.item_id,
+                "@type": ["https://www.commoncoreontologies.org/ont00000756", "http://www.w3.org/2002/07/owl#NamedIndividual"],
                 "https://www.commoncoreontologies.org/ont00001761": [{ "@value": row.item_text }],
                 "http://www.w3.org/2000/01/rdf-schema#comment": [{ "@value": row.datasource_quality_notes }]
               };
@@ -935,17 +1152,30 @@ async function handleCSVUpload(event) {
             cqNode["http://purl.org/dc/terms/requires"].push({ "@id": row.item_id });
             break;
 
-          case 'DataSource':
+          case 'MermaidDiagram':
             if (!processedNodeIds.has(row.item_id)) {
               const mermaidNode = {
-                "@id": row.item_id, "@type": ["https://www.commoncoreontologies.org/ont00000756", "http://www.w3.org/2002/07/owl#NamedIndividual"],
-                "https://www.commoncoreontologies.org/ont00001761": [{ "@value": row.item_text }],
-                "http://www.w3.org/2000/01/rdf-schema#comment": [{ "@value": row.datasource_quality_notes }]
+                "@id": row.item_id,
+                "@type": ["https://github.com/jonathanvajda/SemanticArtifactOntology/ont000004", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+                "https://github.com/jonathanvajda/SemanticArtifactOntology/has_mermaid_diagram_text_value": [{ "@value": row.mermaid_diagram_text || row.item_text }]
               };
-              newGraph.push(dsNode);
+              newGraph.push(mermaidNode);
               processedNodeIds.add(row.item_id);
             }
-            cqNode["http://purl.org/dc/terms/requires"].push({ "@id": row.item_id });
+            cqNode["http://purl.obolibrary.org/obo/BFO_0000178"].push({ "@id": row.item_id });
+            break;
+
+          case 'DatabaseQuery':
+            if (!processedNodeIds.has(row.item_id)) {
+              const dbQueryNode = {
+                "@id": row.item_id,
+                "@type": ["https://github.com/jonathanvajda/SemanticArtifactOntology/ont000016", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+                "https://github.com/jonathanvajda/SemanticArtifactOntology/has_query_text_value": [{ "@value": row.database_query_text || row.item_text }]
+              };
+              newGraph.push(dbQueryNode);
+              processedNodeIds.add(row.item_id);
+            }
+            cqNode["http://purl.obolibrary.org/obo/BFO_0000178"].push({ "@id": row.item_id });
             break;  
         }
       });
@@ -1031,6 +1261,17 @@ function setupEventListeners() {
     addDataRequirementItem();
     debouncedAutoSave();
   });
+
+  // Operational Context Sections
+  document.getElementById('add-mermaid-diagram-btn').addEventListener('click', () => {
+    addMermaidDiagramItem();
+    debouncedAutoSave();
+  });
+  document.getElementById('add-database-query-btn').addEventListener('click', () => {
+    addDatabaseQueryItem();
+    debouncedAutoSave();
+  });
+
   document.getElementById('add-person-btn').addEventListener('click', () => {
     addPersonItem();
     debouncedAutoSave();
@@ -1058,9 +1299,16 @@ function setupEventListeners() {
     document.getElementById("persons-list").innerHTML = "";
     addPersonItem();
     document.getElementById("data-requirements-list").innerHTML = "";
+
+    // Operational Context
+    document.getElementById("mermaid-diagram-list").innerHTML = "";
+    document.getElementById("database-query-list").innerHTML = "";
+
     addDataRequirementItem();
     addSubquestionItem();
     addDecisionLogicItem();
+    addMermaidDiagramItem();
+    addDatabaseQueryItem();
   });
 }
 
