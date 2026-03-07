@@ -1655,7 +1655,7 @@ class GDCService {
         this.lemmatizer = new Lemmatizer();
 
         // --- Configuration ---
-        this.GDC_BASE_IRI = "http://purl.obolibrary.org/obo/BFO_0000031";
+        this.GDC_BASE_IRI = "https://github.com/jonathanvajda/SemanticArtifactOntology/GDC";
         this.GDC_TYPE_IRI = "http://purl.obolibrary.org/obo/BFO_0000031";
         this.CONTINUANT_PART_OF = "http://purl.obolibrary.org/obo/BFO_0000176";
         this.PERSON_IRI = "https://www.commoncoreontologies.org/ont00001262";
@@ -1734,7 +1734,7 @@ class GDCService {
                     } else {
                         const gdcId = this.hashCode(mapKey);
                         const newNode = {
-                            '@id': `${this.GDC_BASE_IRI}_${gdcId}`,
+                            '@id': `${this.GDC_BASE_IRI}_GDC_${gdcId}`,
                             '@type': [this.GDC_TYPE_IRI],
                             [this.RDFS_LABEL_IRI]: [{ '@value': lemmatizedText }],
                             [this.CONTINUANT_PART_OF]: [{ '@id': sourceNodeIri }]

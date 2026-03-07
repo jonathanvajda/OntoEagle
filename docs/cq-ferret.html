@@ -112,8 +112,10 @@
     <div style="display: grid;grid-template-columns: 1fr 4fr; gap: 1rem;">
         <div class="sidebar">
             <div class="tabs" role="tablist">
-                <button class="tab-btn" role="tab" data-tab="tab-cq-form" aria-controls="tab-cq-form">Competency Questions</button>
-                <button class="tab-btn" role="tab" data-tab="tab-term-form" aria-controls="tab-term-form">Term List</button>
+                <button class="tab-btn" role="tab" data-tab="tab-cq-form" aria-controls="tab-cq-form">Competency
+                    Questions</button>
+                <button class="tab-btn" role="tab" data-tab="tab-term-form" aria-controls="tab-term-form">Term
+                    List</button>
             </div>
             <div class="cq-list" id="cq-list">
             </div>
@@ -151,10 +153,10 @@
                                     <option value="Other">Other</option>
                                 </select></div>
                             <div class="person-search-results"></div><input type="text" class="person-contact-input"
-                                placeholder="Contact (Email, Phone, etc.)"><textarea class="person-notes-textarea" rows="2"
-                                placeholder="Notes / Comments (e.g., area of responsibility)"></textarea><input
-                                type="hidden" class="person-id-input" value=""><input type="hidden" class="email-id-input"
-                                value="">
+                                placeholder="Contact (Email, Phone, etc.)"><textarea class="person-notes-textarea"
+                                rows="2" placeholder="Notes / Comments (e.g., area of responsibility)"></textarea><input
+                                type="hidden" class="person-id-input" value=""><input type="hidden"
+                                class="email-id-input" value="">
                         </div>
                     </div>
                     <button type="button" id="add-person-btn" class="add-item-btn">+ Add Person</button>
@@ -177,9 +179,11 @@
                             <small>Can you break the main question into smaller, answerable questions?</small>
                             <div id="subquestions-list" class="dynamic-list-container">
                                 <div class="list-item-container"><textarea class="subquestion-input"
-                                        rows="3"></textarea><button class="delete-item-btn" type="button">✖</button></div>
+                                        rows="3"></textarea><button class="delete-item-btn" type="button">✖</button>
+                                </div>
                             </div>
-                            <button type="button" id="add-subquestion-btn" class="add-item-btn">+ Add Subquestion</button>
+                            <button type="button" id="add-subquestion-btn" class="add-item-btn">+ Add
+                                Subquestion</button>
                         </div>
                         <div class="column">
                             <label>Decision Logic</label>
@@ -187,7 +191,8 @@
                             </small>
                             <div id="decision-logic-list" class="dynamic-list-container">
                                 <div class="list-item-container"><textarea class="decision-logic-input"
-                                        rows="3"></textarea><button class="delete-item-btn" type="button">✖</button></div>
+                                        rows="3"></textarea><button class="delete-item-btn" type="button">✖</button>
+                                </div>
                             </div>
                             <button type="button" id="add-decision-logic-btn" class="add-item-btn">+ Add Decision
                                 Logic</button>
@@ -206,13 +211,17 @@
                                 placeholder="Note any known issues or limitations for this source..."></textarea></div>
                     </div>
 
-                    <button type="button" id="add-data-requirement-btn" class="add-item-btn">+ Add Data Requirement</button>
-                </div>
-
-                <div class="section" style="display:none;">
-                    <h3>Process Linkage</h3>
-                    <div class="process-image">
-                        (BPMN process diagram placeholder)
+                    <button type="button" id="add-data-requirement-btn" class="add-item-btn">+ Add Data
+                        Requirement</button>
+                    <div id="mermaid-area" class="section">
+                        <h3>Process Linkage</h3>
+                        <textarea id="mermaid-text" placeholder="graph TD;
+    A-->B"></textarea>
+                    </div>
+                    <div id="query-area" class="section">
+                        <h3>Associated Query</h3>
+                        <textarea id="query-text" placeholder="SELECT *
+WHERE {?subj ?pred ?obj}"></textarea>
                     </div>
                 </div>
                 <button id="save-button-bottom" class="save-btn">Save</button>
@@ -281,4 +290,5 @@
     <script src="./app/extracted-vocabulary-tabulator.js"></script>
 
 </body>
+
 </html>
