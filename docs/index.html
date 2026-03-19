@@ -264,6 +264,32 @@
     </aside>
   </main>
 
+  <!-- Service worker-->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', async function () {
+        try {
+          const reg = await navigator.serviceWorker.register('./sw.js', {
+            updateViaCache: 'none'
+          });
+
+          await reg.update();
+
+          let reloading = false;
+          navigator.serviceWorker.addEventListener('controllerchange', function () {
+            if (reloading) return;
+            reloading = true;
+            window.location.reload();
+          });
+
+          console.log('SW registered with scope:', reg.scope);
+        } catch (err) {
+          console.error('Service worker registration failed:', err);
+        }
+      });
+    }
+  </script>
+
   <script>
     (function () {
       const JS_SOURCES = [

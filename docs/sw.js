@@ -1,11 +1,14 @@
 /* docs/sw.js */
-/* Offline-first SW: cache app shell + graph.jsonld */
+/* Offline-first-ish SW:
+   - app/documents/assets: network-first
+   - graph.jsonld: stale-while-revalidate
+*/
 
-const SW_VERSION = 'v3';
+const SW_VERSION = '__BUILD_ID__';
 const CACHE_SHELL = `ontoeagle-shell-${SW_VERSION}`;
 const CACHE_DATA = `ontoeagle-data-${SW_VERSION}`;
 
-// Keep this list tight and explicit (no globbing).
+// Keep this list tight and explicit.
 const SHELL_ASSETS = [
   './index.html',
   './bundler.html',
@@ -56,36 +59,39 @@ self.addEventListener('activate', (event) => {
   })());
 });
 
-// Cache strategy:
-// - Shell assets: cache-first
-// - graph.jsonld: stale-while-revalidate
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // Only handle same-origin GET
+  // Only same-origin GET requests
   if (req.method !== 'GET' || url.origin !== self.location.origin) return;
 
   const path = url.pathname;
 
-  // Dataset SWR
+  // Dataset: stale-while-revalidate
   if (path.endsWith('/data/graph.jsonld')) {
     event.respondWith(staleWhileRevalidate(req, CACHE_DATA));
     return;
   }
 
-  // Everything else (shell assets): cache-first
-  event.respondWith(cacheFirst(req, CACHE_SHELL));
+  // Everything else: network-first
+  event.respondWith(networkFirst(req, CACHE_SHELL));
 });
 
-async function cacheFirst(req, cacheName) {
+async function networkFirst(req, cacheName) {
   const cache = await caches.open(cacheName);
-  const hit = await cache.match(req);
-  if (hit) return hit;
 
-  const res = await fetch(req);
-  if (res && res.ok) cache.put(req, res.clone());
-  return res;
+  try {
+    const res = await fetch(req);
+    if (res && res.ok) {
+      await cache.put(req, res.clone());
+    }
+    return res;
+  } catch (err) {
+    const hit = await cache.match(req);
+    if (hit) return hit;
+    return new Response('Offline', { status: 503 });
+  }
 }
 
 async function staleWhileRevalidate(req, cacheName) {
@@ -93,12 +99,13 @@ async function staleWhileRevalidate(req, cacheName) {
   const hit = await cache.match(req);
 
   const fetchPromise = fetch(req)
-    .then((res) => {
-      if (res && res.ok) cache.put(req, res.clone());
+    .then(async (res) => {
+      if (res && res.ok) {
+        await cache.put(req, res.clone());
+      }
       return res;
     })
     .catch(() => null);
 
-  // Prefer cached immediately; update in background.
   return hit || (await fetchPromise) || new Response('Offline', { status: 503 });
 }

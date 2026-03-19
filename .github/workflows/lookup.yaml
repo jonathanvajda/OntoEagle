@@ -39,6 +39,11 @@ jobs:
             --out-jsonld ./docs/data/graph.jsonld \
             --out-nq ./docs/data/graph.nq
 
+      - name: Stamp service worker build id
+        run: |
+          BUILD_ID="${GITHUB_SHA::8}"
+          sed -i "s/__BUILD_ID__/${BUILD_ID}/g" docs/sw.js
+
       - name: Upload docs/ (site + data) as artifact for deploy job
         uses: actions/upload-artifact@v4
         with:
