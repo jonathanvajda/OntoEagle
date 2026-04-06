@@ -79,7 +79,7 @@
       {
         title: "Maintenance",
             items: [
-            { label: "Ontology Curation Manager", href: "https://jonathanvajda.github.io/ontology-compliance-diagnostic/", pageId: "ontology-compliance-diagnostic" },
+            { label: "Ontology Compliance Diagnostic", href: "https://jonathanvajda.github.io/ontology-compliance-diagnostic/", pageId: "ontology-compliance-diagnostic" },
             { label: "Myna RDF IRI Swapper", href: "https://jonathanvajda.github.io/iri-swapper/", pageId: "myna-iri-swapper" },
             { label: "Myna SPARQL IRI Swapper", href: "https://jonathanvajda.github.io/iri-swapper/sparql-iri-swapper.html", pageId: "myna-sparql-iri-swapper" }, 
             ],
