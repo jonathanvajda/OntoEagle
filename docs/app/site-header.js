@@ -32,7 +32,7 @@
         "shacl-generator": { title: "SHACL Generator" },
         "axiolotl": { title: "Axiolotl SPARQL & Inference" },
         "sparql-pattern-visualizer": { title: "SPARQL Pattern Visualizer" },
-        "ontology-curation-manager": { title: "Ontology Curation Manager" },
+        "ontology-compliance-diagnostic": { title: "Ontology Compliance Diagnostic" },
         "myna-iri-swapper": { title: "Myna RDF IRI Swapper" },
         "myna-sparql-iri-swapper": { title: "Myna SPARQL IRI Swapper" },
         "visual-lynx": { title: "Visual Lynx" },
@@ -79,7 +79,7 @@
       {
         title: "Maintenance",
             items: [
-            { label: "Ontology Curation Manager", href: "https://jonathanvajda.github.io/ontology-curation-manager/", pageId: "ontology-curation-manager" },
+            { label: "Ontology Curation Manager", href: "https://jonathanvajda.github.io/ontology-compliance-diagnostic/", pageId: "ontology-compliance-diagnostic" },
             { label: "Myna RDF IRI Swapper", href: "https://jonathanvajda.github.io/iri-swapper/", pageId: "myna-iri-swapper" },
             { label: "Myna SPARQL IRI Swapper", href: "https://jonathanvajda.github.io/iri-swapper/sparql-iri-swapper.html", pageId: "myna-sparql-iri-swapper" }, 
             ],
