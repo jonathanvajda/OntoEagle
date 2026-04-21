@@ -35,6 +35,28 @@ const docs = [
     citations: [],
     examples: [],
     clarifications: []
+  },
+  {
+    iri: 'https://www.commoncoreontologies.org/ont00001262',
+    type: 'Class',
+    label: 'Person',
+    altLabels: [],
+    namespace: 'https://www.commoncoreontologies.org/',
+    definition: 'A person exact label fixture.',
+    citations: [],
+    examples: [],
+    clarifications: []
+  },
+  {
+    iri: 'http://example.org/ont#PersonalVehicle',
+    type: 'Class',
+    label: 'Personal Vehicle',
+    altLabels: [],
+    namespace: 'http://example.org/ont#',
+    definition: 'A vehicle with person in the definition and label.',
+    citations: [],
+    examples: [],
+    clarifications: []
   }
 ];
 
@@ -62,6 +84,13 @@ describe('search.js', () => {
   test('docPassesFilters: namespace filtering works by namespace IRI prefix', () => {
     const opts = { ...BASE_OPTS, namespaces: ['http://example.org/ont#'] };
     expect(docPassesFilters(docsByIri.get('http://example.org/ont#Vehicle'), opts)).toBe(true);
+  });
+
+  test('docPassesFilters: namespace filtering accepts common prefixes and full resource IRIs', () => {
+    const ccoDoc = docsByIri.get('https://www.commoncoreontologies.org/ont00001262');
+    expect(docPassesFilters(ccoDoc, { ...BASE_OPTS, namespaces: ['cco2'] })).toBe(true);
+    expect(docPassesFilters(ccoDoc, { ...BASE_OPTS, namespaces: ['https://www.commoncoreontologies.org/ont00001262'] })).toBe(true);
+    expect(docPassesFilters(ccoDoc, { ...BASE_OPTS, namespaces: ['foaf'] })).toBe(false);
   });
 
   test('searchDocuments: wildcard finds label match', () => {
@@ -120,5 +149,13 @@ describe('search.js', () => {
     expect(results.length).toBeGreaterThan(0);
     // "Person" should win on label
     expect(results[0].doc.iri).toBe('http://example.org/ont#Person');
+  });
+
+  test('searchDocuments: exact label matches outrank partial label and definition matches in wildcard mode', () => {
+    const opts = { ...BASE_OPTS, wildcard: true, exact: false, includeDefinition: true };
+    const { results } = searchDocuments(docsByIri, 'person', opts, 10);
+    const topLabels = results.slice(0, 2).map((r) => r.doc.label);
+    expect(topLabels).toEqual(['Person', 'Person']);
+    expect(results.findIndex((r) => r.doc.iri === 'http://example.org/ont#PersonalVehicle')).toBeGreaterThan(1);
   });
 });
