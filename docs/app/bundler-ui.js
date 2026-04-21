@@ -23,6 +23,8 @@ import {
 } from './bundler-core.js';
 
 import { extractDocumentsFromJsonLd, mapByIri, parseGraphJsonLdText } from './rdf_extract.js';
+import { buildSlimFromSeeds } from './slim-core.js';
+import { readFileAsText } from './rdf_io.js';
 
 // Minimal IDB wrappers (you can expand these in indexeddb.min.js later)
 import {
@@ -32,9 +34,8 @@ import {
   idbGetDatasetMeta,
   idbPutDatasetMeta,
   idbGetAllDocuments,
-  idbPutDocuments,
-  idbGetIndex,
-  idbPutIndex
+  idbGetEnabledDocuments,
+  idbPutDocuments
 } from './indexeddb.min.js';
 
 /* Example item */
@@ -51,7 +52,6 @@ const EX_ITEM_NODE = {
 
 // In-memory dataset state (used by IDB cache + graph.jsonld pipeline)
 let docsByIri = new Map();
-let index = null;
 
 const app = document.getElementById('app');
 const txtRaw = document.getElementById('txtRaw');
@@ -69,6 +69,16 @@ const btnMerge = document.getElementById('btnMerge');
 
 const selExportBundle = document.getElementById('selExportBundle');
 const chkIncludeLabels = document.getElementById('chkIncludeLabels');
+const seedFileInput = document.getElementById('seedFileInput');
+const txtSeedInput = document.getElementById('txtSeedInput');
+const selSlimStrategy = document.getElementById('selSlimStrategy');
+const selSlimDepth = document.getElementById('selSlimDepth');
+const selAnnotationMode = document.getElementById('selAnnotationMode');
+const selProvenanceMode = document.getElementById('selProvenanceMode');
+const btnLoadBundleSeeds = document.getElementById('btnLoadBundleSeeds');
+const btnExportSlimTurtle = document.getElementById('btnExportSlimTurtle');
+const btnExportSlimJsonLd = document.getElementById('btnExportSlimJsonLd');
+const slimStatus = document.getElementById('slimStatus');
 
 const selMergeA = document.getElementById('selMergeA'); // ✅ fixed scope
 const selMergeB = document.getElementById('selMergeB'); // ✅ fixed scope
@@ -106,6 +116,35 @@ function downloadText(filename, text) {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+}
+
+function setSlimStatus(message) {
+  if (slimStatus) slimStatus.textContent = message;
+}
+
+async function ensureEnabledDocsLoaded() {
+  await idbInit();
+  const docs = await idbGetEnabledDocuments();
+  docsByIri = mapByIri(docs);
+  return docs;
+}
+
+function selectedSlimOptions() {
+  return {
+    strategy: selSlimStrategy?.value || 'sco',
+    mode: selSlimDepth?.value || 'minimal',
+    annotationMode: selAnnotationMode?.value || 'minimal',
+    provenanceMode: selProvenanceMode?.value || 'lite',
+    includeChildren: selSlimDepth?.value === 'maximal'
+  };
+}
+
+async function buildCurrentSlim() {
+  const docs = await ensureEnabledDocsLoaded();
+  const seedText = txtSeedInput?.value || '';
+  const slim = buildSlimFromSeeds(docs, seedText, selectedSlimOptions());
+  setSlimStatus(`Slim contains ${slim.iris.length} resources. ${slim.missing.length ? `${slim.missing.length} seed(s) not found.` : 'All seeds found.'}`);
+  return slim;
 }
 
 function fillBundleSelect(select, bundleIds) {
@@ -271,6 +310,33 @@ function bundlerInit() {
     console.info('Exported bundle seed text:');
   });
 
+  seedFileInput?.addEventListener('change', async () => {
+    const file = seedFileInput.files && seedFileInput.files[0];
+    if (!file || !txtSeedInput) return;
+    txtSeedInput.value = await readFileAsText(file);
+    setSlimStatus(`Loaded seeds from ${file.name}.`);
+    seedFileInput.value = '';
+  });
+
+  btnLoadBundleSeeds?.addEventListener('click', () => {
+    if (!txtSeedInput) return;
+    const doc = loadDoc();
+    const bundleId = selExportBundle?.value || '';
+    if (!bundleId) return;
+    txtSeedInput.value = getMembers(doc, bundleId).join('\n') + '\n';
+    setSlimStatus('Loaded selected bundle members as seeds.');
+  });
+
+  btnExportSlimTurtle?.addEventListener('click', async () => {
+    const slim = await buildCurrentSlim();
+    downloadText(`ontoeagle-slim-${Date.now()}.ttl`, slim.turtle);
+  });
+
+  btnExportSlimJsonLd?.addEventListener('click', async () => {
+    const slim = await buildCurrentSlim();
+    downloadText(`ontoeagle-slim-${Date.now()}.jsonld`, JSON.stringify(slim.jsonld, null, 2));
+  });
+
   btnMerge?.addEventListener('click', () => {
     const a = selMergeA?.value || '';
     const b = selMergeB?.value || '';
@@ -346,11 +412,8 @@ async function fetchGraph() {
  */
 async function tryLoadFromIdb() {
   const cachedDocs = await idbGetAllDocuments('builtin');
-  const cachedIndex = await idbGetIndex('builtin');
-
-  if (cachedDocs && cachedDocs.length && cachedIndex) {
+  if (cachedDocs && cachedDocs.length) {
     docsByIri = mapByIri(cachedDocs);
-    index = cachedIndex;
     return true;
   }
   return false;

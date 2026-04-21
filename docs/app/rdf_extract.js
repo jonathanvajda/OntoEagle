@@ -17,6 +17,7 @@ const SKOS = 'http://www.w3.org/2004/02/skos/core#';
 const CCEO = 'http://www.ontologyrepository.com/CommonCoreOntologies/';
 const CCO2 = 'https://www.commoncoreontologies.org/';
 const DCTERMS = 'http://purl.org/dc/terms/';
+export const ADDED_BY_USER_IRI = 'https://jonathanvajda.github.io/OntoEagle/added_by_user';
 
 /** Common predicate keys (full IRIs + compact forms) */
 const P = Object.freeze({
@@ -35,6 +36,11 @@ const P = Object.freeze({
   example: [`${SKOS}example`, 'skos:example', 'example', `${CCEO}example_of_usage`],
   note: [`${SKOS}note`, 'skos:note', 'note'],
   curated_in: [`${CCEO}is_curated_in_ontology`, `${RDFS}isDefinedBy`, `${CCO2}ont00001760`],
+  subClassOf: [`${RDFS}subClassOf`, 'rdfs:subClassOf'],
+  subPropertyOf: [`${RDFS}subPropertyOf`, 'rdfs:subPropertyOf'],
+  broader: [`${SKOS}broader`, 'skos:broader'],
+  narrower: [`${SKOS}narrower`, 'skos:narrower'],
+  addedByUser: [ADDED_BY_USER_IRI, 'added_by_user'],
 });
 
 /**
@@ -85,6 +91,22 @@ export function valueToStrings(v) {
     // if (typeof v['@id'] === 'string') return [v['@id']];
   }
 
+  return [];
+}
+
+/**
+ * Convert JSON-LD value(s) to named IRI strings.
+ *
+ * @param {any} v
+ * @returns {string[]}
+ */
+export function valueToIris(v) {
+  if (v == null) return [];
+  if (typeof v === 'string' && /^(https?:|urn:)/i.test(v)) return [v];
+  if (Array.isArray(v)) return v.flatMap(valueToIris).filter(Boolean);
+  if (typeof v === 'object' && typeof v['@id'] === 'string' && !v['@id'].startsWith('_:')) {
+    return [v['@id']];
+  }
   return [];
 }
 
@@ -144,6 +166,8 @@ export function extractDocumentsFromJsonLd(jsonld) {
 
   /** @type {import('./types.js').OntologyDocument[]} */
   const docs = [];
+  /** @type {Map<string, Set<string>>} */
+  const skosNarrowerParentsByChild = new Map();
 
   for (const node of graph) {
     if (!node || typeof node !== 'object') continue;
@@ -170,6 +194,21 @@ export function extractDocumentsFromJsonLd(jsonld) {
     const examples = valueToStrings(getAny(node, P.example));
     const clarifications = valueToStrings(getAny(node, P.note)); // treat skos:note as clarifications for now
     const curated_in = valueToStrings(getAny(node, P.curated_in));
+    const subClassParents = valueToIris(getAny(node, P.subClassOf));
+    const broaderParents = valueToIris(getAny(node, P.broader));
+    const subPropertyParents = valueToIris(getAny(node, P.subPropertyOf));
+    const hierarchyPredicates = [];
+    if (subClassParents.length) hierarchyPredicates.push('rdfs:subClassOf');
+    if (broaderParents.length) hierarchyPredicates.push('skos:broader');
+    if (subPropertyParents.length) hierarchyPredicates.push('rdfs:subPropertyOf');
+
+    for (const child of valueToIris(getAny(node, P.narrower))) {
+      if (!skosNarrowerParentsByChild.has(child)) skosNarrowerParentsByChild.set(child, new Set());
+      skosNarrowerParentsByChild.get(child).add(iri);
+    }
+
+    const addedByUserValues = valueToStrings(getAny(node, P.addedByUser));
+    const addedByUser = addedByUserValues.some((v) => String(v).toLowerCase() === 'true');
 
     docs.push({
       iri,
@@ -182,9 +221,29 @@ export function extractDocumentsFromJsonLd(jsonld) {
       examples: examples.length ? examples : undefined,
       clarifications: clarifications.length ? clarifications : undefined,
       curated_in: curated_in.length ? curated_in : undefined,
+      parents: Array.from(new Set([...subClassParents, ...broaderParents, ...subPropertyParents])),
+      children: [],
+      hierarchyPredicates,
+      addedByUser,
       // If you’re still carrying `text` elsewhere, you can omit it in Stage E.
       text: ''
     });
+  }
+
+  const byIri = new Map(docs.map((d) => [d.iri, d]));
+  for (const [child, parents] of skosNarrowerParentsByChild.entries()) {
+    const doc = byIri.get(child);
+    if (!doc) continue;
+    doc.parents = Array.from(new Set([...(doc.parents || []), ...parents]));
+    doc.hierarchyPredicates = Array.from(new Set([...(doc.hierarchyPredicates || []), 'skos:narrower']));
+  }
+
+  for (const doc of docs) {
+    for (const parent of doc.parents || []) {
+      const parentDoc = byIri.get(parent);
+      if (!parentDoc) continue;
+      parentDoc.children = Array.from(new Set([...(parentDoc.children || []), doc.iri]));
+    }
   }
 
   return docs;

@@ -116,8 +116,9 @@
 }
 
 .ont-search__btn--secondary {
-  background: #e5e7eb;
+  background: var(--ont-code-bg);
   color: var(--ont-text);
+  border-color: var(--ont-border);
 }
 
 .ont-search__btn--ghost {
@@ -232,6 +233,12 @@
   font-size: 1.6rem;
 }
 
+.ont-search__pill--user {
+  background: var(--ont-accent-soft);
+  color: var(--ont-text);
+  border: 1px solid var(--ont-accent);
+}
+
 /* ---------- Details ---------- */
 
 .ont-search__detailsCard {
@@ -246,6 +253,95 @@
 .ont-search__detailsIri code {
   font-family: var(--ont-font-mono);
   font-size: 1.5rem;
+}
+
+.ont-search__detailsSubhead {
+  font-size: 1.75rem;
+  margin: 1rem 0 0.5rem;
+}
+
+.ont-search__taxonomy {
+  border-top: 1px solid var(--ont-border);
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+}
+
+.ont-search__tree {
+  font-size: 1.35rem;
+}
+
+.ont-search__treeLevel {
+  list-style: none;
+  margin: 0.2rem 0 0.2rem 0;
+  padding-left: 1rem;
+  border-left: 1px solid var(--ont-border);
+}
+
+.ont-search__treeItem {
+  margin: 0.2rem 0;
+}
+
+.ont-search__treeNode {
+  display: inline-flex;
+  max-width: 100%;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  overflow-wrap: anywhere;
+}
+
+.ont-search__treeItem--sibling .ont-search__treeNode {
+  color: var(--ont-muted);
+}
+
+.ont-search__treeItem--focus .ont-search__treeNode {
+  border: 1px solid var(--ont-accent);
+  background: var(--ont-accent-soft);
+  color: var(--ont-text);
+  font-weight: 700;
+}
+
+.ont-search__ontologyList {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.ont-search__ontologyRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 0.5rem;
+  align-items: center;
+  border: 1px solid var(--ont-border);
+  border-radius: var(--ont-radius);
+  padding: 0.5rem;
+  background: var(--ont-code-bg);
+}
+
+.ont-search__ontologyName {
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.ont-search__ontologyMeta {
+  color: var(--ont-muted);
+  font-size: 1.15rem;
+  overflow-wrap: anywhere;
+}
+
+.ont-search__ontologyToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+@media (max-width: 620px) {
+  .ont-search__queryRow,
+  .ont-search__ontologyRow {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
 }
 
 /* ---------- Empty / help ---------- */

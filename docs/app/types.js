@@ -23,6 +23,13 @@
  * @property {string[]=} citations
  * @property {string[]=} examples
  * @property {string[]=} clarifications
+ * @property {string[]=} parents
+ * @property {string[]=} children
+ * @property {string[]=} hierarchyPredicates
+ * @property {boolean=} addedByUser
+ * @property {('builtin'|'user')=} source
+ * @property {string=} ontologyName
+ * @property {string=} fileName
  *
  * // Stage F+ (multi-dataset foundation; safe to ignore for now)
  * @property {string=} datasetId
@@ -102,4 +109,7 @@ export const defaultSearchOptions = Object.freeze({
  * @property {boolean=} enabled
  * @property {number=} updatedAt
  * @property {string=} fingerprint
+ * @property {number=} documentCount
+ * @property {string=} fileName
+ * @property {string=} ontologyName
  */

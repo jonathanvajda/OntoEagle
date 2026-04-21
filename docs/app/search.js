@@ -24,6 +24,7 @@
  */
 
 import { normalizeQuery, normalizeText } from './normalize.js';
+import { docMatchesNamespaceFilter, normalizeNamespaceFilters } from './namespaces.js';
 
 /**
  * @param {string} token
@@ -54,19 +55,10 @@ export function docPassesFilters(doc, options) {
   }
 
   // Namespace filter
-  const nsFilters = (options.namespaces || [])
-    .map((s) => normalizeText(s))
-    .filter(Boolean);
+  const nsFilters = normalizeNamespaceFilters(options.namespaces || []);
 
   if (nsFilters.length) {
-    const ns = normalizeText(doc.namespace || '');
-    const iri = normalizeText(doc.iri || '');
-
-    // Accept if:
-    // - stored namespace equals filter
-    // - stored namespace starts with filter (lets you filter by prefix tokens if you store those)
-    // - IRI starts with a namespace IRI filter
-    const ok = nsFilters.some((f) => ns === f || ns.startsWith(f) || iri.startsWith(f));
+    const ok = nsFilters.some((f) => docMatchesNamespaceFilter(doc, f));
     if (!ok) return false;
   }
 
@@ -112,30 +104,28 @@ export function scoreDocument(doc, queryTokens, options) {
     let tokenMatchedSomewhere = false;
     let tokenMatchedLabelOrIri = false;
 
-    // --- Exact matches ---
-    if (options.exact) {
-      if (label === tok) {
-        score += 100;
-        labelHits += 1;
-        tokenMatchedSomewhere = true;
-        tokenMatchedLabelOrIri = true;
-        reasons.push(`label == "${tok}" (+100)`);
-      }
-      if (iri === tok) {
+    // --- Exact equality is always a relevance signal.
+    // If wildcard is off, this block also acts as exact-only matching.
+    if (label === tok) {
+      score += 160;
+      labelHits += 1;
+      tokenMatchedSomewhere = true;
+      tokenMatchedLabelOrIri = true;
+      reasons.push(`label == "${tok}" (+160)`);
+    }
+    if (iri === tok || iri.endsWith(`/${tok}`) || iri.endsWith(`#${tok}`)) {
+      score += 150;
+      tokenMatchedSomewhere = true;
+      tokenMatchedLabelOrIri = true;
+      reasons.push(`iri == "${tok}" (+150)`);
+    }
+
+    if (doc.altLabels?.length) {
+      const altExact = doc.altLabels.some((a) => normalizeText(a) === tok);
+      if (altExact) {
         score += 120;
         tokenMatchedSomewhere = true;
-        tokenMatchedLabelOrIri = true;
-        reasons.push(`iri == "${tok}" (+120)`);
-      }
-
-      // altLabels as exact: if any altLabel equals tok
-      if (doc.altLabels?.length) {
-        const altExact = doc.altLabels.some((a) => normalizeText(a) === tok);
-        if (altExact) {
-          score += 70;
-          tokenMatchedSomewhere = true;
-          reasons.push(`altLabel == "${tok}" (+70)`);
-        }
+        reasons.push(`altLabel == "${tok}" (+120)`);
       }
     }
 
