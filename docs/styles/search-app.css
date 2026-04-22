@@ -268,29 +268,54 @@
 
 .ont-search__tree {
   font-size: 1.35rem;
+  font-family: var(--ont-font-body);
 }
 
 .ont-search__treeLevel {
   list-style: none;
-  margin: 0.2rem 0 0.2rem 0;
-  padding-left: 1rem;
-  border-left: 1px solid var(--ont-border);
+  margin: 0;
+  padding-left: 0;
 }
 
 .ont-search__treeItem {
-  margin: 0.2rem 0;
+  display: flex;
+  align-items: center;
+  min-height: 1.75rem;
+  margin: 0.05rem 0 0.05rem calc(var(--tree-depth, 0) * 1.25rem);
+  line-height: 1.4;
+}
+
+.ont-search__treeConnector {
+  flex: 0 0 2.25rem;
+  color: var(--ont-muted);
+  font-family: var(--ont-font-mono);
+  text-align: right;
+  white-space: pre;
+}
+
+.ont-search__treeLevel--children {
+  margin-left: 0;
 }
 
 .ont-search__treeNode {
   display: inline-flex;
   max-width: 100%;
-  padding: 0.15rem 0.5rem;
+  padding: 0.05rem 0.45rem;
   border-radius: 999px;
   overflow-wrap: anywhere;
 }
 
+.ont-search__treeItem--ancestor .ont-search__treeNode {
+  color: var(--ont-text);
+}
+
 .ont-search__treeItem--sibling .ont-search__treeNode {
   color: var(--ont-muted);
+}
+
+.ont-search__treeItem--extraParent .ont-search__treeNode {
+  color: var(--ont-muted);
+  font-style: italic;
 }
 
 .ont-search__treeItem--focus .ont-search__treeNode {

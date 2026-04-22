@@ -110,6 +110,16 @@ export function valueToIris(v) {
   return [];
 }
 
+function ensureArray(v) {
+  if (v == null) return [];
+  return Array.isArray(v) ? v : [v];
+}
+
+function cloneJsonLdValue(v) {
+  if (v == null || typeof v !== 'object') return v;
+  return JSON.parse(JSON.stringify(v));
+}
+
 /**
  * Determine a normalized OntologyElementType from JSON-LD @type values.
  * @param {any} typeValue
@@ -168,6 +178,13 @@ export function extractDocumentsFromJsonLd(jsonld) {
   const docs = [];
   /** @type {Map<string, Set<string>>} */
   const skosNarrowerParentsByChild = new Map();
+  const blankNodeMap = {};
+
+  for (const node of graph) {
+    if (node && typeof node === 'object' && typeof node['@id'] === 'string' && node['@id'].startsWith('_:')) {
+      blankNodeMap[node['@id']] = cloneJsonLdValue(node);
+    }
+  }
 
   for (const node of graph) {
     if (!node || typeof node !== 'object') continue;
@@ -197,6 +214,8 @@ export function extractDocumentsFromJsonLd(jsonld) {
     const subClassParents = valueToIris(getAny(node, P.subClassOf));
     const broaderParents = valueToIris(getAny(node, P.broader));
     const subPropertyParents = valueToIris(getAny(node, P.subPropertyOf));
+    const subClassOfAxioms = ensureArray(getAny(node, P.subClassOf)).map(cloneJsonLdValue);
+    const subPropertyOfAxioms = ensureArray(getAny(node, P.subPropertyOf)).map(cloneJsonLdValue);
     const hierarchyPredicates = [];
     if (subClassParents.length) hierarchyPredicates.push('rdfs:subClassOf');
     if (broaderParents.length) hierarchyPredicates.push('skos:broader');
@@ -224,6 +243,9 @@ export function extractDocumentsFromJsonLd(jsonld) {
       parents: Array.from(new Set([...subClassParents, ...broaderParents, ...subPropertyParents])),
       children: [],
       hierarchyPredicates,
+      subClassOfAxioms,
+      subPropertyOfAxioms,
+      blankNodeMap,
       addedByUser,
       // If you’re still carrying `text` elsewhere, you can omit it in Stage E.
       text: ''

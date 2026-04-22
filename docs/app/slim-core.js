@@ -20,11 +20,96 @@ function shouldFollowParent(doc, strategy) {
   return false;
 }
 
+function asArray(value) {
+  if (value == null) return [];
+  return Array.isArray(value) ? value : [value];
+}
+
+function isNamedIri(value) {
+  return typeof value === 'string' && /^(https?:|urn:)/i.test(value);
+}
+
+function isBlankId(value) {
+  return typeof value === 'string' && value.startsWith('_:');
+}
+
+function valueId(value) {
+  if (typeof value === 'string') return value;
+  if (value && typeof value === 'object' && typeof value['@id'] === 'string') return value['@id'];
+  return '';
+}
+
+function allBlankNodesForDocs(docsByIri) {
+  const blankNodes = new Map();
+  for (const doc of docsByIri.values()) {
+    for (const [id, node] of Object.entries(doc.blankNodeMap || {})) {
+      if (!blankNodes.has(id)) blankNodes.set(id, node);
+    }
+  }
+  return blankNodes;
+}
+
+function collectIrisFromValue(value, blankNodes, visited = new Set()) {
+  const found = [];
+  const id = valueId(value);
+  if (isNamedIri(id)) found.push(id);
+
+  if (isBlankId(id) && !visited.has(id)) {
+    visited.add(id);
+    const blankNode = blankNodes.get(id);
+    if (blankNode) found.push(...collectIrisFromObject(blankNode, blankNodes, visited));
+  } else if (value && typeof value === 'object' && !id) {
+    found.push(...collectIrisFromObject(value, blankNodes, visited));
+  }
+
+  return found;
+}
+
+function collectIrisFromObject(object, blankNodes, visited = new Set()) {
+  const found = [];
+  if (!object || typeof object !== 'object') return found;
+  for (const [key, raw] of Object.entries(object)) {
+    if (key === '@id') continue;
+    if (key === '@type') {
+      for (const typeValue of asArray(raw)) {
+        if (isNamedIri(typeValue)) found.push(typeValue);
+      }
+      continue;
+    }
+    for (const value of asArray(raw)) {
+      found.push(...collectIrisFromValue(value, blankNodes, visited));
+    }
+  }
+  return found;
+}
+
+function collectAxiomTargets(doc, strategy, mode, blankNodes, traversedBlankIds) {
+  if (!shouldFollowParent(doc, strategy)) return [];
+  const axioms = strategy === 'sco' ? doc.subClassOfAxioms || [] : doc.subPropertyOfAxioms || [];
+  const targets = [];
+
+  for (const axiom of axioms) {
+    const id = valueId(axiom);
+    if (isNamedIri(id)) {
+      targets.push(id);
+      continue;
+    }
+    if (mode === 'maximal') {
+      if (isBlankId(id)) traversedBlankIds.add(id);
+      targets.push(...collectIrisFromValue(axiom, blankNodes));
+    }
+  }
+
+  return targets.filter((iri) => !iri.startsWith(COMMON_PREFIXES.owl));
+}
+
 export function expandSlimTerms(docs, seeds, options = {}) {
   const docsByIri = docsArrayToMap(docs);
-  const strategy = options.strategy || 'sco';
+  const scoMode = options.scoMode || options.mode || 'minimal';
+  const spoMode = options.spoMode || options.mode || 'minimal';
   const includeHierarchy = options.includeHierarchy !== false;
-  const includeChildren = !!options.includeChildren;
+  const blankNodes = allBlankNodesForDocs(docsByIri);
+  const traversedBlankIds = new Set();
   const included = new Set();
   const missing = [];
   const queue = [...parseSeedText(seeds.join('\n'))];
@@ -39,21 +124,20 @@ export function expandSlimTerms(docs, seeds, options = {}) {
     included.add(iri);
 
     const doc = docsByIri.get(iri);
-    if (!doc || !includeHierarchy || !shouldFollowParent(doc, strategy)) continue;
+    if (!doc || !includeHierarchy) continue;
 
-    for (const parent of doc.parents || []) {
-      if (!included.has(parent)) queue.push(parent);
-    }
-    if (includeChildren) {
-      for (const child of doc.children || []) {
-        if (!included.has(child)) queue.push(child);
+    for (const strategy of ['sco', 'spo']) {
+      const mode = strategy === 'sco' ? scoMode : spoMode;
+      for (const target of collectAxiomTargets(doc, strategy, mode, blankNodes, traversedBlankIds)) {
+        if (!included.has(target)) queue.push(target);
       }
     }
   }
 
   return {
     iris: Array.from(included).sort(),
-    missing: Array.from(new Set(missing)).sort()
+    missing: Array.from(new Set(missing)).sort(),
+    traversedBlankIds: Array.from(traversedBlankIds).sort()
   };
 }
 
@@ -71,10 +155,60 @@ function addIf(node, key, value) {
   if (obj) node[key] = obj;
 }
 
+function cloneJson(value) {
+  if (value == null || typeof value !== 'object') return value;
+  return JSON.parse(JSON.stringify(value));
+}
+
+function axiomReferencesIncludedIri(axiom, included, blankNodes) {
+  const id = valueId(axiom);
+  if (isNamedIri(id)) return included.has(id);
+  return collectIrisFromValue(axiom, blankNodes).some((iri) => included.has(iri));
+}
+
+function collectBlankNodeClosure(blankId, blankNodes, out = new Map(), seen = new Set()) {
+  if (!isBlankId(blankId) || seen.has(blankId)) return out;
+  seen.add(blankId);
+  const node = blankNodes.get(blankId);
+  if (!node) return out;
+  out.set(blankId, cloneJson(node));
+  for (const raw of Object.values(node)) {
+    for (const value of asArray(raw)) {
+      const id = valueId(value);
+      if (isBlankId(id)) collectBlankNodeClosure(id, blankNodes, out, seen);
+      if (value && typeof value === 'object' && Array.isArray(value['@list'])) {
+        for (const listValue of value['@list']) {
+          const listId = valueId(listValue);
+          if (isBlankId(listId)) collectBlankNodeClosure(listId, blankNodes, out, seen);
+        }
+      }
+    }
+  }
+  return out;
+}
+
+function includedHierarchyAxioms(doc, key, iris, mode, blankNodes, traversedBlankIds) {
+  const included = new Set(iris);
+  const axioms = key === 'rdfs:subClassOf' ? doc?.subClassOfAxioms || [] : doc?.subPropertyOfAxioms || [];
+  const out = [];
+  for (const axiom of axioms) {
+    const id = valueId(axiom);
+    if (isNamedIri(id) && included.has(id)) out.push(cloneJson(axiom));
+    if (mode === 'maximal' && isBlankId(id) && (traversedBlankIds.has(id) || axiomReferencesIncludedIri(axiom, included, blankNodes))) {
+      out.push(cloneJson(axiom));
+    }
+  }
+  return out;
+}
+
 export function buildSlimJsonLd(docs, iris, options = {}) {
   const docsByIri = docsArrayToMap(docs);
   const annotationMode = options.annotationMode || 'minimal';
   const provenanceMode = options.provenanceMode || 'lite';
+  const scoMode = options.scoMode || options.mode || 'minimal';
+  const spoMode = options.spoMode || options.mode || 'minimal';
+  const traversedBlankIds = new Set(options.traversedBlankIds || []);
+  const blankNodes = allBlankNodesForDocs(docsByIri);
   const derivedAt = options.derivedAt || new Date().toISOString();
   const graph = [];
 
@@ -86,10 +220,10 @@ export function buildSlimJsonLd(docs, iris, options = {}) {
     };
 
     addIf(node, 'rdfs:label', doc?.label || shortIri(iri));
-    if (doc?.parents?.length) {
-      const hierarchyKey = doc.type === 'Class' ? 'rdfs:subClassOf' : /Property$/.test(doc.type || '') ? 'rdfs:subPropertyOf' : 'rdfs:subClassOf';
-      node[hierarchyKey] = doc.parents.filter((p) => iris.includes(p)).map((p) => ({ '@id': p }));
-    }
+    const scoAxioms = includedHierarchyAxioms(doc, 'rdfs:subClassOf', iris, scoMode, blankNodes, traversedBlankIds);
+    const spoAxioms = includedHierarchyAxioms(doc, 'rdfs:subPropertyOf', iris, spoMode, blankNodes, traversedBlankIds);
+    if (scoAxioms.length) node['rdfs:subClassOf'] = scoAxioms;
+    if (spoAxioms.length) node['rdfs:subPropertyOf'] = spoAxioms;
 
     if (annotationMode === 'maximal') {
       addIf(node, 'skos:definition', doc?.definition);
@@ -110,6 +244,18 @@ export function buildSlimJsonLd(docs, iris, options = {}) {
     graph.push(node);
   }
 
+  const blankClosure = new Map();
+  for (const blankId of traversedBlankIds) {
+    collectBlankNodeClosure(blankId, blankNodes, blankClosure);
+  }
+  for (const node of graph) {
+    for (const value of [...asArray(node['rdfs:subClassOf']), ...asArray(node['rdfs:subPropertyOf'])]) {
+      const id = valueId(value);
+      if (isBlankId(id)) collectBlankNodeClosure(id, blankNodes, blankClosure);
+    }
+  }
+  graph.push(...Array.from(blankClosure.values()).sort((a, b) => String(a['@id']).localeCompare(String(b['@id']))));
+
   return {
     '@context': {
       rdf: COMMON_PREFIXES.rdf,
@@ -123,9 +269,29 @@ export function buildSlimJsonLd(docs, iris, options = {}) {
 }
 
 function turtleTerm(value) {
-  if (value && typeof value === 'object' && value['@id']) return `<${value['@id']}>`;
+  if (value && typeof value === 'object' && value['@id']) {
+    return isBlankId(value['@id']) ? value['@id'] : `<${value['@id']}>`;
+  }
+  if (value && typeof value === 'object' && Array.isArray(value['@list'])) {
+    return `( ${value['@list'].map(turtleTerm).join(' ')} )`;
+  }
   const raw = value && typeof value === 'object' && '@value' in value ? value['@value'] : value;
   return `"${String(raw ?? '').replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n')}"`;
+}
+
+function turtleSubject(id) {
+  return isBlankId(id) ? id : `<${id}>`;
+}
+
+function turtlePredicate(key) {
+  if (key === '@type') return 'rdf:type';
+  return isNamedIri(key) ? `<${key}>` : key;
+}
+
+function typeToTurtleTerm(value) {
+  const raw = typeof value === 'string' ? value : valueId(value);
+  if (isNamedIri(raw)) return { '@id': raw };
+  return { '@id': COMMON_PREFIXES.owl + String(raw).replace(/^owl:/, '') };
 }
 
 export function serializeSlimTurtle(jsonld) {
@@ -143,11 +309,11 @@ export function serializeSlimTurtle(jsonld) {
     const statements = [];
     for (const key of predicates) {
       const values = Array.isArray(node[key]) ? node[key] : [node[key]];
-      const pred = key === '@type' ? 'rdf:type' : key;
-      for (const value of values) statements.push(`  ${pred} ${turtleTerm(key === '@type' ? { '@id': COMMON_PREFIXES.owl + String(value).replace(/^owl:/, '') } : value)}`);
+      const pred = turtlePredicate(key);
+      for (const value of values) statements.push(`  ${pred} ${turtleTerm(key === '@type' ? typeToTurtleTerm(value) : value)}`);
     }
     if (!statements.length) continue;
-    lines.push(`<${node['@id']}>`);
+    lines.push(turtleSubject(node['@id']));
     lines.push(`${statements.join(' ;\n')} .`);
     lines.push('');
   }
@@ -158,7 +324,7 @@ export function serializeSlimTurtle(jsonld) {
 export function buildSlimFromSeeds(docs, seedText, options = {}) {
   const seeds = parseSeedText(seedText);
   const expanded = expandSlimTerms(docs, seeds, options);
-  const jsonld = buildSlimJsonLd(docs, expanded.iris, options);
+  const jsonld = buildSlimJsonLd(docs, expanded.iris, { ...options, traversedBlankIds: expanded.traversedBlankIds });
   return {
     seeds,
     ...expanded,

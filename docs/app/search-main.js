@@ -77,6 +77,7 @@ const typeCheckboxes = /** @type {NodeListOf<HTMLInputElement>} */ (document.que
 
 let docsByIri = new Map();   // Map<string, OntologyDocument>
 let options = structuredClone(defaultSearchOptions);
+const DATASET_SCHEMA_VERSION = 2;
 
 /* -----------------------------
  * Utilities
@@ -274,42 +275,75 @@ function renderResults(results) {
   elResultsList.setAttribute('aria-activedescendant', 'ontOpt_0');
 }
 
-function renderTaxonomyNode(iri, className = '') {
+function renderTaxonomyNode(iri, className = '', connector = '', depth = 0) {
   const label = labelForIri(iri);
-  return `<li class="ont-search__treeItem ${className}">
+  const safeDepth = Math.max(0, Math.min(8, Number(depth) || 0));
+  return `<li class="ont-search__treeItem ${className}" style="--tree-depth:${safeDepth}">
+    <span class="ont-search__treeConnector" aria-hidden="true">${escapeHtml(connector)}</span>
     <span class="ont-search__treeNode" title="${escapeHtml(iri)}">${escapeHtml(label)}</span>
   </li>`;
 }
 
+function firstKnownParent(iri, seen = new Set()) {
+  if (seen.has(iri)) return '';
+  seen.add(iri);
+  const doc = docsByIri.get(iri);
+  const parents = sortIrisByLabel((doc?.parents || []).filter((parent) => docsByIri.has(parent)));
+  return parents[0] || '';
+}
+
+function ancestorChain(iri) {
+  const chain = [];
+  const seen = new Set([iri]);
+  let parent = firstKnownParent(iri);
+  while (parent && !seen.has(parent) && chain.length < 5) {
+    chain.unshift(parent);
+    seen.add(parent);
+    parent = firstKnownParent(parent, seen);
+  }
+  return chain;
+}
+
 function renderTaxonomy(doc) {
-  const parents = sortIrisByLabel(doc.parents || []).slice(0, 6);
+  const primaryParents = sortIrisByLabel(doc.parents || []).slice(0, 3);
+  const chain = ancestorChain(doc.iri);
+  const chainSet = new Set(chain);
+  const extraParents = primaryParents.filter((iri) => !chainSet.has(iri));
+  const displayedParent = chain[chain.length - 1] || primaryParents[0] || '';
   const siblings = sortIrisByLabel(
-    parents.flatMap((parent) => (docsByIri.get(parent)?.children || []).filter((iri) => iri !== doc.iri))
+    (displayedParent ? docsByIri.get(displayedParent)?.children || [] : [])
+      .filter((iri) => iri !== doc.iri)
   ).slice(0, 8);
   const children = sortIrisByLabel(doc.children || []).slice(0, 8);
 
-  if (!parents.length && !siblings.length && !children.length) return '';
+  if (!chain.length && !extraParents.length && !siblings.length && !children.length) return '';
 
-  const parentHtml = parents.length
-    ? `<ul class="ont-search__treeLevel ont-search__treeLevel--parents">${parents.map((iri) => renderTaxonomyNode(iri)).join('')}</ul>`
+  const ancestorHtml = chain.map((iri, index) =>
+    renderTaxonomyNode(iri, 'ont-search__treeItem--ancestor', index === 0 ? '' : '└─', index)
+  ).join('');
+  const extraParentHtml = extraParents.length
+    ? extraParents.map((iri) => renderTaxonomyNode(iri, 'ont-search__treeItem--ancestor ont-search__treeItem--extraParent', '├─', chain.length)).join('')
     : '';
   const siblingHtml = siblings.length
-    ? `<ul class="ont-search__treeLevel ont-search__treeLevel--siblings">${siblings.map((iri) => renderTaxonomyNode(iri, 'ont-search__treeItem--sibling')).join('')}</ul>`
+    ? siblings.map((iri) => renderTaxonomyNode(iri, 'ont-search__treeItem--sibling', '├─', chain.length)).join('')
     : '';
   const childHtml = children.length
-    ? `<ul class="ont-search__treeLevel ont-search__treeLevel--children">${children.map((iri) => renderTaxonomyNode(iri)).join('')}</ul>`
+    ? `<ul class="ont-search__treeLevel ont-search__treeLevel--children">${children.map((iri, index) =>
+        renderTaxonomyNode(iri, '', index === children.length - 1 ? '└─' : '├─', chain.length + 1)
+      ).join('')}</ul>`
     : '';
 
   return `
     <section class="ont-search__taxonomy" aria-label="Taxonomy context">
       <h3 class="ont-search__detailsSubhead">Taxonomy</h3>
       <div class="ont-search__tree" role="tree">
-        ${parentHtml}
-        ${siblingHtml}
-        <ul class="ont-search__treeLevel ont-search__treeLevel--focus">
-          ${renderTaxonomyNode(doc.iri, 'ont-search__treeItem--focus')}
+        <ul class="ont-search__treeLevel ont-search__treeLevel--root">
+          ${ancestorHtml}
+          ${extraParentHtml}
+          ${siblingHtml}
+          ${renderTaxonomyNode(doc.iri, 'ont-search__treeItem--focus', children.length ? '├─' : '└─', chain.length)}
+          ${childHtml}
         </ul>
-        ${childHtml}
       </div>
     </section>
   `.trim();
@@ -587,6 +621,7 @@ async function buildFromGraphAndPersist(graphText, fingerprint) {
     ontologyName: 'OntoEagle built-in graph',
     fileName: 'graph.jsonld',
     documentCount: docs.length,
+    schemaVersion: DATASET_SCHEMA_VERSION,
     updatedAt: Date.now()
   });
   docsByIri = mapByIri(await idbGetEnabledDocuments());
@@ -669,6 +704,7 @@ async function importUserOntologyFile(file) {
     ontologyName: file.name.replace(/\.[^.]+$/, ''),
     fileName: file.name,
     documentCount: docs.length,
+    schemaVersion: DATASET_SCHEMA_VERSION,
     updatedAt: Date.now()
   });
   await refreshDocsFromEnabledDatasets();
@@ -734,7 +770,7 @@ async function ontoEagleInit() {
   const { text, fingerprint } = await fetchGraph();
   const meta = await idbGetDatasetMeta('builtin');
 
-  const fingerprintChanged = !meta || meta.fingerprint !== fingerprint;
+  const fingerprintChanged = !meta || meta.fingerprint !== fingerprint || meta.schemaVersion !== DATASET_SCHEMA_VERSION;
 
   if (!cacheOk || fingerprintChanged) {
     setStatus('Building index (first run or updated dataset)…');

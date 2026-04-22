@@ -52,6 +52,7 @@ const EX_ITEM_NODE = {
 
 // In-memory dataset state (used by IDB cache + graph.jsonld pipeline)
 let docsByIri = new Map();
+const DATASET_SCHEMA_VERSION = 2;
 
 const app = document.getElementById('app');
 const txtRaw = document.getElementById('txtRaw');
@@ -71,8 +72,8 @@ const selExportBundle = document.getElementById('selExportBundle');
 const chkIncludeLabels = document.getElementById('chkIncludeLabels');
 const seedFileInput = document.getElementById('seedFileInput');
 const txtSeedInput = document.getElementById('txtSeedInput');
-const selSlimStrategy = document.getElementById('selSlimStrategy');
-const selSlimDepth = document.getElementById('selSlimDepth');
+const selScoMode = document.getElementById('selScoMode');
+const selSpoMode = document.getElementById('selSpoMode');
 const selAnnotationMode = document.getElementById('selAnnotationMode');
 const selProvenanceMode = document.getElementById('selProvenanceMode');
 const btnLoadBundleSeeds = document.getElementById('btnLoadBundleSeeds');
@@ -131,11 +132,10 @@ async function ensureEnabledDocsLoaded() {
 
 function selectedSlimOptions() {
   return {
-    strategy: selSlimStrategy?.value || 'sco',
-    mode: selSlimDepth?.value || 'minimal',
+    scoMode: selScoMode?.value || 'minimal',
+    spoMode: selSpoMode?.value || 'minimal',
     annotationMode: selAnnotationMode?.value || 'minimal',
-    provenanceMode: selProvenanceMode?.value || 'lite',
-    includeChildren: selSlimDepth?.value === 'maximal'
+    provenanceMode: selProvenanceMode?.value || 'lite'
   };
 }
 
@@ -433,7 +433,7 @@ async function buildFromGraphAndPersist(graphText, fingerprint) {
 
   await idbPutDocuments('builtin', docs);
  // INDEX FEATURE:   await idbPutIndex('builtin', index);
-  await idbPutDatasetMeta('builtin', { fingerprint, enabled: true, updatedAt: Date.now() });
+  await idbPutDatasetMeta('builtin', { fingerprint, enabled: true, schemaVersion: DATASET_SCHEMA_VERSION, updatedAt: Date.now() });
 }
 
 async function render() {
@@ -616,7 +616,7 @@ async function render() {
   const { text, fingerprint } = await fetchGraph();
   const meta = await idbGetDatasetMeta('builtin');
 
-  const fingerprintChanged = !meta || meta.fingerprint !== fingerprint;
+  const fingerprintChanged = !meta || meta.fingerprint !== fingerprint || meta.schemaVersion !== DATASET_SCHEMA_VERSION;
 
   if (!cacheOk || fingerprintChanged) {
     setStatus('Building index (first run or updated dataset)…');

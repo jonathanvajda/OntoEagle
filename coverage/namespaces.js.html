@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">51.35% </span>
+                <span class="strong">72.97% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>19/37</span>
+                <span class='fraction'>27/37</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">52.5% </span>
+                <span class="strong">62.5% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>21/40</span>
+                <span class='fraction'>25/40</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>4/5</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">60.71% </span>
+                <span class="strong">85.71% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>17/28</span>
+                <span class='fraction'>24/28</span>
             </div>
         
             
@@ -157,14 +157,14 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">38x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -187,7 +187,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">51x</span>
+<span class="cline-any cline-yes">83x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -225,15 +225,15 @@ export const COMMON_PREFIXES = Object.freeze({
   vcard: 'http://www.w3.org/2006/vcard/ns#'
 });
 &nbsp;
-export function <span class="fstat-no" title="function not covered" >shortIri(</span>iri) {
-<span class="cstat-no" title="statement not covered" >  if (typeof iri !== 'string') <span class="cstat-no" title="statement not covered" >return '';</span></span>
-<span class="cstat-no" title="statement not covered" >  for (const [prefix, ns] of Object.entries(COMMON_PREFIXES)) {</span>
-<span class="cstat-no" title="statement not covered" >    if (iri.startsWith(ns)) <span class="cstat-no" title="statement not covered" >return `${prefix}:${iri.slice(ns.length)}`;</span></span>
+export function shortIri(iri) {
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (typeof iri !== 'string') <span class="cstat-no" title="statement not covered" >return '';</span>
+  for (const [prefix, ns] of Object.entries(COMMON_PREFIXES)) {
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (iri.startsWith(ns)) <span class="cstat-no" title="statement not covered" >return `${prefix}:${iri.slice(ns.length)}`;</span>
   }
-  const hash = <span class="cstat-no" title="statement not covered" >iri.lastIndexOf('#');</span>
-<span class="cstat-no" title="statement not covered" >  if (hash &gt;= 0) <span class="cstat-no" title="statement not covered" >return iri.slice(hash + 1);</span></span>
-  const slash = <span class="cstat-no" title="statement not covered" >iri.lastIndexOf('/');</span>
-<span class="cstat-no" title="statement not covered" >  if (slash &gt;= 0) <span class="cstat-no" title="statement not covered" >return iri.slice(slash + 1);</span></span>
+  const hash = iri.lastIndexOf('#');
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (hash &gt;= 0) <span class="cstat-no" title="statement not covered" >return iri.slice(hash + 1);</span>
+  const slash = iri.lastIndexOf('/');
+  <span class="missing-if-branch" title="else path not taken" >E</span>if (slash &gt;= 0) return iri.slice(slash + 1);
 <span class="cstat-no" title="statement not covered" >  return iri;</span>
 }
 &nbsp;
@@ -277,7 +277,7 @@ export function docMatchesNamespaceFilter(doc, filter) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-04-21T14:18:13.144Z
+                at 2026-04-21T18:22:47.295Z
             </div>
         <script src="prettify.js"></script>
         <script>

@@ -3,6 +3,7 @@
 ## Search Weighting
 
 - [x] Exact label/IRI/alt-label matches are boosted during normal wildcard search.
+- [x] Unquoted multi-word label queries receive a full-phrase boost.
 - [x] Exact-only mode remains available as a hard matching mode.
 - [x] Search tests cover exact boosts and exact-only behavior.
 
@@ -34,6 +35,9 @@
 - [x] Add seed import/paste support.
 - [x] Add deterministic slim term expansion.
 - [x] Export generated slims as Turtle and JSON-LD.
+- [x] Run SCO and SPO together with independent minimal/maximal settings.
+- [x] Limit maximal expansion to named IRIs reached through `rdfs:subClassOf`/`rdfs:subPropertyOf` blank-node axiom paths.
+- [x] Preserve traversed blank-node axiom shapes in slim JSON-LD/Turtle output.
 
 ## Verification
 

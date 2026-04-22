@@ -26,6 +26,9 @@
  * @property {string[]=} parents
  * @property {string[]=} children
  * @property {string[]=} hierarchyPredicates
+ * @property {any[]=} subClassOfAxioms
+ * @property {any[]=} subPropertyOfAxioms
+ * @property {Record<string, any>=} blankNodeMap
  * @property {boolean=} addedByUser
  * @property {('builtin'|'user')=} source
  * @property {string=} ontologyName

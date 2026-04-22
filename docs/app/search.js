@@ -207,6 +207,16 @@ export function scoreDocument(doc, queryTokens, options) {
  */
 export function searchDocuments(docsByIri, query, options, limit = 50) {
   const queryTokens = normalizeQuery(query);
+  const fullQuery = normalizeText(query);
+  const phraseQuery = queryTokens.length === 1 && queryTokens[0].includes(' ')
+    ? queryTokens[0]
+    : fullQuery;
+  const isPhraseQuery = phraseQuery && phraseQuery.includes(' ');
+  const scoringTokens = isPhraseQuery && options.exact && !options.wildcard
+    ? [phraseQuery]
+    : isPhraseQuery
+      ? Array.from(new Set([phraseQuery, ...queryTokens]))
+    : queryTokens;
   if (!queryTokens.length) return { results: [], queryTokens };
 
   /** @type {Array<any>} */
@@ -216,17 +226,34 @@ export function searchDocuments(docsByIri, query, options, limit = 50) {
     if (!docPassesFilters(doc, options)) continue;
 
     const { score, matchedTokens, labelHits, defOnlyHits, reasons } =
-      scoreDocument(doc, queryTokens, options);
+      scoreDocument(doc, scoringTokens, options);
 
-    if (score <= 0) continue;
+    let finalScore = score;
+    let finalLabelHits = labelHits;
+    const finalReasons = [...reasons];
+
+    if (isPhraseQuery && options.wildcard) {
+      const label = normalizeText(doc.label || '');
+      const altExact = (doc.altLabels || []).some((a) => normalizeText(a) === phraseQuery);
+      if (label === phraseQuery) {
+        finalScore += 300;
+        finalLabelHits += 1;
+        finalReasons.push(`label phrase == "${phraseQuery}" (+300)`);
+      } else if (altExact) {
+        finalScore += 220;
+        finalReasons.push(`altLabel phrase == "${phraseQuery}" (+220)`);
+      }
+    }
+
+    if (finalScore <= 0) continue;
 
     scored.push({
       doc,
-      score,
+      score: finalScore,
       matchedTokenCount: matchedTokens.size,
-      labelHits,
+      labelHits: finalLabelHits,
       defOnlyHits,
-      reasons
+      reasons: finalReasons
     });
   }
 

@@ -57,6 +57,39 @@ const docs = [
     citations: [],
     examples: [],
     clarifications: []
+  },
+  {
+    iri: 'http://example.org/ont#GroundVehicle',
+    type: 'Class',
+    label: 'Ground Vehicle',
+    altLabels: [],
+    namespace: 'http://example.org/ont#',
+    definition: 'A conveyance designed for roads or terrain.',
+    citations: [],
+    examples: [],
+    clarifications: []
+  },
+  {
+    iri: 'http://example.org/ont#LooseSplitMatch',
+    type: 'Class',
+    label: 'Unrelated Capability',
+    altLabels: ['externally-grounded capability'],
+    namespace: 'http://example.org/ont#',
+    definition: 'A fixture that mentions a vehicle somewhere else.',
+    citations: [],
+    examples: ['Vehicle example'],
+    clarifications: []
+  },
+  {
+    iri: 'http://example.org/ont#GroundMotorVehicle',
+    type: 'Class',
+    label: 'Ground Motor Vehicle',
+    altLabels: [],
+    namespace: 'http://example.org/ont#',
+    definition: 'A ground vehicle that receives motive power from an engine.',
+    citations: [],
+    examples: [],
+    clarifications: []
   }
 ];
 
@@ -123,6 +156,31 @@ describe('search.js', () => {
     const { results } = searchDocuments(docsByIri, '"material entity"', opts, 10);
     expect(results.length).toBeGreaterThan(0);
     expect(results[0].doc.iri).toBe('http://example.org/ont#Vehicle');
+  });
+
+  test('searchDocuments: unquoted multi-word labels get exact phrase boost in wildcard mode', () => {
+    const opts = { ...BASE_OPTS, wildcard: true, exact: false, includeDefinition: true };
+    const { results } = searchDocuments(docsByIri, 'ground vehicle', opts, 10);
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].doc.iri).toBe('http://example.org/ont#GroundVehicle');
+    expect(results.map((r) => r.doc.iri)).toContain('http://example.org/ont#LooseSplitMatch');
+    expect(results.findIndex((r) => r.doc.iri === 'http://example.org/ont#GroundVehicle'))
+      .toBeLessThan(results.findIndex((r) => r.doc.iri === 'http://example.org/ont#LooseSplitMatch'));
+  });
+
+  test('searchDocuments: longer unquoted multi-word labels rank above partial phrase matches', () => {
+    const opts = { ...BASE_OPTS, wildcard: true, exact: false, includeDefinition: true };
+    const { results } = searchDocuments(docsByIri, 'ground motor vehicle', opts, 10);
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].doc.iri).toBe('http://example.org/ont#GroundMotorVehicle');
+    expect(results.map((r) => r.doc.iri)).toContain('http://example.org/ont#GroundVehicle');
+  });
+
+  test('searchDocuments: exact mode accepts unquoted multi-word label equality', () => {
+    const opts = { ...BASE_OPTS, wildcard: false, exact: true, includeDefinition: true };
+    const { results } = searchDocuments(docsByIri, 'ground vehicle', opts, 10);
+    expect(results).toHaveLength(1);
+    expect(results[0].doc.iri).toBe('http://example.org/ont#GroundVehicle');
   });
 
   test('searchDocuments: definition field can be excluded', () => {
