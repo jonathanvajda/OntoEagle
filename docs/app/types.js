@@ -20,12 +20,23 @@
  * @property {string} namespace
  *
  * @property {string=} definition
- * @property {string[]=} citations
- * @property {string[]=} examples
- * @property {string[]=} clarifications
+ * @property {{value:string, iri?:string, datatype?:string, language?:string}[]=} citations
+ * @property {{value:string, iri?:string, datatype?:string, language?:string}[]=} definitionSources
+ * @property {{value:string, iri?:string, datatype?:string, language?:string}[]=} examples
+ * @property {{value:string, iri?:string, datatype?:string, language?:string}[]=} clarifications
+ * @property {{value:string, iri?:string, datatype?:string, language?:string}[]=} comments
+ * @property {{value:string, iri?:string, datatype?:string, language?:string}[]=} curatorNotes
+ * @property {string[]=} typeIris
+ * @property {string[]=} additionalTypes
  * @property {string[]=} parents
  * @property {string[]=} children
  * @property {string[]=} hierarchyPredicates
+ * @property {string[]=} subClassOf
+ * @property {string[]=} subPropertyOf
+ * @property {string[]=} disjointWith
+ * @property {string[]=} equivalentClasses
+ * @property {string[]=} domains
+ * @property {string[]=} ranges
  * @property {any[]=} subClassOfAxioms
  * @property {any[]=} subPropertyOfAxioms
  * @property {Record<string, any>=} blankNodeMap

@@ -216,11 +216,18 @@
 }
 
 .ont-search__resultIri {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   font-family: var(--ont-font-mono);
   font-size: 1.25rem;
   color: var(--ont-muted);
-  word-break: break-all;
   padding-bottom: 1rem;
+}
+
+.ont-search__resultIri span {
+  min-width: 0;
+  word-break: break-all;
 }
 
 /* ---------- Pills ---------- */
@@ -253,6 +260,83 @@
 .ont-search__detailsIri code {
   font-family: var(--ont-font-mono);
   font-size: 1.5rem;
+}
+
+.ont-search__detailsMeta {
+  margin: 0.85rem 0;
+}
+
+.ont-search__detailsList {
+  margin: 0.35rem 0 0;
+  padding-left: 1.35rem;
+}
+
+.ont-search__detailsList li {
+  margin: 0.25rem 0;
+}
+
+.ont-search__detailsList code {
+  font-family: var(--ont-font-mono);
+  font-size: 0.9em;
+  color: var(--ont-muted);
+}
+
+.ont-search__detailsList--pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding-left: 0;
+  list-style: none;
+}
+
+.ont-search__detailsPillItem {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--ont-border);
+  border-radius: 999px;
+  background: var(--ont-pill-bg);
+  color: var(--ont-pill-text);
+  padding: 0.15rem 0.55rem;
+}
+
+.ont-search__inlineBtn,
+.ont-search__copyBtn {
+  border: 1px solid var(--ont-border);
+  border-radius: 4px;
+  background: var(--ont-code-bg);
+  color: var(--ont-text);
+  cursor: pointer;
+}
+
+.ont-search__inlineBtn {
+  margin-left: 0.35rem;
+  padding: 0.05rem 0.35rem;
+  font-size: 0.9em;
+}
+
+.ont-search__copyBtn {
+  display: inline-grid;
+  place-items: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  margin-left: 0.35rem;
+  padding: 0;
+  font-size: 0.9rem;
+  line-height: 1;
+  vertical-align: text-bottom;
+}
+
+.ont-search__inlineBtn:hover,
+.ont-search__copyBtn:hover {
+  border-color: var(--ont-accent);
+}
+
+.ont-search__expandText {
+  display: inline;
+}
+
+.ont-search__expandRest:not([hidden]) {
+  display: inline;
 }
 
 .ont-search__detailsSubhead {

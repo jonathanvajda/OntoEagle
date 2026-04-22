@@ -26,6 +26,14 @@
 import { normalizeQuery, normalizeText } from './normalize.js';
 import { docMatchesNamespaceFilter, normalizeNamespaceFilters } from './namespaces.js';
 
+function fieldValuesToText(values) {
+  return (values || []).map((v) => {
+    if (typeof v === 'string') return v;
+    if (v && typeof v === 'object') return v.value || v.iri || '';
+    return '';
+  }).join(' ');
+}
+
 /**
  * @param {string} token
  * @param {string} haystackNormalized
@@ -90,9 +98,9 @@ export function scoreDocument(doc, queryTokens, options) {
   const alt = normalizeText((doc.altLabels || []).join(' '));
 
   const def = options.includeDefinition ? normalizeText(doc.definition || '') : '';
-  const cit = options.includeCitation ? normalizeText((doc.citations || []).join(' ')) : '';
-  const ex = options.includeExamples ? normalizeText((doc.examples || []).join(' ')) : '';
-  const cl = options.includeClarifications ? normalizeText((doc.clarifications || []).join(' ')) : '';
+  const cit = options.includeCitation ? normalizeText(fieldValuesToText(doc.citations)) : '';
+  const ex = options.includeExamples ? normalizeText(fieldValuesToText(doc.examples)) : '';
+  const cl = options.includeClarifications ? normalizeText(fieldValuesToText(doc.clarifications)) : '';
 
   let labelHits = 0;
   let defOnlyHits = 0;

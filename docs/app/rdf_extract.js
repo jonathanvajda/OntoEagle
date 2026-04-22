@@ -17,6 +17,7 @@ const SKOS = 'http://www.w3.org/2004/02/skos/core#';
 const CCEO = 'http://www.ontologyrepository.com/CommonCoreOntologies/';
 const CCO2 = 'https://www.commoncoreontologies.org/';
 const DCTERMS = 'http://purl.org/dc/terms/';
+const OBO = 'http://purl.obolibrary.org/obo/';
 export const ADDED_BY_USER_IRI = 'https://jonathanvajda.github.io/OntoEagle/added_by_user';
 
 /** Common predicate keys (full IRIs + compact forms) */
@@ -25,19 +26,20 @@ const P = Object.freeze({
   label: [`${RDFS}label`, 'rdfs:label', 'label'],
   prefLabel: [`${SKOS}prefLabel`, 'skos:prefLabel', 'prefLabel'],
   altLabel: [`${SKOS}altLabel`, 'skos:altLabel', 'altLabel'],
-  definition: [`${SKOS}definition`, 'skos:definition', 'definition', `${OWL}IAO_0000115`, 'IAO_0000115', `${CCEO}definition`],
-  citation: [
-    `${DCTERMS}bibliographicCitation`,
-    'dc:bibliographicCitation',
-    `${RDFS}seeAlso`,
-    'rdfs:seeAlso',
-    `${CCEO}definition_source`,
-  ],
-  example: [`${SKOS}example`, 'skos:example', 'example', `${CCEO}example_of_usage`],
-  note: [`${SKOS}note`, 'skos:note', 'note'],
+  definition: [`${SKOS}definition`, 'skos:definition', 'definition', `${OBO}IAO_0000115`, 'obo:IAO_0000115', 'IAO_0000115', `${CCEO}definition`],
+  citation: [`${DCTERMS}bibliographicCitation`, 'dcterms:bibliographicCitation'],
+  definitionSource: [`${CCEO}definition_source`, `${CCO2}ont00001754`, `${OBO}IAO_0000119`, 'cceo:definition_source', 'cco2:ont00001754', 'obo:IAO_0000119', 'IAO_0000119'],
+  example: [`${SKOS}example`, `${OBO}IAO_0000112`, `${CCEO}example_of_usage`, 'skos:example', 'example', 'obo:IAO_0000112', 'IAO_0000112', 'cceo:example_of_usage'],
+  note: [`${SKOS}scopeNote`, `${OBO}IAO_0000600`, `${CCEO}elucidation`, 'skos:scopeNote', 'scopeNote', 'obo:IAO_0000600', 'IAO_0000600', 'cceo:elucidation'],
+  comment: [`${RDFS}comment`, 'rdfs:comment', 'comment'],
+  curatorNote: [`${OBO}IAO_0000232`, 'obo:IAO_0000232', 'IAO_0000232'],
   curated_in: [`${CCEO}is_curated_in_ontology`, `${RDFS}isDefinedBy`, `${CCO2}ont00001760`],
   subClassOf: [`${RDFS}subClassOf`, 'rdfs:subClassOf'],
   subPropertyOf: [`${RDFS}subPropertyOf`, 'rdfs:subPropertyOf'],
+  disjointWith: [`${OWL}disjointWith`, 'owl:disjointWith'],
+  equivalentClass: [`${OWL}equivalentClass`, 'owl:equivalentClass'],
+  domain: [`${RDFS}domain`, 'rdfs:domain'],
+  range: [`${RDFS}range`, 'rdfs:range'],
   broader: [`${SKOS}broader`, 'skos:broader'],
   narrower: [`${SKOS}narrower`, 'skos:narrower'],
   addedByUser: [ADDED_BY_USER_IRI, 'added_by_user'],
@@ -110,6 +112,38 @@ export function valueToIris(v) {
   return [];
 }
 
+/**
+ * Convert JSON-LD value(s) into displayable objects while preserving typed URI literals.
+ *
+ * @param {any} v
+ * @returns {Array<{value:string, iri?:string, datatype?:string, language?:string}>}
+ */
+export function valueToDisplayValues(v) {
+  if (v == null) return [];
+  if (typeof v === 'string') return [{ value: v }];
+  if (Array.isArray(v)) return v.flatMap(valueToDisplayValues).filter((item) => item.value);
+  if (typeof v === 'object') {
+    if (typeof v['@value'] === 'string') {
+      const out = { value: v['@value'] };
+      if (typeof v['@type'] === 'string') out.datatype = v['@type'];
+      if (typeof v['@language'] === 'string') out.language = v['@language'];
+      return [out];
+    }
+    if (typeof v['@id'] === 'string' && !v['@id'].startsWith('_:')) {
+      return [{ value: v['@id'], iri: v['@id'] }];
+    }
+  }
+  return [];
+}
+
+function valueToTypeIris(v) {
+  if (v == null) return [];
+  if (typeof v === 'string') return [v];
+  if (Array.isArray(v)) return v.flatMap(valueToTypeIris).filter(Boolean);
+  if (typeof v === 'object' && typeof v['@id'] === 'string') return [v['@id']];
+  return [];
+}
+
 function ensureArray(v) {
   if (v == null) return [];
   return Array.isArray(v) ? v : [v];
@@ -126,7 +160,7 @@ function cloneJsonLdValue(v) {
  * @returns {import('./types.js').OntologyElementType}
  */
 export function inferElementType(typeValue) {
-  const types = valueToStrings(typeValue);
+  const types = valueToTypeIris(typeValue);
 
   // types might be CURIE-like or full IRIs.
   const has = (t) => types.includes(t) || types.includes(`owl:${t}`) || types.includes(`${OWL}${t}`);
@@ -207,13 +241,21 @@ export function extractDocumentsFromJsonLd(jsonld) {
 
     const definition = valueToStrings(getAny(node, P.definition))[0];
 
-    const citations = valueToStrings(getAny(node, P.citation));
-    const examples = valueToStrings(getAny(node, P.example));
-    const clarifications = valueToStrings(getAny(node, P.note)); // treat skos:note as clarifications for now
+    const citations = valueToDisplayValues(getAny(node, P.citation));
+    const definitionSources = valueToDisplayValues(getAny(node, P.definitionSource));
+    const examples = valueToDisplayValues(getAny(node, P.example));
+    const clarifications = valueToDisplayValues(getAny(node, P.note));
+    const comments = valueToDisplayValues(getAny(node, P.comment));
+    const curatorNotes = valueToDisplayValues(getAny(node, P.curatorNote));
     const curated_in = valueToStrings(getAny(node, P.curated_in));
+    const typeIris = valueToTypeIris(getAny(node, P.type));
     const subClassParents = valueToIris(getAny(node, P.subClassOf));
     const broaderParents = valueToIris(getAny(node, P.broader));
     const subPropertyParents = valueToIris(getAny(node, P.subPropertyOf));
+    const disjointWith = valueToIris(getAny(node, P.disjointWith));
+    const equivalentClasses = valueToIris(getAny(node, P.equivalentClass));
+    const domains = valueToIris(getAny(node, P.domain));
+    const ranges = valueToIris(getAny(node, P.range));
     const subClassOfAxioms = ensureArray(getAny(node, P.subClassOf)).map(cloneJsonLdValue);
     const subPropertyOfAxioms = ensureArray(getAny(node, P.subPropertyOf)).map(cloneJsonLdValue);
     const hierarchyPredicates = [];
@@ -236,13 +278,24 @@ export function extractDocumentsFromJsonLd(jsonld) {
       altLabels,
       namespace: computeNamespace(iri),
       definition,
+      typeIris: typeIris.length ? typeIris : undefined,
+      additionalTypes: typeIris.length ? typeIris.filter((t) => ![`owl:${type}`, `${OWL}${type}`].includes(t)) : undefined,
       citations: citations.length ? citations : undefined,
+      definitionSources: definitionSources.length ? definitionSources : undefined,
       examples: examples.length ? examples : undefined,
       clarifications: clarifications.length ? clarifications : undefined,
+      comments: comments.length ? comments : undefined,
+      curatorNotes: curatorNotes.length ? curatorNotes : undefined,
       curated_in: curated_in.length ? curated_in : undefined,
       parents: Array.from(new Set([...subClassParents, ...broaderParents, ...subPropertyParents])),
       children: [],
       hierarchyPredicates,
+      subClassOf: subClassParents.length ? subClassParents : undefined,
+      subPropertyOf: subPropertyParents.length ? subPropertyParents : undefined,
+      disjointWith: disjointWith.length ? disjointWith : undefined,
+      equivalentClasses: equivalentClasses.length ? equivalentClasses : undefined,
+      domains: domains.length ? domains : undefined,
+      ranges: ranges.length ? ranges : undefined,
       subClassOfAxioms,
       subPropertyOfAxioms,
       blankNodeMap,
