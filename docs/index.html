@@ -221,6 +221,23 @@
             </button>
           </div>
         </details>
+
+        <details class="ont-search__details" open>
+          <summary class="ont-search__summary"><strong>User ontologies</strong></summary>
+          <fieldset class="ont-search__fieldset">
+            <legend class="ont-search__legend">Add ontology</legend>
+            <input
+              id="ontUserOntologyFile"
+              class="ont-search__input"
+              type="file"
+              multiple
+              accept=".ttl,.turtle,.n3,.nt,.ntriples,.nq,.trig,.jsonld,.json-ld,.rdf,.owl,.xml"
+            />
+            <p class="ont-search__help">Loaded ontologies stay in this browser and can be searched across sessions.</p>
+          </fieldset>
+          <div id="ontUserOntologyStatus" class="ont-search__help" aria-live="polite"></div>
+          <div id="ontUserOntologyList" class="ont-search__ontologyList"></div>
+        </details>
       </form>
     </section>
 
@@ -331,6 +348,9 @@
     })();
   </script>
   <!-- App JS --> 
+  <script src="./app/n3.min.js"></script>
+  <script src="./app/jsonld.min.js"></script>
+  <script src="./app/rdflib.min.js"></script>
   <script type="module" src="./app/bundler-core.js"></script>
   <script type="module" src="./app/search-main.js"></script>
 

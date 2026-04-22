@@ -24,6 +24,15 @@
  */
 
 import { normalizeQuery, normalizeText } from './normalize.js';
+import { docMatchesNamespaceFilter, normalizeNamespaceFilters } from './namespaces.js';
+
+function fieldValuesToText(values) {
+  return (values || []).map((v) => {
+    if (typeof v === 'string') return v;
+    if (v && typeof v === 'object') return v.value || v.iri || '';
+    return '';
+  }).join(' ');
+}
 
 /**
  * @param {string} token
@@ -54,19 +63,10 @@ export function docPassesFilters(doc, options) {
   }
 
   // Namespace filter
-  const nsFilters = (options.namespaces || [])
-    .map((s) => normalizeText(s))
-    .filter(Boolean);
+  const nsFilters = normalizeNamespaceFilters(options.namespaces || []);
 
   if (nsFilters.length) {
-    const ns = normalizeText(doc.namespace || '');
-    const iri = normalizeText(doc.iri || '');
-
-    // Accept if:
-    // - stored namespace equals filter
-    // - stored namespace starts with filter (lets you filter by prefix tokens if you store those)
-    // - IRI starts with a namespace IRI filter
-    const ok = nsFilters.some((f) => ns === f || ns.startsWith(f) || iri.startsWith(f));
+    const ok = nsFilters.some((f) => docMatchesNamespaceFilter(doc, f));
     if (!ok) return false;
   }
 
@@ -98,9 +98,9 @@ export function scoreDocument(doc, queryTokens, options) {
   const alt = normalizeText((doc.altLabels || []).join(' '));
 
   const def = options.includeDefinition ? normalizeText(doc.definition || '') : '';
-  const cit = options.includeCitation ? normalizeText((doc.citations || []).join(' ')) : '';
-  const ex = options.includeExamples ? normalizeText((doc.examples || []).join(' ')) : '';
-  const cl = options.includeClarifications ? normalizeText((doc.clarifications || []).join(' ')) : '';
+  const cit = options.includeCitation ? normalizeText(fieldValuesToText(doc.citations)) : '';
+  const ex = options.includeExamples ? normalizeText(fieldValuesToText(doc.examples)) : '';
+  const cl = options.includeClarifications ? normalizeText(fieldValuesToText(doc.clarifications)) : '';
 
   let labelHits = 0;
   let defOnlyHits = 0;
@@ -112,30 +112,28 @@ export function scoreDocument(doc, queryTokens, options) {
     let tokenMatchedSomewhere = false;
     let tokenMatchedLabelOrIri = false;
 
-    // --- Exact matches ---
-    if (options.exact) {
-      if (label === tok) {
-        score += 100;
-        labelHits += 1;
-        tokenMatchedSomewhere = true;
-        tokenMatchedLabelOrIri = true;
-        reasons.push(`label == "${tok}" (+100)`);
-      }
-      if (iri === tok) {
+    // --- Exact equality is always a relevance signal.
+    // If wildcard is off, this block also acts as exact-only matching.
+    if (label === tok) {
+      score += 160;
+      labelHits += 1;
+      tokenMatchedSomewhere = true;
+      tokenMatchedLabelOrIri = true;
+      reasons.push(`label == "${tok}" (+160)`);
+    }
+    if (iri === tok || iri.endsWith(`/${tok}`) || iri.endsWith(`#${tok}`)) {
+      score += 150;
+      tokenMatchedSomewhere = true;
+      tokenMatchedLabelOrIri = true;
+      reasons.push(`iri == "${tok}" (+150)`);
+    }
+
+    if (doc.altLabels?.length) {
+      const altExact = doc.altLabels.some((a) => normalizeText(a) === tok);
+      if (altExact) {
         score += 120;
         tokenMatchedSomewhere = true;
-        tokenMatchedLabelOrIri = true;
-        reasons.push(`iri == "${tok}" (+120)`);
-      }
-
-      // altLabels as exact: if any altLabel equals tok
-      if (doc.altLabels?.length) {
-        const altExact = doc.altLabels.some((a) => normalizeText(a) === tok);
-        if (altExact) {
-          score += 70;
-          tokenMatchedSomewhere = true;
-          reasons.push(`altLabel == "${tok}" (+70)`);
-        }
+        reasons.push(`altLabel == "${tok}" (+120)`);
       }
     }
 
@@ -217,6 +215,16 @@ export function scoreDocument(doc, queryTokens, options) {
  */
 export function searchDocuments(docsByIri, query, options, limit = 50) {
   const queryTokens = normalizeQuery(query);
+  const fullQuery = normalizeText(query);
+  const phraseQuery = queryTokens.length === 1 && queryTokens[0].includes(' ')
+    ? queryTokens[0]
+    : fullQuery;
+  const isPhraseQuery = phraseQuery && phraseQuery.includes(' ');
+  const scoringTokens = isPhraseQuery && options.exact && !options.wildcard
+    ? [phraseQuery]
+    : isPhraseQuery
+      ? Array.from(new Set([phraseQuery, ...queryTokens]))
+    : queryTokens;
   if (!queryTokens.length) return { results: [], queryTokens };
 
   /** @type {Array<any>} */
@@ -226,17 +234,34 @@ export function searchDocuments(docsByIri, query, options, limit = 50) {
     if (!docPassesFilters(doc, options)) continue;
 
     const { score, matchedTokens, labelHits, defOnlyHits, reasons } =
-      scoreDocument(doc, queryTokens, options);
+      scoreDocument(doc, scoringTokens, options);
 
-    if (score <= 0) continue;
+    let finalScore = score;
+    let finalLabelHits = labelHits;
+    const finalReasons = [...reasons];
+
+    if (isPhraseQuery && options.wildcard) {
+      const label = normalizeText(doc.label || '');
+      const altExact = (doc.altLabels || []).some((a) => normalizeText(a) === phraseQuery);
+      if (label === phraseQuery) {
+        finalScore += 300;
+        finalLabelHits += 1;
+        finalReasons.push(`label phrase == "${phraseQuery}" (+300)`);
+      } else if (altExact) {
+        finalScore += 220;
+        finalReasons.push(`altLabel phrase == "${phraseQuery}" (+220)`);
+      }
+    }
+
+    if (finalScore <= 0) continue;
 
     scored.push({
       doc,
-      score,
+      score: finalScore,
       matchedTokenCount: matchedTokens.size,
-      labelHits,
+      labelHits: finalLabelHits,
       defOnlyHits,
-      reasons
+      reasons: finalReasons
     });
   }
 

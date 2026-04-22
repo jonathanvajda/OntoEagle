@@ -4,7 +4,7 @@
    - graph.jsonld: stale-while-revalidate
 */
 
-const SW_VERSION = '__BUILD_ID__';
+const SW_VERSION = '__BUILD_ID__-details-fields-v1';
 const CACHE_SHELL = `ontoeagle-shell-${SW_VERSION}`;
 const CACHE_DATA = `ontoeagle-data-${SW_VERSION}`;
 
@@ -19,11 +19,17 @@ const SHELL_ASSETS = [
   './app/search-main.js',
   './app/search.js',
   './app/normalize.js',
+  './app/namespaces.js',
+  './app/rdf_io.js',
+  './app/slim-core.js',
   './app/rdf_extract.js',
   './app/indexeddb.min.js',
   './app/types.js',
   './app/bundler-core.js',
   './app/bundler-ui.js',
+  './app/n3.min.js',
+  './app/jsonld.min.js',
+  './app/rdflib.min.js',
   './images/add-to-cart.svg',
   './images/default-logo.png',
   './images/block-logo.png',

@@ -138,6 +138,50 @@
         </label>
         <button id="btnExportSeed" type="button">Export ROBOT seed (.txt)</button>
 
+        <h3>Generate Ontology Slim</h3>
+        <label>
+            Seed file:
+            <input id="seedFileInput" type="file" accept=".txt,.seed,.csv" />
+        </label>
+        <label for="txtSeedInput">Seed IRIs</label>
+        <textarea id="txtSeedInput" placeholder="One IRI per line"></textarea>
+        <div class="row">
+            <label>
+                SCO:
+                <select id="selScoMode">
+                    <option value="minimal" selected>Minimal</option>
+                    <option value="maximal">Maximal</option>
+                </select>
+            </label>
+            <label>
+                SPO:
+                <select id="selSpoMode">
+                    <option value="minimal" selected>Minimal</option>
+                    <option value="maximal">Maximal</option>
+                </select>
+            </label>
+            <label>
+                Annotations:
+                <select id="selAnnotationMode">
+                    <option value="minimal" selected>Minimal</option>
+                    <option value="maximal">Maximal</option>
+                </select>
+            </label>
+            <label>
+                Provenance:
+                <select id="selProvenanceMode">
+                    <option value="lite" selected>Lite</option>
+                    <option value="full">Full</option>
+                </select>
+            </label>
+        </div>
+        <div class="row">
+            <button id="btnLoadBundleSeeds" type="button">Use selected bundle as seeds</button>
+            <button id="btnExportSlimTurtle" type="button">Export slim Turtle</button>
+            <button id="btnExportSlimJsonLd" type="button">Export slim JSON-LD</button>
+        </div>
+        <div id="slimStatus" class="itemDefinedByValue" aria-live="polite"></div>
+
         <h3>Manage Bundles</h3>
         
         <button id="btnCreateBundle" type="button">Create bundle</button><br />
