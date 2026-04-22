@@ -325,7 +325,9 @@ function renderTaxonomy(doc) {
     ? extraParents.map((iri) => renderTaxonomyNode(iri, 'ont-search__treeItem--ancestor ont-search__treeItem--extraParent', '├─', chain.length)).join('')
     : '';
   const siblingHtml = siblings.length
-    ? siblings.map((iri) => renderTaxonomyNode(iri, 'ont-search__treeItem--sibling', '├─', chain.length)).join('')
+    ? siblings.map((iri, index) =>
+        renderTaxonomyNode(iri, 'ont-search__treeItem--sibling', index === siblings.length - 1 ? '└─' : '├─', chain.length)
+      ).join('')
     : '';
   const childHtml = children.length
     ? `<ul class="ont-search__treeLevel ont-search__treeLevel--children">${children.map((iri, index) =>
@@ -340,9 +342,9 @@ function renderTaxonomy(doc) {
         <ul class="ont-search__treeLevel ont-search__treeLevel--root">
           ${ancestorHtml}
           ${extraParentHtml}
-          ${siblingHtml}
-          ${renderTaxonomyNode(doc.iri, 'ont-search__treeItem--focus', children.length ? '├─' : '└─', chain.length)}
+          ${renderTaxonomyNode(doc.iri, 'ont-search__treeItem--focus', children.length || siblings.length ? '├─' : '└─', chain.length)}
           ${childHtml}
+          ${siblingHtml}
         </ul>
       </div>
     </section>
