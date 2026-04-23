@@ -27,6 +27,11 @@ If you fork this repository, the simplest path is:
 2. **Add your custom ontologies** to:
    ```text
    $project_root/src/ontologies
+   ```
+
+## License
+
+This project is licensed under the GNU General Public License version 3.0. See [LICENSE](LICENSE) for the full license text.
 
 
 # Workflow w/ OntoEagle and CQ Ferret
