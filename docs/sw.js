@@ -11,11 +11,19 @@ const CACHE_DATA = `ontoeagle-data-${SW_VERSION}`;
 // Keep this list tight and explicit.
 const SHELL_ASSETS = [
   './index.html',
+  './ontology-catalog.html',
+  './ontology-viewer.html',
   './bundler.html',
   './styles/skeleton.css',
   './styles/app-base.css',
   './styles/search-app.css',
+  './styles/ontology-pages.css',
+  './styles/tabulator.min.css',
   './styles/bundler.css',
+  './app/ontology-catalog.js',
+  './app/ontology-viewer.js',
+  './app/ontology-meta.js',
+  './app/ontology-icons.js',
   './app/search-main.js',
   './app/search.js',
   './app/normalize.js',
@@ -27,6 +35,8 @@ const SHELL_ASSETS = [
   './app/types.js',
   './app/bundler-core.js',
   './app/bundler-ui.js',
+  './app/tabulator.min.js',
+  './app/mermaid.min.js',
   './app/n3.min.js',
   './app/jsonld.min.js',
   './app/rdflib.min.js',
@@ -38,6 +48,7 @@ const SHELL_ASSETS = [
 // Single consolidated dataset produced by Python
 const DATA_ASSETS = [
   './data/graph.jsonld',
+  './data/ontology-registry.json',
 ];
 
 self.addEventListener('install', (event) => {
@@ -75,7 +86,7 @@ self.addEventListener('fetch', (event) => {
   const path = url.pathname;
 
   // Dataset: stale-while-revalidate
-  if (path.endsWith('/data/graph.jsonld')) {
+  if (path.endsWith('/data/graph.jsonld') || path.endsWith('/data/ontology-registry.json')) {
     event.respondWith(staleWhileRevalidate(req, CACHE_DATA));
     return;
   }

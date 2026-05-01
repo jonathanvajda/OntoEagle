@@ -12,6 +12,7 @@ module.exports = {
     'docs/app/**/*.js',
     '!docs/app/search-main.js',
     '!docs/app/indexeddb.min.js',
+    '!docs/app/mermaid.min.js',
     '!docs/app/types.js'
   ]
 };

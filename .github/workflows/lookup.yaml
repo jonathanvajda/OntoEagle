@@ -39,6 +39,12 @@ jobs:
             --out-jsonld ./docs/data/graph.jsonld \
             --out-nq ./docs/data/graph.nq
 
+      - name: Publish hosted ontology files -> docs/ontologies
+        run: |
+          mkdir -p docs/ontologies
+          find docs/ontologies -type f -delete
+          find src/ontologies -type f \( -name "*.ttl" -o -name "*.rdf" -o -name "*.owl" -o -name "*.nt" -o -name "*.nq" -o -name "*.trig" -o -name "*.jsonld" \) -exec cp {} docs/ontologies/ \;
+
       - name: Stamp service worker build id
         run: |
           BUILD_ID="${GITHUB_SHA::8}"
