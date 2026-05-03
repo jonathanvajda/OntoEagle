@@ -1,6 +1,5 @@
 import {
   ONTOLOGY_LEVELS,
-  exportRegistryJson,
   loadOntologyWorkspace,
   saveRegistryOverride,
   truncateText
@@ -11,7 +10,8 @@ const statusText = document.getElementById('ontStatusText');
 const loading = document.getElementById('ontologyCatalogLoading');
 const tableBody = document.getElementById('ontologyCatalogBody');
 const tableWrap = document.getElementById('ontologyCatalogTableWrap');
-const exportBtn = document.getElementById('ontologyRegistryExportBtn');
+const missingMetadataModal = document.getElementById('ontologyMissingMetadataModal');
+const missingMetadataList = document.getElementById('ontologyMissingMetadataList');
 const modal = document.getElementById('ontologyRegistryModal');
 const form = document.getElementById('ontologyRegistryForm');
 const cancelBtn = document.getElementById('ontologyRegistryCancelBtn');
@@ -43,14 +43,14 @@ function externalLink(href, label, html, className = '') {
 
 function renderRepo(record) {
   if (!record.git_repo_url) {
-    return `<button class="ont-catalog__iconBtn" type="button" data-edit-registry="${escapeHtml(record.iri)}">Add<span class="ont-catalog__sr"> repository data</span></button>`;
+    return `<button class="ont-catalog__textBtn" type="button" data-edit-registry="${escapeHtml(record.iri)}">Add<span class="ont-catalog__sr"> repository data</span></button>`;
   }
   return externalLink(record.git_repo_url, 'Open repository', iconSvg(record.git_logo), 'ont-catalog__iconBtn');
 }
 
 function renderDownload(record) {
   if (!record.file) {
-    return `<button class="ont-catalog__iconBtn" type="button" data-edit-registry="${escapeHtml(record.iri)}">Add<span class="ont-catalog__sr"> download data</span></button>`;
+    return `<button class="ont-catalog__textBtn" type="button" data-edit-registry="${escapeHtml(record.iri)}">Add<span class="ont-catalog__sr"> download data</span></button>`;
   }
   return `<a class="ont-catalog__iconBtn" href="${escapeHtml(record.file)}" download title="Download ontology" aria-label="Download ontology">${iconSvg('download')}</a>`;
 }
@@ -91,6 +91,43 @@ function renderCatalog(records) {
   });
 }
 
+function missingMetadataRecords() {
+  return (workspace?.records || [])
+    .filter((record) => !record.git_repo_url || !record.file || !record.issue_tracker_url || !record.registered)
+    .sort((a, b) => String(a.label || a.iri).localeCompare(String(b.label || b.iri)));
+}
+
+function renderMissingMetadataModal() {
+  const records = missingMetadataRecords();
+  if (!records.length) {
+    missingMetadataList.innerHTML = '<p class="ont-viewer__empty">Every catalog ontology has registry metadata.</p>';
+  } else {
+    missingMetadataList.innerHTML = records.map((record) => {
+      const missing = [
+        !record.registered ? 'registry entry' : '',
+        !record.git_repo_url ? 'repository' : '',
+        !record.issue_tracker_url ? 'issue tracker' : '',
+        !record.file ? 'download file' : ''
+      ].filter(Boolean).join(', ');
+      return `<div class="ont-catalog__missingItem">
+        <div>
+          <div class="ont-catalog__missingTitle">${escapeHtml(record.label || record.iri)}</div>
+          <div class="ont-catalog__iri">${escapeHtml(record.iri)}</div>
+          <div>Missing: ${escapeHtml(missing)}</div>
+        </div>
+        <button class="ont-search__btn ont-search__btn--secondary" type="button" data-edit-registry="${escapeHtml(record.iri)}">Add</button>
+      </div>`;
+    }).join('');
+  }
+  missingMetadataList.querySelectorAll('[data-edit-registry]').forEach((button) => {
+    button.addEventListener('click', () => {
+      missingMetadataModal?.close();
+      openRegistryModal(button.getAttribute('data-edit-registry') || '');
+    });
+  });
+  missingMetadataModal?.showModal();
+}
+
 function openRegistryModal(iri) {
   const record = workspace?.records.find((item) => item.iri === iri);
   editingIri = iri;
@@ -103,24 +140,12 @@ function openRegistryModal(iri) {
   if (modal?.showModal) modal.showModal();
 }
 
-function downloadTextFile(fileName, text) {
-  const blob = new Blob([text], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-}
-
 async function refresh() {
   const started = performance.now();
   loading.hidden = false;
   tableWrap.hidden = true;
   setStatus('Loading ontology catalog...');
-  workspace = await loadOntologyWorkspace({ preferSnapshot: true, includeDocs: false });
+  workspace = await loadOntologyWorkspace({ preferSnapshot: true, includeDocs: false, includeUserOntologies: true });
   renderCatalog(workspace.records);
   const elapsed = Math.round(performance.now() - started);
   if (workspace.fromSnapshot) setStatus(`${workspace.records.length} ontologies ready from local snapshot in ${elapsed} ms.`);
@@ -139,10 +164,8 @@ form?.addEventListener('submit', async (event) => {
 
 cancelBtn?.addEventListener('click', () => modal?.close());
 
-exportBtn?.addEventListener('click', () => {
-  if (!workspace) return;
-  downloadTextFile('ontology-registry.json', exportRegistryJson(workspace.registry));
-});
+window.ontoeagleOpenMissingMetadata = renderMissingMetadataModal;
+window.addEventListener('ontoeagle:catalog-data-updated', () => refresh());
 
 refresh().catch((err) => {
   console.error(err);

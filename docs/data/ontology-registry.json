@@ -8,6 +8,14 @@
     "file": "./ontologies/bfo-core.ttl"
   },
   {
+    "iri": "http://purl.obolibrary.org/obo/ico.owl",
+    "ontology_level": "domain",
+    "git_repo_url": "https://github.com/ICO-ontology/ICO",
+    "git_logo": "github",
+    "issue_tracker_url": "https://github.com/ICO-ontology/ICO/issues",
+    "file": "./ontologies/ico.owl"
+  },
+  {
     "iri": "http://purl.obolibrary.org/obo/omo.owl",
     "ontology_level": "mid",
     "git_repo_url": "https://github.com/information-artifact-ontology/ontology-metadata",
@@ -17,7 +25,7 @@
   },
   {
     "iri": "http://purl.org/geojson/vocab#",
-    "ontology_level": "kg",
+    "ontology_level": "dom",
     "git_repo_url": "https://github.com/geojson/geojson-ld",
     "git_logo": "github",
     "issue_tracker_url": "https://github.com/geojson/geojson-ld/issues",
@@ -26,7 +34,7 @@
   {
     "iri": "http://www.ontologyrepository.com/CommonCoreOntologies/Domain/CognitiveProcessOntology",
     "ontology_level": "dom",
-    "git_repo_url": "https://github.com/CommonCoreOntology/CommonCoreOntologies",
+    "git_repo_url": "https://github.com/CommonCoreOntology/CognitiveProcessOntology",
     "git_logo": "github",
     "issue_tracker_url": "https://github.com/CommonCoreOntology/CommonCoreOntologies/issues",
     "file": "./ontologies/CognitiveProcessOntology.ttl"
@@ -34,30 +42,21 @@
   {
     "iri": "http://www.ontologyrepository.com/CommonCoreOntologies/Domain/CyberOntology",
     "ontology_level": "dom",
-    "git_repo_url": "https://github.com/CommonCoreOntology/CommonCoreOntologies",
-    "git_logo": "github",
-    "issue_tracker_url": "https://github.com/CommonCoreOntology/CommonCoreOntologies/issues",
+    "git_repo_url": "https://opensource.ieee.org/cyber-ontology-working-group/cyber-ontology-releases",
+    "git_logo": "gitlab",
+    "issue_tracker_url": "https://opensource.ieee.org/cyber-ontology-working-group/cyber-ontology-releases/issues",
     "file": "./ontologies/CyberOntology.ttl"
   },
   {
     "iri": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "ontology_level": "top",
-    "git_repo_url": "https://github.com/w3c/rdf-concepts",
-    "git_logo": "github",
-    "issue_tracker_url": "https://github.com/w3c/rdf-concepts/issues",
     "file": "./ontologies/rdf-syntax.ttl"
   },
   {
     "iri": "http://www.w3.org/2000/01/rdf-schema#",
-    "ontology_level": "top",
-    "git_repo_url": "https://github.com/w3c/rdf-schema",
-    "git_logo": "github",
-    "issue_tracker_url": "https://github.com/w3c/rdf-schema/issues",
     "file": "./ontologies/rdf-schema.ttl"
   },
   {
     "iri": "http://www.w3.org/2002/07/owl",
-    "ontology_level": "top",
     "git_repo_url": "https://github.com/w3c/owl",
     "git_logo": "github",
     "issue_tracker_url": "https://github.com/w3c/owl/issues",
@@ -65,15 +64,11 @@
   },
   {
     "iri": "http://www.w3.org/2004/02/skos/core",
-    "ontology_level": "mid",
-    "git_repo_url": "https://github.com/w3c/skos",
-    "git_logo": "github",
-    "issue_tracker_url": "https://github.com/w3c/skos/issues",
     "file": "./ontologies/skos.rdf"
   },
   {
     "iri": "http://www.w3.org/ns/dcat",
-    "ontology_level": "kg",
+    "ontology_level": "domain",
     "git_repo_url": "https://github.com/w3c/dxwg",
     "git_logo": "github",
     "issue_tracker_url": "https://github.com/w3c/dxwg/issues",
@@ -81,7 +76,7 @@
   },
   {
     "iri": "http://xmlns.com/foaf/0.1/",
-    "ontology_level": "kg",
+    "ontology_level": "domain",
     "git_repo_url": "https://github.com/foaf/foaf",
     "git_logo": "github",
     "issue_tracker_url": "https://github.com/foaf/foaf/issues",
@@ -89,7 +84,7 @@
   },
   {
     "iri": "https://github.com/jonathanvajda/cco-d-acts",
-    "ontology_level": "app",
+    "ontology_level": "dom",
     "git_repo_url": "https://github.com/jonathanvajda/cco-d-acts",
     "git_logo": "github",
     "issue_tracker_url": "https://github.com/jonathanvajda/cco-d-acts/issues",

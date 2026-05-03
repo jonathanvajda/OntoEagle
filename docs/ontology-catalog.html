@@ -23,14 +23,19 @@
   <header id="siteHeader" class="sitehdr-root" role="banner" aria-label="Site header"></header>
 
   <div class="ont-catalog__status">
-    <div aria-live="polite" aria-atomic="true"><span id="ontStatusText">Idle</span></div>
-    <div><a href="./index.html">Search</a></div>
+    <div class="ont-pagebar__left">
+      <nav class="ont-pagebar__nav" aria-label="OntoEagle pages">
+        <a href="./index.html" aria-current="page"><button class="ont-search__btn ont-search__btn--secondary" type="button" data-lookup-service>Search</button></a>
+        <a href="./ontology-catalog.html"><button class="ont-search__btn ont-search__btn--secondary" type="button" data-manage-catalog-table>Catalog</button></a>
+        <button class="ont-search__btn ont-search__btn--secondary" type="button" data-manage-catalog-data>Manage Catalog Data</button>
+      </nav>
+      <div aria-live="polite" aria-atomic="true"><span id="ontStatusText">Idle</span></div>
+    </div>
   </div>
 
   <main class="ont-catalog__main" role="main">
     <div class="ont-catalog__toolbar">
       <h1 class="ont-catalog__title">Ontology Catalog</h1>
-      <button id="ontologyRegistryExportBtn" class="ont-search__btn ont-search__btn--secondary" type="button">Export registry JSON</button>
     </div>
 
     <section class="ont-catalog__panel" aria-label="Ontology catalog table">
@@ -106,11 +111,25 @@
     </form>
   </dialog>
 
+  <dialog id="ontologyMissingMetadataModal" class="ont-catalog__modal ont-catalog__modal--wide">
+    <form method="dialog">
+      <div class="ont-catalog__toolbar">
+        <h2 class="ont-viewer__title">Ontologies missing metadata</h2>
+        <button class="ont-search__btn ont-search__btn--ghost" type="submit">Close</button>
+      </div>
+      <div id="ontologyMissingMetadataList" class="ont-catalog__missingList"></div>
+    </form>
+  </dialog>
+
   <footer class="ont-catalog__footer">
     <p>Copyright Jonathan Vajda. Licensed under the GNU General Public License version 3.0.</p>
   </footer>
 
   <script src="./app/site-header.js"></script>
+  <script src="./app/n3.min.js"></script>
+  <script src="./app/jsonld.min.js"></script>
+  <script src="./app/rdflib.min.js"></script>
+  <script type="module" src="./app/catalog-data-manager.js"></script>
   <script type="module" src="./app/ontology-catalog.js"></script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 import {
+  ADDED_BY_USER_IRI,
   extractDocumentsFromJsonLd,
   mapByIri,
   parseGraphJsonLdText,
@@ -6,7 +7,9 @@ import {
   valueToIris,
   valueToStrings
 } from './rdf_extract.js';
+import { parseRdfTextToJsonLd, readFileAsText } from './rdf_io.js';
 import {
+  idbGetAllDatasetMeta,
   idbGetDatasetMeta,
   idbGetEnabledDocuments,
   idbInit,
@@ -25,6 +28,7 @@ const OBO = 'http://purl.obolibrary.org/obo/';
 const DATASET_SCHEMA_VERSION = 2;
 const REGISTRY_STORAGE_KEY = 'ontoeagle:ontologyRegistryOverrides';
 const ONTOLOGY_SNAPSHOT_KEY = 'ontoeagle:ontologyMetadataSnapshot:v1';
+const USER_ONTOLOGY_RECORDS_KEY = 'ontoeagle:userOntologyRecords:v1';
 const ONTOLOGY_SNAPSHOT_MAX_AGE_MS = 1000 * 60 * 60 * 24;
 
 export const ONTOLOGY_LEVELS = Object.freeze([
@@ -149,6 +153,65 @@ function annotateDocs(docs, meta) {
   }));
 }
 
+function stableDatasetId(fileName, fingerprint) {
+  const safeName = String(fileName || 'ontology')
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80) || 'ontology';
+  return `user:${safeName}:${fingerprint.slice(0, 16)}`;
+}
+
+function annotateUserJsonLd(jsonld) {
+  for (const node of getGraph(jsonld)) {
+    if (node && typeof node === 'object' && typeof node['@id'] === 'string' && node['@id'].startsWith('http')) {
+      node[ADDED_BY_USER_IRI] = [{ '@value': 'TRUE' }];
+    }
+  }
+  return jsonld;
+}
+
+function loadStoredUserOntologyRecords() {
+  try {
+    const raw = globalThis.localStorage?.getItem(USER_ONTOLOGY_RECORDS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_err) {
+    return [];
+  }
+}
+
+function saveStoredUserOntologyRecords(records) {
+  try {
+    globalThis.localStorage?.setItem(USER_ONTOLOGY_RECORDS_KEY, JSON.stringify(records || []));
+  } catch (_err) {
+    // Best-effort companion metadata for user ontologies.
+  }
+}
+
+function upsertStoredUserOntologyRecords(datasetId, records) {
+  const existing = loadStoredUserOntologyRecords().filter((record) => record.datasetId !== datasetId);
+  const next = [
+    ...existing,
+    ...records.map((record) => ({ ...record, datasetId, source: 'user', addedByUser: true }))
+  ];
+  saveStoredUserOntologyRecords(next);
+}
+
+export function removeStoredUserOntologyRecordsForDataset(datasetId) {
+  const next = loadStoredUserOntologyRecords().filter((record) => record.datasetId !== datasetId);
+  saveStoredUserOntologyRecords(next);
+  clearOntologyMetadataSnapshot();
+}
+
+export function clearOntologyMetadataSnapshot() {
+  try {
+    globalThis.localStorage?.removeItem(ONTOLOGY_SNAPSHOT_KEY);
+  } catch (_err) {
+    // No-op.
+  }
+}
+
 export async function fetchGraphJsonLd() {
   const res = await fetch('./data/graph.jsonld', { cache: 'no-store' });
   if (!res.ok) throw new Error(`Failed to fetch graph.jsonld: ${res.status}`);
@@ -184,6 +247,46 @@ export async function ensureBuiltinDataset() {
   }
 
   return { text, jsonld, fingerprint };
+}
+
+export async function importUserOntologyFile(file) {
+  if (!file) return null;
+  const text = await readFileAsText(file);
+  const fingerprint = await sha256Hex(text);
+  const datasetId = stableDatasetId(file.name, fingerprint);
+  const ontologyName = file.name.replace(/\.[^.]+$/, '');
+  const jsonld = annotateUserJsonLd(await parseRdfTextToJsonLd(text, file.name, {
+    baseIRI: `urn:ontoeagle:upload:${encodeURIComponent(file.name)}`
+  }));
+  const docs = annotateDocs(extractDocumentsFromJsonLd(jsonld), {
+    datasetId,
+    source: 'user',
+    ontologyName,
+    fileName: file.name
+  });
+  const ontologyRecords = extractOntologyRecordsFromJsonLd(jsonld).records.map((record) => ({
+    ...record,
+    addedByUser: true,
+    source: 'user',
+    ontologyName,
+    fileName: file.name
+  }));
+
+  await idbPutDocuments(datasetId, docs);
+  await idbPutDatasetMeta(datasetId, {
+    fingerprint,
+    enabled: true,
+    source: 'user',
+    ontologyName,
+    fileName: file.name,
+    documentCount: docs.length,
+    ontologyCount: ontologyRecords.length,
+    schemaVersion: DATASET_SCHEMA_VERSION,
+    updatedAt: Date.now()
+  });
+  upsertStoredUserOntologyRecords(datasetId, ontologyRecords);
+  clearOntologyMetadataSnapshot();
+  return { datasetId, docs, ontologyRecords, documentCount: docs.length };
 }
 
 function loadOntologySnapshot() {
@@ -386,6 +489,7 @@ export function buildMermaidImportSyntax(rootIri, ontologyIndex) {
 export async function loadOntologyWorkspace(options = {}) {
   await idbInit();
   const includeDocs = options.includeDocs !== false;
+  const includeUserOntologies = options.includeUserOntologies === true;
   let docs = includeDocs ? await idbGetEnabledDocuments() : [];
   const snapshot = options.preferSnapshot ? loadOntologySnapshot() : null;
   let ontologyIndex = snapshot;
@@ -402,9 +506,51 @@ export async function loadOntologyWorkspace(options = {}) {
   }
 
   const docsByIri = mapByIri(docs);
+  const existingIris = new Set(ontologyIndex.records.map((record) => record.iri));
+
+  if (includeUserOntologies) {
+    for (const record of loadStoredUserOntologyRecords()) {
+      if (record?.iri && !existingIris.has(record.iri)) {
+        ontologyIndex.records.push({ ...record, registered: false, ontology_level: 'unsorted' });
+        existingIris.add(record.iri);
+      }
+    }
+
+    const metas = await idbGetAllDatasetMeta();
+    if (metas.some((meta) => meta?.source === 'user' && meta.enabled !== false)) {
+      const enabledDocs = includeDocs ? docs : await idbGetEnabledDocuments();
+      for (const doc of enabledDocs) {
+        if (doc.addedByUser && doc.type === 'Ontology' && !existingIris.has(doc.iri)) {
+          const record = {
+            iri: doc.iri,
+            label: doc.label || doc.iri,
+            description: doc.definition || '',
+            versionIri: '',
+            versionIriCount: 0,
+            versionInfo: [],
+            imports: [],
+            license: [],
+            rightsHolder: [],
+            creators: [],
+            contributors: [],
+            comments: doc.comments || [],
+            registry: null,
+            ontology_level: 'unsorted',
+            registered: false,
+            addedByUser: true,
+            source: 'user',
+            datasetId: doc.datasetId,
+            fileName: doc.fileName
+          };
+          ontologyIndex.records.push(record);
+          existingIris.add(doc.iri);
+        }
+      }
+    }
+  }
 
   for (const doc of docs) {
-    if (doc.addedByUser && doc.type === 'Ontology' && !ontologyIndex.byIri.has(doc.iri)) {
+    if (doc.addedByUser && doc.type === 'Ontology' && !existingIris.has(doc.iri)) {
       const record = {
         iri: doc.iri,
         label: doc.label || doc.iri,
@@ -424,7 +570,7 @@ export async function loadOntologyWorkspace(options = {}) {
         addedByUser: true
       };
       ontologyIndex.records.push(record);
-      ontologyIndex.byIri.set(record.iri, record);
+      existingIris.add(record.iri);
     }
   }
 

@@ -15,11 +15,11 @@
  * - types.js
  */
 
-import { ADDED_BY_USER_IRI, extractDocumentsFromJsonLd, mapByIri, parseGraphJsonLdText } from './rdf_extract.js';
+import { extractDocumentsFromJsonLd, mapByIri, parseGraphJsonLdText } from './rdf_extract.js';
 import { searchDocuments } from './search.js';
 import { defaultSearchOptions } from './types.js';
 import { mintBundleIri, BUNDLE_LS_KEY, setShoppingCartCount, loadSlimBundleDoc, getShoppingCartCountFromStorage} from './bundler-core.js';
-import { parseRdfTextToJsonLd, readFileAsText } from './rdf_io.js';
+import { importUserOntologyFile as importUserOntologyFileToIdb } from './ontology-meta.js';
 import { shortIri } from './namespaces.js';
   
 
@@ -112,15 +112,6 @@ async function sha256Hex(text) {
   return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-function stableDatasetId(fileName, fingerprint) {
-  const safeName = String(fileName || 'ontology')
-    .toLowerCase()
-    .replace(/[^a-z0-9._-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 80) || 'ontology';
-  return `user:${safeName}:${fingerprint.slice(0, 16)}`;
-}
-
 function annotateDocs(docs, meta) {
   return docs.map((doc) => ({
     ...doc,
@@ -130,16 +121,6 @@ function annotateDocs(docs, meta) {
     fileName: meta.fileName || '',
     addedByUser: meta.source === 'user' || !!doc.addedByUser
   }));
-}
-
-function annotateUserJsonLd(jsonld) {
-  const graph = Array.isArray(jsonld?.['@graph']) ? jsonld['@graph'] : [];
-  for (const node of graph) {
-    if (node && typeof node === 'object' && typeof node['@id'] === 'string' && node['@id'].startsWith('http')) {
-      node[ADDED_BY_USER_IRI] = [{ '@value': 'TRUE' }];
-    }
-  }
-  return jsonld;
 }
 
 function labelForIri(iri) {
@@ -844,38 +825,6 @@ async function renderUserOntologyManager() {
   if (ontUserOntologyStatus) ontUserOntologyStatus.textContent = `${metas.length} user ontolog${metas.length === 1 ? 'y' : 'ies'} loaded.`;
 }
 
-async function importUserOntologyFile(file) {
-  if (!file) return;
-  setStatus(`Reading ${file.name}...`);
-  const text = await readFileAsText(file);
-  const fingerprint = await sha256Hex(text);
-  const datasetId = stableDatasetId(file.name, fingerprint);
-
-  setStatus(`Parsing ${file.name}...`);
-  const jsonld = annotateUserJsonLd(await parseRdfTextToJsonLd(text, file.name, { baseIRI: `urn:ontoeagle:upload:${encodeURIComponent(file.name)}` }));
-  const docs = annotateDocs(extractDocumentsFromJsonLd(jsonld), {
-    datasetId,
-    source: 'user',
-    ontologyName: file.name.replace(/\.[^.]+$/, ''),
-    fileName: file.name
-  });
-
-  await idbPutDocuments(datasetId, docs);
-  await idbPutDatasetMeta(datasetId, {
-    fingerprint,
-    enabled: true,
-    source: 'user',
-    ontologyName: file.name.replace(/\.[^.]+$/, ''),
-    fileName: file.name,
-    documentCount: docs.length,
-    schemaVersion: DATASET_SCHEMA_VERSION,
-    updatedAt: Date.now()
-  });
-  await refreshDocsFromEnabledDatasets();
-  await renderUserOntologyManager();
-  setStatus(`Loaded ${docs.length} resources from ${file.name}.`);
-}
-
 /* -----------------------------
  * App init + search execution
  * ----------------------------- */
@@ -980,13 +929,22 @@ async function ontoEagleInit() {
     const files = Array.from(ontUserOntologyFile.files || []);
     for (const file of files) {
       try {
-        await importUserOntologyFile(file);
+        setStatus(`Loading ${file.name}...`);
+        const result = await importUserOntologyFileToIdb(file);
+        await refreshDocsFromEnabledDatasets();
+        await renderUserOntologyManager();
+        setStatus(`Loaded ${result.documentCount} resources from ${file.name}.`);
       } catch (err) {
         console.error(err);
         setStatus(`Ontology import failed: ${errToString(err)}`);
       }
     }
     ontUserOntologyFile.value = '';
+  });
+
+  window.addEventListener('ontoeagle:catalog-data-updated', async () => {
+    await refreshDocsFromEnabledDatasets();
+    setStatus('Catalog data updated.');
   });
 
   setupResultsKeyboardNav();

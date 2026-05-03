@@ -115,8 +115,8 @@ function renderOntologyCard(record) {
 
   ontologyCard.innerHTML = `
     <div class="ont-viewer__toolbar">
-      <h2 class="ont-viewer__title">${escapeHtml(record.label || record.iri)} ${actionIcon(record.file, 'download', 'Download ontology', true)}</h2>
-      <div class="ont-catalog__actions">${registryActions}<a class="ont-search__btn ont-search__btn--secondary" href="./ontology-catalog.html">Catalog</a></div>
+      <h2 class="ont-viewer__title">${escapeHtml(record.label || record.iri)}</h2>
+      <div class="ont-catalog__actions">${registryActions}</div>
     </div>
     ${versionQuality}
     <dl class="ont-viewer__cardGrid">${fields}</dl>

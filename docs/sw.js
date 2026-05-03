@@ -24,6 +24,7 @@ const SHELL_ASSETS = [
   './app/ontology-viewer.js',
   './app/ontology-meta.js',
   './app/ontology-icons.js',
+  './app/catalog-data-manager.js',
   './app/search-main.js',
   './app/search.js',
   './app/normalize.js',

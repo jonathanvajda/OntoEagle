@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="OntoEagle ontology viewer for inspecting ontology metadata, imports, and terms." />
+  <meta name="description" content="Ontology viewer for inspecting ontology metadata, imports, and terms." />
   <meta name="author" content="Jonathan Vajda" />
   <meta name="dcterms.creator" content="Jonathan Vajda" />
   <meta name="dcterms.rightsHolder" content="Jonathan Vajda" />
@@ -12,7 +12,7 @@
   <meta name="dcterms.license" content="https://www.gnu.org/licenses/gpl-3.0.en.html" />
   <meta name="version" content="0.1.0" />
   <link rel="icon" type="image/x-icon" href="./images/block-logo.png">
-  <title>Ontology Viewer | OntoEagle</title>
+  <title>Ontology Viewer</title>
   <link rel="stylesheet" href="./styles/skeleton.css" />
   <link rel="stylesheet" href="./styles/app-base.css" />
   <link rel="stylesheet" href="./styles/site-header.css" />
@@ -20,12 +20,18 @@
   <link rel="stylesheet" href="./styles/tabulator.min.css" />
   <link rel="stylesheet" href="./styles/ontology-pages.css" />
 </head>
-<body data-page-id="ontoeagle" class="ont-catalog">
+<body data-page-id="ontology-viewer" class="ont-catalog">
   <header id="siteHeader" class="sitehdr-root" role="banner" aria-label="Site header"></header>
 
   <div class="ont-catalog__status">
-    <div aria-live="polite" aria-atomic="true"><span id="ontStatusText">Idle</span></div>
-    <div><a href="./ontology-catalog.html">Catalog</a> | <a href="./index.html">Search</a></div>
+    <div class="ont-pagebar__left">
+      <nav class="ont-pagebar__nav" aria-label="OntoEagle pages">
+        <a href="./index.html" aria-current="page"><button class="ont-search__btn ont-search__btn--secondary" type="button" data-lookup-service>Search</button></a>
+        <a href="./ontology-catalog.html"><button class="ont-search__btn ont-search__btn--secondary" type="button" data-manage-catalog-table>Catalog</button></a>
+        <button class="ont-search__btn ont-search__btn--secondary" type="button" data-manage-catalog-data>Manage Catalog Data</button>
+      </nav>
+      <div aria-live="polite" aria-atomic="true"><span id="ontStatusText">Idle</span></div>
+    </div>
   </div>
 
   <main class="ont-catalog__main ont-viewer__layout" role="main">
@@ -93,8 +99,12 @@
   </footer>
 
   <script src="./app/site-header.js"></script>
+  <script src="./app/n3.min.js"></script>
+  <script src="./app/jsonld.min.js"></script>
+  <script src="./app/rdflib.min.js"></script>
   <script src="./app/mermaid.min.js"></script>
   <script src="./app/tabulator.min.js"></script>
+  <script type="module" src="./app/catalog-data-manager.js"></script>
   <script type="module" src="./app/ontology-viewer.js"></script>
 </body>
 </html>
