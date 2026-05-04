@@ -46,6 +46,27 @@
   color: var(--ont-muted);
 }
 
+.ont-pagebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.ont-pagebar__left,
+.ont-pagebar__right {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.ont-pagebar__nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 /* ---------- Layout ---------- */
 
 .ont-search__layout {
