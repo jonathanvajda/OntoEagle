@@ -55,7 +55,11 @@ export function getShoppingCartCountFromStorage() {
  */
 export function setShoppingCartCount(n) {
   const el = document.getElementById('ontShoppingCartCount');
-  if (el) el.textContent = String(Number.isFinite(n) ? n : 0);
+  if (el) {
+    const count = Number.isFinite(n) ? n : 0;
+    el.textContent = String(count);
+    el.setAttribute('aria-label', `${count} bundled item${count === 1 ? '' : 's'}`);
+  }
 }
 
 /**

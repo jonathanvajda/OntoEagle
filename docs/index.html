@@ -114,38 +114,24 @@
   <link rel="stylesheet" href="./styles/ontology-pages.css" />
 </head>
 
-<body data-page-id="ontoeagle" class="ont-search">
+<body data-page-id="ontoeagle" data-db-name="OntoEagleDB" data-db-stores="settings,datasets,documents,index" data-manage-data-label="Manage data" class="ont-search">
   <header id="siteHeader" class="sitehdr-root" role="banner" aria-label="Site header">
     
   </header>
 
   <div id="ontMetaStatus" class="ont-pagebar">
     <div class="ont-pagebar__left">
-      <nav class="ont-pagebar__nav" aria-label="OntoEagle pages">
-        <a href="./index.html" aria-current="page"><button class="ont-search__btn ont-search__btn--secondary" type="button" data-lookup-service>Search</button></a>
-        <a href="./ontology-catalog.html"><button class="ont-search__btn ont-search__btn--secondary" type="button" data-manage-catalog-table>Catalog</button></a>
-        <button class="ont-search__btn ont-search__btn--secondary" type="button" data-manage-catalog-data>Manage Catalog Data</button>
+      <nav class="ont-pagebar__nav" aria-label="OntoEagle views" role="tablist">
+        <button id="ontSearchTab" class="ont-pagebar__tab" type="button" role="tab" aria-selected="true" aria-controls="ontSearchView" data-view-tab="search">Term Lookup</button>
+        <button id="ontCatalogTab" class="ont-pagebar__tab" type="button" role="tab" aria-selected="false" aria-controls="ontCatalogView" data-view-tab="catalog">Ontology Catalog</button>
       </nav>
-      <div class="ont-search__status" aria-live="polite" aria-atomic="true">
-        <span id="ontStatusText">Idle</span>
-      </div>
-    </div>
-    <div class="ont-pagebar__right ont-search__status" aria-live="polite" aria-atomic="true" style="padding-right: 1.5rem;">
-        <div style="width: 20px; padding-top: 3px;"><a href="./bundler.html"><svg width="20px" height="20px" viewBox="0 0 24 24" fill="var(--ont-text)" xmlns="http://www.w3.org/2000/svg">
-        <path d="M14 2C14 1.44772 13.5523 1 13 1C12.4477 1 12 1.44772 12 2V8.58579L9.70711 6.29289C9.31658 5.90237 8.68342 5.90237 8.29289 6.29289C7.90237 6.68342 7.90237 7.31658 8.29289 7.70711L12.2929 11.7071C12.6834 12.0976 13.3166 12.0976 13.7071 11.7071L17.7071 7.70711C18.0976 7.31658 18.0976 6.68342 17.7071 6.29289C17.3166 5.90237 16.6834 5.90237 16.2929 6.29289L14 8.58579V2ZM1 3C1 2.44772 1.44772 2 2 2H2.47241C3.82526 2 5.01074 2.90547 5.3667 4.21065L5.78295 5.73688L7.7638 13H18.236L20.2152 5.73709C20.3604 5.20423 20.9101 4.88998 21.4429 5.03518C21.9758 5.18038 22.29 5.73006 22.1448 6.26291L20.1657 13.5258C19.9285 14.3962 19.1381 15 18.236 15H8V16C8 16.5523 8.44772 17 9 17H16.5H18C18.5523 17 19 17.4477 19 18C19 18.212 18.934 18.4086 18.8215 18.5704C18.9366 18.8578 19 19.1715 19 19.5C19 20.8807 17.8807 22 16.5 22C15.1193 22 14 20.8807 14 19.5C14 19.3288 14.0172 19.1616 14.05 19H10.95C10.9828 19.1616 11 19.3288 11 19.5C11 20.8807 9.88071 22 8.5 22C7.11929 22 6 20.8807 6 19.5C6 18.863 6.23824 18.2816 6.63048 17.8402C6.23533 17.3321 6 16.6935 6 16V14.1339L3.85342 6.26312L3.43717 4.73688C3.31852 4.30182 2.92336 4 2.47241 4H2C1.44772 4 1 3.55228 1 3ZM16 19.5C16 19.2239 16.2239 19 16.5 19C16.7761 19 17 19.2239 17 19.5C17 19.7761 16.7761 20 16.5 20C16.2239 20 16 19.7761 16 19.5ZM8 19.5C8 19.2239 8.22386 19 8.5 19C8.77614 19 9 19.2239 9 19.5C9 19.7761 8.77614 20 8.5 20C8.22386 20 8 19.7761 8 19.5Z"/>
-        </svg></a>
-        </div>
-        <div><a href="./bundler.html"><span id="ontShoppingCartCount">0</span> items</a> bundled for a slim.
-        </div>
     </div>
   </div>
 
-  <main class="ont-search__layout" role="main">
+  <main id="ontSearchView" class="ont-search__layout ont-appView" role="tabpanel" aria-labelledby="ontSearchTab">
     <!-- Left: Search + filters -->
     <section class="ont-search__panel" aria-label="Search and filters">
       <form id="ontSearchForm" class="ont-search__form" role="search" autocomplete="off">
-        <label for="ontQuery" class="ont-search__label">Search</label>
-
         <div class="ont-search__queryRow">
           <input
             id="ontQuery"
@@ -156,7 +142,7 @@
             aria-describedby="ontQueryHelp"
             spellcheck="false"
           />
-          <button id="ontSearchBtn" class="ont-search__btn" type="submit">Search</button>
+          <button id="ontSearchBtn" class="ont-search__btn" type="submit" disabled aria-disabled="true">Search</button>
         </div>
 
         <p id="ontQueryHelp" class="ont-search__help">
@@ -164,7 +150,7 @@
         </p>
 
         <details class="ont-search__details" open>
-          <summary class="ont-search__summary"><strong>Search filters</strong></summary>
+          <summary class="ont-search__summary"><strong>Filters</strong></summary>
 
           <fieldset class="ont-search__fieldset">
             <legend class="ont-search__legend">Match</legend>
@@ -205,7 +191,7 @@
           </fieldset>
 
           <fieldset class="ont-search__fieldset">
-            <legend class="ont-search__legend">Element types</legend>
+            <legend class="ont-search__legend">By element types</legend>
 
             <div class="ont-search__grid" role="group" aria-label="OWL element types">
               <label class="ont-search__check"><input class="optType" type="checkbox" value="Ontology" checked /> <span>Ontology</span></label>
@@ -218,7 +204,7 @@
           </fieldset>
 
           <fieldset class="ont-search__fieldset">
-            <legend class="ont-search__legend">Namespaces filter</legend>
+            <legend class="ont-search__legend">By namespaces</legend>
             <input
               id="optNamespaces"
               class="ont-search__input"
@@ -281,6 +267,90 @@
     </aside>
   </main>
 
+  <main id="ontCatalogView" class="ont-catalog__main ont-appView" role="tabpanel" aria-labelledby="ontCatalogTab" hidden>
+    <section class="ont-catalog__panel" aria-label="Ontology catalog table">
+      <div id="ontologyCatalogLoading" class="ont-catalog__loading">
+        <span class="ont-catalog__spinner" aria-hidden="true"></span>
+        <span>Loading ontologies...</span>
+      </div>
+      <div id="ontologyCatalogTableWrap" class="ont-catalog__tableWrap" hidden>
+        <table class="ont-catalog__table">
+          <colgroup>
+            <col />
+            <col />
+            <col />
+            <col />
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col">Label</th>
+              <th scope="col">Description</th>
+              <th scope="col">Repo</th>
+              <th scope="col">Download</th>
+            </tr>
+          </thead>
+          <tbody id="ontologyCatalogBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="ontologyRegistryModal" class="ont-catalog__modal">
+    <form id="ontologyRegistryForm" method="dialog">
+      <h2 class="ont-viewer__title">Registry data</h2>
+      <div class="ont-catalog__formGrid">
+        <div class="ont-catalog__field ont-catalog__field--full">
+          <label for="registryIri">IRI</label>
+          <input id="registryIri" name="iri" type="url" readonly />
+        </div>
+        <div class="ont-catalog__field">
+          <label for="registryLevel">Ontology level</label>
+          <select id="registryLevel" name="ontology_level">
+            <option value="top">Top</option>
+            <option value="mid">Mid</option>
+            <option value="dom">Domain</option>
+            <option value="app">Application</option>
+            <option value="kg">Knowledge graph</option>
+          </select>
+        </div>
+        <div class="ont-catalog__field">
+          <label for="registryLogo">Repo logo</label>
+          <select id="registryLogo" name="git_logo">
+            <option value="github">GitHub</option>
+            <option value="gitlab">GitLab</option>
+            <option value="git">Git</option>
+          </select>
+        </div>
+        <div class="ont-catalog__field ont-catalog__field--full">
+          <label for="registryRepo">Git repository URL</label>
+          <input id="registryRepo" name="git_repo_url" type="url" />
+        </div>
+        <div class="ont-catalog__field ont-catalog__field--full">
+          <label for="registryIssues">Issue tracker URL</label>
+          <input id="registryIssues" name="issue_tracker_url" type="url" />
+        </div>
+        <div class="ont-catalog__field ont-catalog__field--full">
+          <label for="registryFile">Download file path</label>
+          <input id="registryFile" name="file" type="text" placeholder="./ontologies/example.ttl" />
+        </div>
+      </div>
+      <div class="ont-catalog__toolbar">
+        <button class="ont-search__btn" type="submit">Save</button>
+        <button id="ontologyRegistryCancelBtn" class="ont-search__btn ont-search__btn--ghost" type="button">Cancel</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="ontologyMissingMetadataModal" class="ont-catalog__modal ont-catalog__modal--wide">
+    <form method="dialog">
+      <div class="ont-catalog__toolbar">
+        <h2 class="ont-viewer__title">Ontologies missing metadata</h2>
+        <button class="ont-search__btn ont-search__btn--ghost" type="submit">Close</button>
+      </div>
+      <div id="ontologyMissingMetadataList" class="ont-catalog__missingList"></div>
+    </form>
+  </dialog>
+
   <!-- Service worker-->
   <script>
     if ('serviceWorker' in navigator) {
@@ -311,8 +381,8 @@
     (function () {
       const JS_SOURCES = [
         "./app/site-header.js", /* local dev copy first */
-        "https://jonathanvajda.github.io/OntoEagle/app/site-header.js",
-        "https://jonathanvajda.github.io/table-nova/app/site-header.js",
+        //"https://jonathanvajda.github.io/OntoEagle/app/site-header.js",
+        //"https://jonathanvajda.github.io/table-nova/app/site-header.js",
       ];
 
       function loadScript(src) {
@@ -347,12 +417,35 @@
       })();
     })();
   </script>
+  <script>
+    (() => {
+      const tabs = Array.from(document.querySelectorAll('[data-view-tab]'));
+      const views = {
+        search: document.getElementById('ontSearchView'),
+        catalog: document.getElementById('ontCatalogView')
+      };
+
+      function showView(viewName) {
+        for (const tab of tabs) {
+          tab.setAttribute('aria-selected', String(tab.dataset.viewTab === viewName));
+        }
+        for (const [name, view] of Object.entries(views)) {
+          if (view) view.hidden = name !== viewName;
+        }
+      }
+
+      tabs.forEach((tab) => {
+        tab.addEventListener('click', () => showView(tab.dataset.viewTab || 'search'));
+      });
+    })();
+  </script>
   <!-- App JS --> 
   <script src="./app/n3.min.js"></script>
   <script src="./app/jsonld.min.js"></script>
   <script src="./app/rdflib.min.js"></script>
   <script type="module" src="./app/bundler-core.js"></script>
   <script type="module" src="./app/catalog-data-manager.js"></script>
+  <script type="module" src="./app/ontology-catalog.js"></script>
   <script type="module" src="./app/search-main.js"></script>
 
 </body>

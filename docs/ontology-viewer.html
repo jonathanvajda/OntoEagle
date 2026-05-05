@@ -20,7 +20,7 @@
   <link rel="stylesheet" href="./styles/tabulator.min.css" />
   <link rel="stylesheet" href="./styles/ontology-pages.css" />
 </head>
-<body data-page-id="ontology-viewer" class="ont-catalog">
+<body data-page-id="ontology-viewer" data-db-name="OntoEagleDB" data-db-stores="settings,datasets,documents,index" data-manage-data-label="Manage data" class="ont-catalog">
   <header id="siteHeader" class="sitehdr-root" role="banner" aria-label="Site header"></header>
 
   <div class="ont-catalog__status">
@@ -28,9 +28,7 @@
       <nav class="ont-pagebar__nav" aria-label="OntoEagle pages">
         <a href="./index.html" aria-current="page"><button class="ont-search__btn ont-search__btn--secondary" type="button" data-lookup-service>Search</button></a>
         <a href="./ontology-catalog.html"><button class="ont-search__btn ont-search__btn--secondary" type="button" data-manage-catalog-table>Catalog</button></a>
-        <button class="ont-search__btn ont-search__btn--secondary" type="button" data-manage-catalog-data>Manage Catalog Data</button>
       </nav>
-      <div aria-live="polite" aria-atomic="true"><span id="ontStatusText">Idle</span></div>
     </div>
   </div>
 

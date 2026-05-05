@@ -140,6 +140,160 @@
   background-color: var(--ont-code-border);
 }
 
+.sitehdr-utility {
+  display: grid;
+  gap: 0.55rem;
+  justify-items: end;
+  margin-left: auto;
+}
+
+.sitehdr-db {
+  display: inline-flex;
+  align-items: center;
+  color: var(--ont-muted, #666);
+  font-size: 1rem;
+}
+
+.sitehdr-db__status {
+  font-size: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.sitehdr-appTools {
+  display: grid;
+  justify-items: end;
+  gap: 0.45rem;
+}
+
+.sitehdr-appToolActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.sitehdr-utilBtn {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid var(--ont-border, rgba(0,0,0,0.2));
+  border-radius: var(--ont-radius, 6px);
+  background: var(--ont-code-bg, #f7f7f7);
+  color: var(--ont-text, #111);
+  cursor: pointer;
+  padding: 0.25rem;
+  text-decoration: none;
+}
+
+.sitehdr-utilBtn:hover {
+  border-color: var(--ont-accent, #2563eb);
+}
+
+.sitehdr-utilBtn:focus-visible {
+  outline: 2px solid var(--ont-focus, #2563eb);
+  outline-offset: 2px;
+}
+
+.sitehdr-utilIconImg,
+.sitehdr-utilIconSvg {
+  display: block;
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.sitehdr-utilIconImg {
+  object-fit: contain;
+}
+
+.sitehdr-utilBtn--data .sitehdr-utilIconImg {
+  width: 1.35rem;
+  height: 1.35rem;
+  transform: scale(2);
+  transform-origin: center;
+}
+
+.sitehdr-utilBtn--tool .sitehdr-utilIconSvg {
+  width: 1.85rem;
+  height: 1.85rem;
+}
+
+.sitehdr-utilBadge {
+  position: absolute;
+  top: -.8rem;
+  right: -1.2rem;
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.2rem;
+  height: 1.45rem;
+  padding: 0 0.3rem;
+  border: 1px solid var(--ont-panel-bg, #fff);
+  border-radius: 999px;
+  background: var(--ont-accent, #2563eb);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.sitehdr-utilBtn--data {
+  border-color: transparent;
+  background: transparent;
+}
+
+.sitehdr-utilBtn--data:hover {
+  border-color: transparent;
+  background: transparent;
+}
+
+.sitehdr-db__bulb {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, #8a8f98 72%, #ffffff);
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.75), transparent 28%),
+    #8a8f98;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, #8a8f98 22%, transparent),
+    0 0 0.65rem color-mix(in srgb, #8a8f98 30%, transparent);
+}
+
+.sitehdr-db[data-db-status="initializing"] .sitehdr-db__bulb,
+.sitehdr-db[data-db-status="reading"] .sitehdr-db__bulb,
+.sitehdr-db[data-db-status="writing"] .sitehdr-db__bulb {
+  border-color: color-mix(in srgb, #eab308 72%, #ffffff);
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.78), transparent 28%),
+    #eab308;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, #eab308 24%, transparent),
+    0 0 0.8rem color-mix(in srgb, #eab308 45%, transparent);
+}
+
+.sitehdr-db[data-db-status="ready"] .sitehdr-db__bulb {
+  border-color: color-mix(in srgb, #22c55e 72%, #ffffff);
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.78), transparent 28%),
+    #22c55e;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, #22c55e 24%, transparent),
+    0 0 0.8rem color-mix(in srgb, #22c55e 45%, transparent);
+}
+
+.sitehdr-db[data-db-status="error"] .sitehdr-db__bulb {
+  border-color: color-mix(in srgb, #ef4444 72%, #ffffff);
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.78), transparent 28%),
+    #ef4444;
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, #ef4444 24%, transparent),
+    0 0 0.8rem color-mix(in srgb, #ef4444 45%, transparent);
+}
+
 /* Small screens: allow wrap so sections drop under logos */
 @media (max-width: 900px) {
   .sitehdr-bar {
@@ -149,5 +303,14 @@
 
   .sitehdr-sections {
     flex: 1 1 100%;
+  }
+
+  .sitehdr-utility {
+    justify-items: start;
+    margin-left: 0;
+  }
+
+  .sitehdr-appTools {
+    justify-items: start;
   }
 }

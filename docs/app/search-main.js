@@ -45,6 +45,7 @@ const elStatusText = document.getElementById('ontStatusText');
 
 const form = document.getElementById('ontSearchForm');
 const inputQuery = document.getElementById('ontQuery');
+const btnSearch = document.getElementById('ontSearchBtn');
 
 const optExact = document.getElementById('optExact');
 const optWildcard = document.getElementById('optWildcard');
@@ -77,6 +78,7 @@ const typeCheckboxes = /** @type {NodeListOf<HTMLInputElement>} */ (document.que
 
 let docsByIri = new Map();   // Map<string, OntologyDocument>
 let options = structuredClone(defaultSearchOptions);
+let searchReady = false;
 const DATASET_SCHEMA_VERSION = 2;
 
 /* -----------------------------
@@ -89,6 +91,20 @@ const DATASET_SCHEMA_VERSION = 2;
  */
 function setStatus(s) {
   if (elStatusText) elStatusText.textContent = s;
+}
+
+function setSearchReady(isReady) {
+  searchReady = isReady;
+  if (!btnSearch) return;
+  btnSearch.disabled = !isReady;
+  btnSearch.setAttribute('aria-disabled', String(!isReady));
+  btnSearch.title = isReady ? '' : 'Search index is still loading.';
+}
+
+function setDbStatus(state, text) {
+  document.dispatchEvent(new CustomEvent('sitehdr:db-status', {
+    detail: { state, text }
+  }));
 }
 
 /**
@@ -130,6 +146,14 @@ function labelForIri(iri) {
 
 function sortIrisByLabel(iris) {
   return [...new Set(iris || [])].sort((a, b) => labelForIri(a).localeCompare(labelForIri(b)));
+}
+
+function ontologyViewerHref(iri) {
+  return `./ontology-viewer.html?iri=${encodeURIComponent(iri)}`;
+}
+
+function isOntologyIri(iri) {
+  return docsByIri.get(iri)?.type === 'Ontology';
 }
 
 /**
@@ -234,15 +258,25 @@ function renderResults(results) {
     resultDiv.className = 'ont-search__result';
     resultDiv.dataset.iri = r.doc.iri;
 
+    const title = escapeHtml(r.doc.label || r.doc.iri);
+    const titleHtml = r.doc.type === 'Ontology'
+      ? `<a href="${escapeHtml(ontologyViewerHref(r.doc.iri))}" data-result-link>${title}</a>`
+      : title;
+
+    const iriText = escapeHtml(r.doc.iri);
+    const iriHtml = r.doc.type === 'Ontology'
+      ? `<a href="${escapeHtml(ontologyViewerHref(r.doc.iri))}" data-result-link>${iriText}</a>`
+      : `<span>${iriText}</span>`;
+
     resultDiv.innerHTML = `
-      <div class="ont-search__resultTitle">${escapeHtml(r.doc.label || r.doc.iri)}</div>
+      <div class="ont-search__resultTitle">${titleHtml}</div>
       <div class="ont-search__resultMeta">
         <span class="ont-search__pill">${escapeHtml(r.doc.type)}</span>
         ${r.doc.addedByUser ? '<span class="ont-search__pill ont-search__pill--user">added by user</span>' : ''}
         <br />
       </div>
       <div class="ont-search__resultIri">
-        <span>${escapeHtml(r.doc.iri)}</span>
+        ${iriHtml}
         ${renderCopyIriButton(r.doc.iri)}
       </div>
     `.trim();
@@ -254,6 +288,8 @@ function renderResults(results) {
     li.appendChild(resultDiv);
     elResultsList.appendChild(li);
   }
+
+  attachCopyButtons(elResultsList);
 
   // Set initial active descendant to first item (but focus stays where it is)
   elResultsList.setAttribute('aria-activedescendant', 'ontOpt_0');
@@ -474,7 +510,10 @@ function renderIriLabel(iri) {
   const label = labelForIri(iri);
   const curie = shortIri(iri);
   const suffix = curie && curie !== label ? ` <code>${escapeHtml(curie)}</code>` : '';
-  return `${escapeHtml(label)}${suffix} ${renderCopyIriButton(iri)}`;
+  const labelHtml = isOntologyIri(iri)
+    ? `<a href="${escapeHtml(ontologyViewerHref(iri))}">${escapeHtml(label)}</a>`
+    : escapeHtml(label);
+  return `${labelHtml}${suffix} ${renderCopyIriButton(iri)}`;
 }
 
 function renderCopyIriButton(iri) {
@@ -527,22 +566,12 @@ async function copyTextToClipboard(text) {
   textarea.remove();
 }
 
-function attachDetailsInteractions(root) {
-  root.querySelectorAll('[data-expand-text]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const wrapper = button.closest('.ont-search__expandText');
-      const rest = wrapper?.querySelector('.ont-search__expandRest');
-      const ellipsis = wrapper?.querySelector('.ont-search__ellipsis');
-      if (!rest) return;
-      const expanding = rest.hasAttribute('hidden');
-      rest.toggleAttribute('hidden', !expanding);
-      if (ellipsis) ellipsis.hidden = expanding;
-      button.textContent = expanding ? 'Show less' : 'Show more';
-    });
-  });
-
+function attachCopyButtons(root) {
   root.querySelectorAll('[data-copy-iri]').forEach((button) => {
+    if (button.dataset.copyBound === 'true') return;
+    button.dataset.copyBound = 'true';
     button.addEventListener('click', async (event) => {
+      event.preventDefault();
       event.stopPropagation();
       const iri = button.getAttribute('data-copy-iri') || '';
       try {
@@ -561,6 +590,23 @@ function attachDetailsInteractions(root) {
   });
 }
 
+function attachDetailsInteractions(root) {
+  root.querySelectorAll('[data-expand-text]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const wrapper = button.closest('.ont-search__expandText');
+      const rest = wrapper?.querySelector('.ont-search__expandRest');
+      const ellipsis = wrapper?.querySelector('.ont-search__ellipsis');
+      if (!rest) return;
+      const expanding = rest.hasAttribute('hidden');
+      rest.toggleAttribute('hidden', !expanding);
+      if (ellipsis) ellipsis.hidden = expanding;
+      button.textContent = expanding ? 'Show less' : 'Show more';
+    });
+  });
+
+  attachCopyButtons(root);
+}
+
 function renderDetails(doc) {
   if (!doc) {
     elDetails.innerHTML = `<p class="ont-search__help">Select a result to view details.</p>`;
@@ -572,9 +618,7 @@ function renderDetails(doc) {
     ? `<p class="ont-search__detailsMeta"><strong>Alt labels:</strong><br />${escapeHtml(doc.altLabels.join(', '))}</p>`
     : '';
 
-  const curated_in = (doc.curated_in && doc.curated_in.length)
-    ? renderDetailList('Curated in', doc.curated_in.map((value) => ({ value })), { truncate: false })
-    : '';
+  const curated_in = renderIriList('Curated in', doc.curated_in || []);
   const userPill = doc.addedByUser ? '<span class="ont-search__pill ont-search__pill--user">added by user</span>' : '';
   const taxonomy = renderTaxonomy(doc);
   const relationDetails = [
@@ -807,15 +851,19 @@ async function renderUserOntologyManager() {
     const toggle = row.querySelector('input');
     toggle?.addEventListener('change', async () => {
       await idbSetDatasetEnabled(meta.datasetId, toggle.checked);
+      setDbStatus('reading', 'DB refreshing');
       await refreshDocsFromEnabledDatasets();
+      setDbStatus('ready', 'DB ready');
       setStatus(toggle.checked ? 'User ontology enabled.' : 'User ontology disabled.');
     });
 
     const remove = row.querySelector('button');
     remove?.addEventListener('click', async () => {
       await idbDeleteDataset(meta.datasetId);
+      setDbStatus('reading', 'DB refreshing');
       await refreshDocsFromEnabledDatasets();
       await renderUserOntologyManager();
+      setDbStatus('ready', 'DB ready');
       setStatus('User ontology removed.');
     });
 
@@ -844,6 +892,12 @@ async function registerServiceWorker() {
  * @param {string} query
  */
 function runSearch(query) {
+  if (!searchReady) {
+    setStatus('Search index is still loading...');
+    setDbStatus('initializing', 'DB loading');
+    return;
+  }
+
   const opts = readOptionsFromUI();
   options = opts;
 
@@ -865,9 +919,12 @@ function runSearch(query) {
 }
 
 async function ontoEagleInit() {
+  setSearchReady(false);
+  setDbStatus('initializing', 'DB initializing');
   setStatus('Initializing…');
 
   await registerServiceWorker();
+  setDbStatus('initializing', 'DB opening');
   await idbInit();
 
   // Load settings
@@ -877,6 +934,7 @@ async function ontoEagleInit() {
 
   // Prefer IDB cache; fall back to graph fetch if needed or outdated
   setStatus('Loading cached index…');
+  setDbStatus('reading', 'DB reading');
   const cacheOk = await tryLoadFromIdb();
 
   setStatus('Checking dataset…');
@@ -887,12 +945,16 @@ async function ontoEagleInit() {
 
   if (!cacheOk || fingerprintChanged) {
     setStatus('Building index (first run or updated dataset)…');
+    setDbStatus('writing', 'DB writing');
     await buildFromGraphAndPersist(text, fingerprint);
   } else {
+    setDbStatus('reading', 'DB reading');
     await refreshDocsFromEnabledDatasets();
   }
 
   setStatus('Ready.');
+  setDbStatus('ready', 'DB ready');
+  setSearchReady(true);
   setShoppingCartCount(getShoppingCartCountFromStorage());
   await renderUserOntologyManager();
 
@@ -900,12 +962,6 @@ async function ontoEagleInit() {
   elResultsCount.textContent = '0';
   elResultsTime.textContent = '0 ms';
   renderDetails(null);
-
-  // Wire events
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    runSearch(inputQuery.value || '');
-  });
 
   inputQuery.addEventListener('input', () => {
     // Optional: live search as you type (debounce later)
@@ -930,12 +986,16 @@ async function ontoEagleInit() {
     for (const file of files) {
       try {
         setStatus(`Loading ${file.name}...`);
+        setDbStatus('writing', 'DB writing');
         const result = await importUserOntologyFileToIdb(file);
+        setDbStatus('reading', 'DB refreshing');
         await refreshDocsFromEnabledDatasets();
         await renderUserOntologyManager();
+        setDbStatus('ready', 'DB ready');
         setStatus(`Loaded ${result.documentCount} resources from ${file.name}.`);
       } catch (err) {
         console.error(err);
+        setDbStatus('error', 'DB error');
         setStatus(`Ontology import failed: ${errToString(err)}`);
       }
     }
@@ -943,14 +1003,25 @@ async function ontoEagleInit() {
   });
 
   window.addEventListener('ontoeagle:catalog-data-updated', async () => {
+    setDbStatus('reading', 'DB refreshing');
     await refreshDocsFromEnabledDatasets();
+    setDbStatus('ready', 'DB ready');
     setStatus('Catalog data updated.');
   });
 
   setupResultsKeyboardNav();
 }
 
+form?.addEventListener('submit', (e) => {
+  e.preventDefault();
+  runSearch(inputQuery?.value || '');
+});
+
+setSearchReady(false);
+
 ontoEagleInit().catch((err) => {
   console.error(err);
+  setSearchReady(false);
+  setDbStatus('error', 'DB error');
   setStatus(`Error: ${errToString(err)}`);
 });

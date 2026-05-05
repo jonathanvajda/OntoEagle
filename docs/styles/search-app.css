@@ -48,9 +48,10 @@
 
 .ont-pagebar {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 1rem;
+  padding: 0.35rem 1rem 0.25rem;
 }
 
 .ont-pagebar__left,
@@ -64,7 +65,35 @@
 .ont-pagebar__nav {
   display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.25rem;
+}
+
+.ont-pagebar__tab {
+  border: 1px solid var(--ont-border);
+  border-radius: var(--ont-radius);
+  background: transparent;
+  color: var(--ont-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.15rem;
+  font-weight: 650;
+  line-height: 2.6;
+  padding: 0.4rem 0.85rem;
+  margin-bottom: 0px;
+}
+
+.ont-pagebar__tab[aria-selected="true"] {
+  background: var(--ont-panel-bg);
+  border-color: var(--ont-accent);
+  color: var(--ont-text);
+}
+
+.ont-appView[hidden] {
+  display: none !important;
+}
+
+.ont-appView.ont-catalog__main {
+  padding-top: 0;
 }
 
 /* ---------- Layout ---------- */
@@ -73,7 +102,7 @@
   display: grid;
   grid-template-columns: 1.5fr 3fr 2.5fr;
   gap: var(--ont-gap);
-  padding: 1rem;
+  padding: 0.35rem 1rem 1rem;
 }
 
 @media (max-width: 1100px) {
@@ -145,6 +174,12 @@
 .ont-search__btn--ghost {
   background: transparent;
   color: var(--ont-muted);
+}
+
+.ont-search__btn:disabled,
+.ont-search__btn[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.58;
 }
 
 .ont-search__btn:focus {
