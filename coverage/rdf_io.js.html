@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">5.88% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/119</span>
+                <span class='fraction'>7/119</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">7.36% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/95</span>
+                <span class='fraction'>7/95</span>
             </div>
         
             
@@ -260,12 +260,12 @@
 <a name='L195'></a><a href='#L195'>195</a>
 <a name='L196'></a><a href='#L196'>196</a>
 <a name='L197'></a><a href='#L197'>197</a>
-<a name='L198'></a><a href='#L198'>198</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<a name='L198'></a><a href='#L198'>198</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -275,7 +275,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -290,7 +290,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -457,12 +457,12 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">const RDF_TYPE = <span class="cstat-no" title="statement not covered" >'http://www.w3.org/1999/02/22-rdf-syntax-ns#type';</span>
-const RDF_FIRST = <span class="cstat-no" title="statement not covered" >'http://www.w3.org/1999/02/22-rdf-syntax-ns#first';</span>
-const RDF_REST = <span class="cstat-no" title="statement not covered" >'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest';</span>
-const RDF_NIL = <span class="cstat-no" title="statement not covered" >'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil';</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">const RDF_TYPE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type';
+const RDF_FIRST = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#first';
+const RDF_REST = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest';
+const RDF_NIL = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil';
 &nbsp;
-export const RDF_FORMATS = <span class="cstat-no" title="statement not covered" >Object.freeze({</span>
+export const RDF_FORMATS = Object.freeze({
   TURTLE: 'text/turtle',
   N3: 'text/n3',
   N_TRIPLES: 'application/n-triples',
@@ -472,7 +472,7 @@ export const RDF_FORMATS = <span class="cstat-no" title="statement not covered" 
   RDF_XML: 'application/rdf+xml'
 });
 &nbsp;
-const extensionToFormat = <span class="cstat-no" title="statement not covered" >Object.freeze({</span>
+const extensionToFormat = Object.freeze({
   '.ttl': RDF_FORMATS.TURTLE,
   '.turtle': RDF_FORMATS.TURTLE,
   '.n3': RDF_FORMATS.N3,
@@ -487,7 +487,7 @@ const extensionToFormat = <span class="cstat-no" title="statement not covered" >
   '.xml': RDF_FORMATS.RDF_XML
 });
 &nbsp;
-const n3FormatByMime = <span class="cstat-no" title="statement not covered" >Object.freeze({</span>
+const n3FormatByMime = Object.freeze({
   [RDF_FORMATS.TURTLE]: RDF_FORMATS.TURTLE,
   [RDF_FORMATS.N3]: RDF_FORMATS.N3,
   [RDF_FORMATS.N_TRIPLES]: RDF_FORMATS.N_TRIPLES,
@@ -661,7 +661,7 @@ export async function <span class="fstat-no" title="function not covered" >parse
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-04-21T18:22:47.295Z
+                at 2026-05-02T03:17:06.456Z
             </div>
         <script src="prettify.js"></script>
         <script>

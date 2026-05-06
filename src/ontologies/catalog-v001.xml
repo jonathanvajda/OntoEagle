@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<catalog prefer="public" xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+    <group id="Folder Repository, directory=, recursive=true, Auto-Update=true, version=2" prefer="public" xml:base="">
+        <uri id="Automatically generated entry, Timestamp=1777343916061" name="http://purl.obolibrary.org/obo/omo.owl" uri="omo.owl"/>
+        <uri id="Automatically generated entry, Timestamp=1777343916061" name="http://www.w3.org/2004/02/skos/core" uri="skos.rdf"/>
+    </group>
+</catalog>
