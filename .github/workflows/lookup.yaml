@@ -45,6 +45,12 @@ jobs:
           find docs/ontologies -type f -delete
           find src/ontologies -type f \( -name "*.ttl" -o -name "*.rdf" -o -name "*.owl" -o -name "*.nt" -o -name "*.nq" -o -name "*.trig" -o -name "*.jsonld" \) -exec cp {} docs/ontologies/ \;
 
+      - name: Publish tutorial artifacts -> docs/tutorials
+        run: |
+          mkdir -p docs/tutorials
+          find docs/tutorials -maxdepth 1 -type f \( -name "*.md" -o -name "*.csv" -o -name "*.jsonld" -o -name "*.ttl" \) ! -name "README.md" -delete
+          cp -R src/tutorials/. docs/tutorials/
+
       - name: Stamp service worker build id
         run: |
           BUILD_ID="${GITHUB_SHA::8}"
