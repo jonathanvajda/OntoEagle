@@ -1,5 +1,7 @@
 # CQ Ferret Tutorial: Turning Competency Questions into Project Intelligence
 
+![CQ Ferret logo](screenshots/competency-question-ferret-logo.png)
+
 ## BLUF
 
 CQ Ferret helps ontology and knowledge-graph teams move competency questions out of Word, PowerPoint, and one-off spreadsheets and into a structured browser workspace. The payoff is practical: you can gather the question, its decomposition, contributors, data sources, diagrams, and SQL/SPARQL query ideas in one place; export normalized CSV or JSON-LD; rebuild vocabulary candidates; and load the resulting graph into downstream tooling.
