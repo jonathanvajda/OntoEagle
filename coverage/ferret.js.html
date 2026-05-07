@@ -2708,22 +2708,22 @@ let allNodesCache = <span class="cstat-no" title="statement not covered" >[];</s
 const tagger = <span class="cstat-no" title="statement not covered" >new POSTagger(window.POSTAGGER_LEXICON);</span>
 const gdcManager = <span class="cstat-no" title="statement not covered" >new GDCManager(tagger, allNodesCache);</span>
 &nbsp;
-const SEMARTO = <span class="cstat-no" title="statement not covered" >{</span>
-  CQ: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000002",
-  INTERROGATIVE_ICE: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000001",
-  BUSINESS_RULE: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000009",
-  MERMAID_DIAGRAM: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000004",
-  DATABASE_QUERY: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000016",
-  SPARQL_QUERY: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000007",
-  SQL_QUERY: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000005",
+const OKEA = <span class="cstat-no" title="statement not covered" >{</span>
+  CQ: "https://github.com/jonathanvajda/okea/ont000002",
+  INTERROGATIVE_ICE: "https://github.com/jonathanvajda/okea/ont000001",
+  BUSINESS_RULE: "https://github.com/jonathanvajda/okea/ont000009",
+  MERMAID_DIAGRAM: "https://github.com/jonathanvajda/okea/ont000004",
+  DATABASE_QUERY: "https://github.com/jonathanvajda/okea/ont000016",
+  SPARQL_QUERY: "https://github.com/jonathanvajda/okea/ont000007",
+  SQL_QUERY: "https://github.com/jonathanvajda/okea/ont000005",
 &nbsp;
-  HAS_MERMAID_DIAGRAM: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000012",
-  HAS_FORMALIZATION: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000014",
+  HAS_MERMAID_DIAGRAM: "https://github.com/jonathanvajda/okea/ont000012",
+  HAS_FORMALIZATION: "https://github.com/jonathanvajda/okea/ont000014",
 &nbsp;
-  HAS_MERMAID_TEXT: "https://github.com/jonathanvajda/SemanticArtifactOntology/has_mermaid_diagram_text_value",
-  HAS_QUERY_TEXT: "https://github.com/jonathanvajda/SemanticArtifactOntology/has_query_text_value",
-  HAS_SPARQL_QUERY_TEXT: "https://github.com/jonathanvajda/SemanticArtifactOntology/has_sparql_query_text_value",
-  HAS_SQL_QUERY_TEXT: "https://github.com/jonathanvajda/SemanticArtifactOntology/has_sql_query_text_value",
+  HAS_MERMAID_TEXT: "https://github.com/jonathanvajda/okea/has_mermaid_diagram_text_value",
+  HAS_QUERY_TEXT: "https://github.com/jonathanvajda/okea/has_query_text_value",
+  HAS_SPARQL_QUERY_TEXT: "https://github.com/jonathanvajda/okea/has_sparql_query_text_value",
+  HAS_SQL_QUERY_TEXT: "https://github.com/jonathanvajda/okea/has_sql_query_text_value",
 &nbsp;
   HAS_TEXT_VALUE_CCO: "https://www.commoncoreontologies.org/ont00001761"
 };
@@ -2732,45 +2732,45 @@ function <span class="fstat-no" title="function not covered" >getDatabaseQuerySe
 <span class="cstat-no" title="statement not covered" >  switch (syntax) {</span>
     case 'SPARQL':
 <span class="cstat-no" title="statement not covered" >      return {</span>
-        classIri: SEMARTO.SPARQL_QUERY,
-        textPredicate: SEMARTO.HAS_SPARQL_QUERY_TEXT
+        classIri: OKEA.SPARQL_QUERY,
+        textPredicate: OKEA.HAS_SPARQL_QUERY_TEXT
       };
     case 'SQL':
 <span class="cstat-no" title="statement not covered" >      return {</span>
-        classIri: SEMARTO.SQL_QUERY,
-        textPredicate: SEMARTO.HAS_SQL_QUERY_TEXT
+        classIri: OKEA.SQL_QUERY,
+        textPredicate: OKEA.HAS_SQL_QUERY_TEXT
       };
     case 'Other':
     default:
 <span class="cstat-no" title="statement not covered" >      return {</span>
-        classIri: SEMARTO.DATABASE_QUERY,
-        textPredicate: SEMARTO.HAS_QUERY_TEXT
+        classIri: OKEA.DATABASE_QUERY,
+        textPredicate: OKEA.HAS_QUERY_TEXT
       };
   }
 }
 &nbsp;
 function <span class="fstat-no" title="function not covered" >getDatabaseQueryTextAndSyntax(</span>node) {
-<span class="cstat-no" title="statement not covered" >  if (hasType(node, SEMARTO.SPARQL_QUERY)) {</span>
+<span class="cstat-no" title="statement not covered" >  if (hasType(node, OKEA.SPARQL_QUERY)) {</span>
 <span class="cstat-no" title="statement not covered" >    return {</span>
       syntax: 'SPARQL',
-      text: node[SEMARTO.HAS_SPARQL_QUERY_TEXT]?.[0]?.['@value']
-        ?? node[SEMARTO.HAS_QUERY_TEXT]?.[0]?.['@value']
+      text: node[OKEA.HAS_SPARQL_QUERY_TEXT]?.[0]?.['@value']
+        ?? node[OKEA.HAS_QUERY_TEXT]?.[0]?.['@value']
         ?? ''
     };
   }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  if (hasType(node, SEMARTO.SQL_QUERY)) {</span>
+<span class="cstat-no" title="statement not covered" >  if (hasType(node, OKEA.SQL_QUERY)) {</span>
 <span class="cstat-no" title="statement not covered" >    return {</span>
       syntax: 'SQL',
-      text: node[SEMARTO.HAS_SQL_QUERY_TEXT]?.[0]?.['@value']
-        ?? node[SEMARTO.HAS_QUERY_TEXT]?.[0]?.['@value']
+      text: node[OKEA.HAS_SQL_QUERY_TEXT]?.[0]?.['@value']
+        ?? node[OKEA.HAS_QUERY_TEXT]?.[0]?.['@value']
         ?? ''
     };
   }
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  return {</span>
     syntax: 'Other',
-    text: node[SEMARTO.HAS_QUERY_TEXT]?.[0]?.['@value'] ?? ''
+    text: node[OKEA.HAS_QUERY_TEXT]?.[0]?.['@value'] ?? ''
   };
 }
 &nbsp;
@@ -2840,7 +2840,7 @@ function <span class="fstat-no" title="function not covered" >renderSidebarFromC
 &nbsp;
   // Add safety checks before calling .includes()
   const cqNodes = <span class="cstat-no" title="statement not covered" >allNodesCache.filter(<span class="fstat-no" title="function not covered" >n </span>=&gt;</span>
-<span class="cstat-no" title="statement not covered" >    hasType(n, "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000002")</span>
+<span class="cstat-no" title="statement not covered" >    hasType(n, "https://github.com/jonathanvajda/okea/ont000002")</span>
   );
 &nbsp;
   const titleProperty = <span class="cstat-no" title="statement not covered" >"http://www.w3.org/2000/01/rdf-schema#label";</span>
@@ -2944,7 +2944,7 @@ function <span class="fstat-no" title="function not covered" >loadCQIntoForm(</s
 <span class="cstat-no" title="statement not covered" >  subquestionsList.innerHTML = '';</span>
   const subquestionNodes = <span class="cstat-no" title="statement not covered" >allNodesCache.filter(<span class="fstat-no" title="function not covered" >n </span>=&gt;</span>
 <span class="cstat-no" title="statement not covered" >    (cq["http://purl.obolibrary.org/obo/BFO_0000178"] || []).some(<span class="fstat-no" title="function not covered" >it</span>em =&gt; <span class="cstat-no" title="statement not covered" >item["@id"] === n["@id"])</span> &amp;&amp;</span>
-    n["@type"].includes("https://github.com/jonathanvajda/SemanticArtifactOntology/ont000001")
+    n["@type"].includes("https://github.com/jonathanvajda/okea/ont000001")
   );
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  subquestionNodes.forEach(<span class="fstat-no" title="function not covered" >no</span>de =&gt; <span class="cstat-no" title="statement not covered" >addSubquestionItem(node["https://www.commoncoreontologies.org/ont00001761"][0]["@value"]))</span>;</span>
@@ -2953,7 +2953,7 @@ function <span class="fstat-no" title="function not covered" >loadCQIntoForm(</s
 <span class="cstat-no" title="statement not covered" >  decisionLogicList.innerHTML = '';</span>
   const logicNodes = <span class="cstat-no" title="statement not covered" >allNodesCache.filter(<span class="fstat-no" title="function not covered" >n </span>=&gt;</span>
 <span class="cstat-no" title="statement not covered" >    (cq["http://purl.obolibrary.org/obo/BFO_0000178"] || []).some(<span class="fstat-no" title="function not covered" >it</span>em =&gt; <span class="cstat-no" title="statement not covered" >item["@id"] === n["@id"])</span> &amp;&amp;</span>
-    n["@type"].includes("https://github.com/jonathanvajda/SemanticArtifactOntology/ont000009")
+    n["@type"].includes("https://github.com/jonathanvajda/okea/ont000009")
   );
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  logicNodes.forEach(<span class="fstat-no" title="function not covered" >no</span>de =&gt; <span class="cstat-no" title="statement not covered" >addDecisionLogicItem(node["https://www.commoncoreontologies.org/ont00001761"][0]["@value"]))</span>;</span>
@@ -2977,12 +2977,12 @@ function <span class="fstat-no" title="function not covered" >loadCQIntoForm(</s
 <span class="cstat-no" title="statement not covered" >  mermaidDiagramList.innerHTML = '';</span>
 &nbsp;
   const mermaidNodes = <span class="cstat-no" title="statement not covered" >allNodesCache.filter(<span class="fstat-no" title="function not covered" >n </span>=&gt;</span>
-<span class="cstat-no" title="statement not covered" >    (cq[SEMARTO.HAS_MERMAID_DIAGRAM] || []).some(<span class="fstat-no" title="function not covered" >it</span>em =&gt; <span class="cstat-no" title="statement not covered" >item["@id"] === n["@id"])</span> &amp;&amp;</span>
-    hasType(n, SEMARTO.MERMAID_DIAGRAM)
+<span class="cstat-no" title="statement not covered" >    (cq[OKEA.HAS_MERMAID_DIAGRAM] || []).some(<span class="fstat-no" title="function not covered" >it</span>em =&gt; <span class="cstat-no" title="statement not covered" >item["@id"] === n["@id"])</span> &amp;&amp;</span>
+    hasType(n, OKEA.MERMAID_DIAGRAM)
   );
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  mermaidNodes.forEach(<span class="fstat-no" title="function not covered" >no</span>de =&gt; {</span>
-    const diagramText = <span class="cstat-no" title="statement not covered" >node[SEMARTO.HAS_MERMAID_TEXT]?.[0]?.["@value"] ?? '';</span>
+    const diagramText = <span class="cstat-no" title="statement not covered" >node[OKEA.HAS_MERMAID_TEXT]?.[0]?.["@value"] ?? '';</span>
 <span class="cstat-no" title="statement not covered" >    addMermaidDiagramItem(diagramText);</span>
   });
 &nbsp;
@@ -2993,11 +2993,11 @@ function <span class="fstat-no" title="function not covered" >loadCQIntoForm(</s
 <span class="cstat-no" title="statement not covered" >  databaseQueryList.innerHTML = '';</span>
 &nbsp;
   const databaseQueryNodes = <span class="cstat-no" title="statement not covered" >allNodesCache.filter(<span class="fstat-no" title="function not covered" >n </span>=&gt;</span>
-<span class="cstat-no" title="statement not covered" >    (cq[SEMARTO.HAS_FORMALIZATION] || []).some(<span class="fstat-no" title="function not covered" >it</span>em =&gt; <span class="cstat-no" title="statement not covered" >item["@id"] === n["@id"])</span> &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >    (cq[OKEA.HAS_FORMALIZATION] || []).some(<span class="fstat-no" title="function not covered" >it</span>em =&gt; <span class="cstat-no" title="statement not covered" >item["@id"] === n["@id"])</span> &amp;&amp;</span>
     (
-      hasType(n, SEMARTO.SPARQL_QUERY) ||
-      hasType(n, SEMARTO.SQL_QUERY) ||
-      hasType(n, SEMARTO.DATABASE_QUERY)
+      hasType(n, OKEA.SPARQL_QUERY) ||
+      hasType(n, OKEA.SQL_QUERY) ||
+      hasType(n, OKEA.DATABASE_QUERY)
     )
   );
 &nbsp;
@@ -3406,30 +3406,30 @@ function <span class="fstat-no" title="function not covered" >generateJSONLD(</s
     "http://www.w3.org/2000/01/rdf-schema#comment": [{ "@value": dr.quality }]
   }));
   const subquestionNodes = <span class="cstat-no" title="statement not covered" >subquestions.map(<span class="fstat-no" title="function not covered" >(s</span>q, index) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
-    "@id": `https://github.com/jonathanvajda/SemanticArtifactOntology/ont000001_IterrogativeICE_${cqUniqueId}_${index + 1}`,
+    "@id": `https://github.com/jonathanvajda/okea/ont000001_IterrogativeICE_${cqUniqueId}_${index + 1}`,
     // ... rest of subquestion node ...
-    "@type": ["https://github.com/jonathanvajda/SemanticArtifactOntology/ont000001", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+    "@type": ["https://github.com/jonathanvajda/okea/ont000001", "http://www.w3.org/2002/07/owl#NamedIndividual"],
     "https://www.commoncoreontologies.org/ont00001761": [{ "@value": sq }],
   }));
   const decisionLogicNodes = <span class="cstat-no" title="statement not covered" >decisionLogic.map(<span class="fstat-no" title="function not covered" >(d</span>l, index) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
-    "@id": `https://github.com/jonathanvajda/SemanticArtifactOntology/ont000009_DecisionLogic_${cqUniqueId}_${index + 1}`,
+    "@id": `https://github.com/jonathanvajda/okea/ont000009_DecisionLogic_${cqUniqueId}_${index + 1}`,
     // ... rest of logic node ...
-    "@type": ["https://github.com/jonathanvajda/SemanticArtifactOntology/ont000009", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+    "@type": ["https://github.com/jonathanvajda/okea/ont000009", "http://www.w3.org/2002/07/owl#NamedIndividual"],
     "https://www.commoncoreontologies.org/ont00001761": [{ "@value": dl }],
   }));
   
   const mermaidDiagramNodes = <span class="cstat-no" title="statement not covered" >mermaidDiagram.map(<span class="fstat-no" title="function not covered" >(d</span>l, index) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
-    "@id": `https://github.com/jonathanvajda/SemanticArtifactOntology/ont000004_MermaidDiagram_${cqUniqueId}_${index + 1}`,
+    "@id": `https://github.com/jonathanvajda/okea/ont000004_MermaidDiagram_${cqUniqueId}_${index + 1}`,
     // ... rest of logic node ...
-    "@type": ["https://github.com/jonathanvajda/SemanticArtifactOntology/ont000004", "http://www.w3.org/2002/07/owl#NamedIndividual"],
-    "https://github.com/jonathanvajda/SemanticArtifactOntology/has_mermaid_diagram_text_value": [{ "@value": dl }],
+    "@type": ["https://github.com/jonathanvajda/okea/ont000004", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+    "https://github.com/jonathanvajda/okea/has_mermaid_diagram_text_value": [{ "@value": dl }],
   }));
   
   const databaseQueryNodes = <span class="cstat-no" title="statement not covered" >databaseQuery.map(<span class="fstat-no" title="function not covered" >(d</span>q, index) =&gt; {</span>
     const semantics = <span class="cstat-no" title="statement not covered" >getDatabaseQuerySemantics(dq.syntax);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    return {</span>
-      "@id": `https://github.com/jonathanvajda/SemanticArtifactOntology/ont000016_DatabaseQuery_${cqUniqueId}_${index + 1}`,
+      "@id": `https://github.com/jonathanvajda/okea/ont000016_DatabaseQuery_${cqUniqueId}_${index + 1}`,
       "@type": [semantics.classIri, "http://www.w3.org/2002/07/owl#NamedIndividual"],
       [semantics.textPredicate]: [{ "@value": dq.text }]
     };
@@ -3450,8 +3450,8 @@ function <span class="fstat-no" title="function not covered" >generateJSONLD(</s
     ...mermaidDiagramNodes,
     ...databaseQueryNodes,
     {
-      "@id": `https://github.com/jonathanvajda/SemanticArtifactOntology/ont000002_CQ_${cqUniqueId}`,
-      "@type": ["https://github.com/jonathanvajda/SemanticArtifactOntology/ont000002", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+      "@id": `https://github.com/jonathanvajda/okea/ont000002_CQ_${cqUniqueId}`,
+      "@type": ["https://github.com/jonathanvajda/okea/ont000002", "http://www.w3.org/2002/07/owl#NamedIndividual"],
       "http://www.w3.org/2000/01/rdf-schema#label": [{ "@value": title }],
       "http://purl.org/dc/terms/description": [{ "@value": description }],
       "http://purl.org/dc/terms/created": createdTimestamp,
@@ -3463,8 +3463,8 @@ function <span class="fstat-no" title="function not covered" >generateJSONLD(</s
         ...decisionLogicNodes.map(<span class="fstat-no" title="function not covered" >n </span>=&gt; (<span class="cstat-no" title="statement not covered" >{ "@id": n['@id'] })</span>),
         ...subquestionNodes.map(<span class="fstat-no" title="function not covered" >n </span>=&gt; (<span class="cstat-no" title="statement not covered" >{ "@id": n['@id'] })</span>)
       ],
-      [SEMARTO.HAS_MERMAID_DIAGRAM]: mermaidDiagramNodes.map(<span class="fstat-no" title="function not covered" >n </span>=&gt; (<span class="cstat-no" title="statement not covered" >{ "@id": n['@id'] })</span>),
-      [SEMARTO.HAS_FORMALIZATION]: databaseQueryNodes.map(<span class="fstat-no" title="function not covered" >n </span>=&gt; (<span class="cstat-no" title="statement not covered" >{ "@id": n['@id'] })</span>),
+      [OKEA.HAS_MERMAID_DIAGRAM]: mermaidDiagramNodes.map(<span class="fstat-no" title="function not covered" >n </span>=&gt; (<span class="cstat-no" title="statement not covered" >{ "@id": n['@id'] })</span>),
+      [OKEA.HAS_FORMALIZATION]: databaseQueryNodes.map(<span class="fstat-no" title="function not covered" >n </span>=&gt; (<span class="cstat-no" title="statement not covered" >{ "@id": n['@id'] })</span>),
     },
   ];
 <span class="cstat-no" title="statement not covered" >  return jsonLD;</span>
@@ -3498,7 +3498,7 @@ async function <span class="fstat-no" title="function not covered" >saveJSONLD(<
   const result = <span class="cstat-no" title="statement not covered" >await performSave();</span>
 <span class="cstat-no" title="statement not covered" >  if (result.success) {</span>
     const isUpdate = <span class="cstat-no" title="statement not covered" >!!currentCQId;</span>
-    const savedDsqId = <span class="cstat-no" title="statement not covered" >isUpdate ? currentCQId : result.newJsonLD.find(<span class="fstat-no" title="function not covered" >n </span>=&gt; <span class="cstat-no" title="statement not covered" >n["@type"].includes("https://github.com/jonathanvajda/SemanticArtifactOntology/ont000002"))</span>["@id"];</span>
+    const savedDsqId = <span class="cstat-no" title="statement not covered" >isUpdate ? currentCQId : result.newJsonLD.find(<span class="fstat-no" title="function not covered" >n </span>=&gt; <span class="cstat-no" title="statement not covered" >n["@type"].includes("https://github.com/jonathanvajda/okea/ont000002"))</span>["@id"];</span>
 <span class="cstat-no" title="statement not covered" >    allNodesCache = await readFromIndexedDB();</span>
     const cqNode = <span class="cstat-no" title="statement not covered" >allNodesCache.find(<span class="fstat-no" title="function not covered" >n </span>=&gt; <span class="cstat-no" title="statement not covered" >n['@id'] === savedDsqId)</span>;</span>
 <span class="cstat-no" title="statement not covered" >    if (!cqNode) {</span>
@@ -3596,7 +3596,7 @@ function <span class="fstat-no" title="function not covered" >downloadCSV(</span
 &nbsp;
   // 2. Find all the master CQ nodes
   const cqNodes = <span class="cstat-no" title="statement not covered" >allNodesCache.filter(<span class="fstat-no" title="function not covered" >n </span>=&gt;</span>
-<span class="cstat-no" title="statement not covered" >    hasType(n, "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000002")</span>
+<span class="cstat-no" title="statement not covered" >    hasType(n, "https://github.com/jonathanvajda/okea/ont000002")</span>
   );
 &nbsp;
   // 3. Process each CQ and its related items
@@ -3644,11 +3644,11 @@ function <span class="fstat-no" title="function not covered" >downloadCSV(</span
 &nbsp;
     // Process other item types (Subquestions, Logic, Data Sources)
     const itemTypes = <span class="cstat-no" title="statement not covered" >[</span>
-      { type: 'Subquestion', iri: 'https://github.com/jonathanvajda/SemanticArtifactOntology/ont000001', link: 'http://purl.obolibrary.org/obo/BFO_0000178' },
-      { type: 'DecisionLogic', iri: 'https://github.com/jonathanvajda/SemanticArtifactOntology/ont000009', link: 'http://purl.obolibrary.org/obo/BFO_0000178' },
+      { type: 'Subquestion', iri: 'https://github.com/jonathanvajda/okea/ont000001', link: 'http://purl.obolibrary.org/obo/BFO_0000178' },
+      { type: 'DecisionLogic', iri: 'https://github.com/jonathanvajda/okea/ont000009', link: 'http://purl.obolibrary.org/obo/BFO_0000178' },
       { type: 'DataSource', iri: 'https://www.commoncoreontologies.org/ont00000756', link: 'http://purl.org/dc/terms/requires' },
-      { type: 'MermaidDiagram', iri: 'https://github.com/jonathanvajda/SemanticArtifactOntology/ont000004', link: 'https://github.com/jonathanvajda/SemanticArtifactOntology/ont000012'},
-      { type: 'DatabaseQuery', iri: 'https://github.com/jonathanvajda/SemanticArtifactOntology/ont000016', link: 'https://github.com/jonathanvajda/SemanticArtifactOntology/ont000014'}
+      { type: 'MermaidDiagram', iri: 'https://github.com/jonathanvajda/okea/ont000004', link: 'https://github.com/jonathanvajda/okea/ont000012'},
+      { type: 'DatabaseQuery', iri: 'https://github.com/jonathanvajda/okea/ont000016', link: 'https://github.com/jonathanvajda/okea/ont000014'}
     ];
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    itemTypes.forEach(<span class="fstat-no" title="function not covered" >co</span>nfig =&gt; {</span>
@@ -3684,12 +3684,12 @@ function <span class="fstat-no" title="function not covered" >downloadCSV(</span
         }
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        if (config.type === 'MermaidDiagram') {</span>
-<span class="cstat-no" title="statement not covered" >          row.item_text = node["https://github.com/jonathanvajda/SemanticArtifactOntology/has_mermaid_diagram_text_value"]?.[0]?.['@value'] ?? '';</span>
+<span class="cstat-no" title="statement not covered" >          row.item_text = node["https://github.com/jonathanvajda/okea/has_mermaid_diagram_text_value"]?.[0]?.['@value'] ?? '';</span>
 <span class="cstat-no" title="statement not covered" >          row.mermaid_diagram_text = row.item_text;</span>
         }
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        if (config.type === 'DatabaseQuery') {</span>
-<span class="cstat-no" title="statement not covered" >          row.item_text = node["https://github.com/jonathanvajda/SemanticArtifactOntology/has_query_text_value"]?.[0]?.['@value'] ?? '';</span>
+<span class="cstat-no" title="statement not covered" >          row.item_text = node["https://github.com/jonathanvajda/okea/has_query_text_value"]?.[0]?.['@value'] ?? '';</span>
 <span class="cstat-no" title="statement not covered" >          row.database_query_text = row.item_text;</span>
         }
 &nbsp;
@@ -3766,7 +3766,7 @@ async function <span class="fstat-no" title="function not covered" >handleCSVUpl
 &nbsp;
       const cqNode = <span class="cstat-no" title="statement not covered" >{</span>
         "@id": baseRow.cq_id,
-        "@type": ["https://github.com/jonathanvajda/SemanticArtifactOntology/ont000002", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+        "@type": ["https://github.com/jonathanvajda/okea/ont000002", "http://www.w3.org/2002/07/owl#NamedIndividual"],
         "http://www.w3.org/2000/01/rdf-schema#label": [{ "@value": baseRow.cq_title }],
         "http://purl.org/dc/terms/description": [{ "@value": baseRow.cq_description }],
         "http://purl.org/dc/terms/created": [{ "@value": baseRow.cq_created_date, "@type": "http://www.w3.org/2001/XMLSchema#dateTime" }],
@@ -3818,7 +3818,7 @@ async function <span class="fstat-no" title="function not covered" >handleCSVUpl
           case 'Subquestion':
 <span class="cstat-no" title="statement not covered" >            if (!processedNodeIds.has(row.item_id)) {</span>
               const sqNode = <span class="cstat-no" title="statement not covered" >{</span>
-                "@id": row.item_id, "@type": ["https://github.com/jonathanvajda/SemanticArtifactOntology/ont000001", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+                "@id": row.item_id, "@type": ["https://github.com/jonathanvajda/okea/ont000001", "http://www.w3.org/2002/07/owl#NamedIndividual"],
                 "https://www.commoncoreontologies.org/ont00001761": [{ "@value": row.item_text }],
               };
 <span class="cstat-no" title="statement not covered" >              newGraph.push(sqNode);</span>
@@ -3830,7 +3830,7 @@ async function <span class="fstat-no" title="function not covered" >handleCSVUpl
           case 'DecisionLogic':
 <span class="cstat-no" title="statement not covered" >            if (!processedNodeIds.has(row.item_id)) {</span>
               const dlNode = <span class="cstat-no" title="statement not covered" >{</span>
-                "@id": row.item_id, "@type": ["https://github.com/jonathanvajda/SemanticArtifactOntology/ont000009", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+                "@id": row.item_id, "@type": ["https://github.com/jonathanvajda/okea/ont000009", "http://www.w3.org/2002/07/owl#NamedIndividual"],
                 "https://www.commoncoreontologies.org/ont00001761": [{ "@value": row.item_text }],
               };
 <span class="cstat-no" title="statement not covered" >              newGraph.push(dlNode);</span>
@@ -3857,8 +3857,8 @@ async function <span class="fstat-no" title="function not covered" >handleCSVUpl
 <span class="cstat-no" title="statement not covered" >            if (!processedNodeIds.has(row.item_id)) {</span>
               const mermaidNode = <span class="cstat-no" title="statement not covered" >{</span>
                 "@id": row.item_id,
-                "@type": ["https://github.com/jonathanvajda/SemanticArtifactOntology/ont000004", "http://www.w3.org/2002/07/owl#NamedIndividual"],
-                "https://github.com/jonathanvajda/SemanticArtifactOntology/has_mermaid_diagram_text_value": [{ "@value": row.mermaid_diagram_text || row.item_text }]
+                "@type": ["https://github.com/jonathanvajda/okea/ont000004", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+                "https://github.com/jonathanvajda/okea/has_mermaid_diagram_text_value": [{ "@value": row.mermaid_diagram_text || row.item_text }]
               };
 <span class="cstat-no" title="statement not covered" >              newGraph.push(mermaidNode);</span>
 <span class="cstat-no" title="statement not covered" >              processedNodeIds.add(row.item_id);</span>
@@ -3870,8 +3870,8 @@ async function <span class="fstat-no" title="function not covered" >handleCSVUpl
 <span class="cstat-no" title="statement not covered" >            if (!processedNodeIds.has(row.item_id)) {</span>
               const dbQueryNode = <span class="cstat-no" title="statement not covered" >{</span>
                 "@id": row.item_id,
-                "@type": ["https://github.com/jonathanvajda/SemanticArtifactOntology/ont000016", "http://www.w3.org/2002/07/owl#NamedIndividual"],
-                "https://github.com/jonathanvajda/SemanticArtifactOntology/has_query_text_value": [{ "@value": row.database_query_text || row.item_text }]
+                "@type": ["https://github.com/jonathanvajda/okea/ont000016", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+                "https://github.com/jonathanvajda/okea/has_query_text_value": [{ "@value": row.database_query_text || row.item_text }]
               };
 <span class="cstat-no" title="statement not covered" >              newGraph.push(dbQueryNode);</span>
 <span class="cstat-no" title="statement not covered" >              processedNodeIds.add(row.item_id);</span>
@@ -4024,7 +4024,7 @@ function <span class="fstat-no" title="function not covered" >setupEventListener
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-02T03:17:06.456Z
+                at 2026-05-07T12:15:32.359Z
             </div>
         <script src="prettify.js"></script>
         <script>

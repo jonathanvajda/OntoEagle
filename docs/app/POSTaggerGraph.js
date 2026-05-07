@@ -1655,7 +1655,7 @@ class GDCService {
         this.lemmatizer = new Lemmatizer();
 
         // --- Configuration ---
-        this.GDC_BASE_IRI = "https://github.com/jonathanvajda/SemanticArtifactOntology/GDC";
+        this.GDC_BASE_IRI = "https://github.com/jonathanvajda/okea/GDC";
         this.GDC_TYPE_IRI = "http://purl.obolibrary.org/obo/BFO_0000031";
         this.CONTINUANT_PART_OF = "http://purl.obolibrary.org/obo/BFO_0000176";
         this.PERSON_IRI = "https://www.commoncoreontologies.org/ont00001262";

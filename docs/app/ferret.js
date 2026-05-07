@@ -7,22 +7,22 @@ let allNodesCache = [];
 const tagger = new POSTagger(window.POSTAGGER_LEXICON);
 const gdcManager = new GDCManager(tagger, allNodesCache);
 
-const SEMARTO = {
-  CQ: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000002",
-  INTERROGATIVE_ICE: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000001",
-  BUSINESS_RULE: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000009",
-  MERMAID_DIAGRAM: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000004",
-  DATABASE_QUERY: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000016",
-  SPARQL_QUERY: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000007",
-  SQL_QUERY: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000005",
+const OKEA = {
+  CQ: "https://github.com/jonathanvajda/okea/ont000002",
+  INTERROGATIVE_ICE: "https://github.com/jonathanvajda/okea/ont000001",
+  BUSINESS_RULE: "https://github.com/jonathanvajda/okea/ont000009",
+  MERMAID_DIAGRAM: "https://github.com/jonathanvajda/okea/ont000004",
+  DATABASE_QUERY: "https://github.com/jonathanvajda/okea/ont000016",
+  SPARQL_QUERY: "https://github.com/jonathanvajda/okea/ont000007",
+  SQL_QUERY: "https://github.com/jonathanvajda/okea/ont000005",
 
-  HAS_MERMAID_DIAGRAM: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000012",
-  HAS_FORMALIZATION: "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000014",
+  HAS_MERMAID_DIAGRAM: "https://github.com/jonathanvajda/okea/ont000012",
+  HAS_FORMALIZATION: "https://github.com/jonathanvajda/okea/ont000014",
 
-  HAS_MERMAID_TEXT: "https://github.com/jonathanvajda/SemanticArtifactOntology/has_mermaid_diagram_text_value",
-  HAS_QUERY_TEXT: "https://github.com/jonathanvajda/SemanticArtifactOntology/has_query_text_value",
-  HAS_SPARQL_QUERY_TEXT: "https://github.com/jonathanvajda/SemanticArtifactOntology/has_sparql_query_text_value",
-  HAS_SQL_QUERY_TEXT: "https://github.com/jonathanvajda/SemanticArtifactOntology/has_sql_query_text_value",
+  HAS_MERMAID_TEXT: "https://github.com/jonathanvajda/okea/has_mermaid_diagram_text_value",
+  HAS_QUERY_TEXT: "https://github.com/jonathanvajda/okea/has_query_text_value",
+  HAS_SPARQL_QUERY_TEXT: "https://github.com/jonathanvajda/okea/has_sparql_query_text_value",
+  HAS_SQL_QUERY_TEXT: "https://github.com/jonathanvajda/okea/has_sql_query_text_value",
 
   HAS_TEXT_VALUE_CCO: "https://www.commoncoreontologies.org/ont00001761"
 };
@@ -31,45 +31,45 @@ function getDatabaseQuerySemantics(syntax) {
   switch (syntax) {
     case 'SPARQL':
       return {
-        classIri: SEMARTO.SPARQL_QUERY,
-        textPredicate: SEMARTO.HAS_SPARQL_QUERY_TEXT
+        classIri: OKEA.SPARQL_QUERY,
+        textPredicate: OKEA.HAS_SPARQL_QUERY_TEXT
       };
     case 'SQL':
       return {
-        classIri: SEMARTO.SQL_QUERY,
-        textPredicate: SEMARTO.HAS_SQL_QUERY_TEXT
+        classIri: OKEA.SQL_QUERY,
+        textPredicate: OKEA.HAS_SQL_QUERY_TEXT
       };
     case 'Other':
     default:
       return {
-        classIri: SEMARTO.DATABASE_QUERY,
-        textPredicate: SEMARTO.HAS_QUERY_TEXT
+        classIri: OKEA.DATABASE_QUERY,
+        textPredicate: OKEA.HAS_QUERY_TEXT
       };
   }
 }
 
 function getDatabaseQueryTextAndSyntax(node) {
-  if (hasType(node, SEMARTO.SPARQL_QUERY)) {
+  if (hasType(node, OKEA.SPARQL_QUERY)) {
     return {
       syntax: 'SPARQL',
-      text: node[SEMARTO.HAS_SPARQL_QUERY_TEXT]?.[0]?.['@value']
-        ?? node[SEMARTO.HAS_QUERY_TEXT]?.[0]?.['@value']
+      text: node[OKEA.HAS_SPARQL_QUERY_TEXT]?.[0]?.['@value']
+        ?? node[OKEA.HAS_QUERY_TEXT]?.[0]?.['@value']
         ?? ''
     };
   }
 
-  if (hasType(node, SEMARTO.SQL_QUERY)) {
+  if (hasType(node, OKEA.SQL_QUERY)) {
     return {
       syntax: 'SQL',
-      text: node[SEMARTO.HAS_SQL_QUERY_TEXT]?.[0]?.['@value']
-        ?? node[SEMARTO.HAS_QUERY_TEXT]?.[0]?.['@value']
+      text: node[OKEA.HAS_SQL_QUERY_TEXT]?.[0]?.['@value']
+        ?? node[OKEA.HAS_QUERY_TEXT]?.[0]?.['@value']
         ?? ''
     };
   }
 
   return {
     syntax: 'Other',
-    text: node[SEMARTO.HAS_QUERY_TEXT]?.[0]?.['@value'] ?? ''
+    text: node[OKEA.HAS_QUERY_TEXT]?.[0]?.['@value'] ?? ''
   };
 }
 
@@ -139,7 +139,7 @@ function renderSidebarFromCache() {
 
   // Add safety checks before calling .includes()
   const cqNodes = allNodesCache.filter(n =>
-    hasType(n, "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000002")
+    hasType(n, "https://github.com/jonathanvajda/okea/ont000002")
   );
 
   const titleProperty = "http://www.w3.org/2000/01/rdf-schema#label";
@@ -243,7 +243,7 @@ function loadCQIntoForm(cqId) {
   subquestionsList.innerHTML = '';
   const subquestionNodes = allNodesCache.filter(n =>
     (cq["http://purl.obolibrary.org/obo/BFO_0000178"] || []).some(item => item["@id"] === n["@id"]) &&
-    n["@type"].includes("https://github.com/jonathanvajda/SemanticArtifactOntology/ont000001")
+    n["@type"].includes("https://github.com/jonathanvajda/okea/ont000001")
   );
 
   subquestionNodes.forEach(node => addSubquestionItem(node["https://www.commoncoreontologies.org/ont00001761"][0]["@value"]));
@@ -252,7 +252,7 @@ function loadCQIntoForm(cqId) {
   decisionLogicList.innerHTML = '';
   const logicNodes = allNodesCache.filter(n =>
     (cq["http://purl.obolibrary.org/obo/BFO_0000178"] || []).some(item => item["@id"] === n["@id"]) &&
-    n["@type"].includes("https://github.com/jonathanvajda/SemanticArtifactOntology/ont000009")
+    n["@type"].includes("https://github.com/jonathanvajda/okea/ont000009")
   );
 
   logicNodes.forEach(node => addDecisionLogicItem(node["https://www.commoncoreontologies.org/ont00001761"][0]["@value"]));
@@ -276,12 +276,12 @@ function loadCQIntoForm(cqId) {
   mermaidDiagramList.innerHTML = '';
 
   const mermaidNodes = allNodesCache.filter(n =>
-    (cq[SEMARTO.HAS_MERMAID_DIAGRAM] || []).some(item => item["@id"] === n["@id"]) &&
-    hasType(n, SEMARTO.MERMAID_DIAGRAM)
+    (cq[OKEA.HAS_MERMAID_DIAGRAM] || []).some(item => item["@id"] === n["@id"]) &&
+    hasType(n, OKEA.MERMAID_DIAGRAM)
   );
 
   mermaidNodes.forEach(node => {
-    const diagramText = node[SEMARTO.HAS_MERMAID_TEXT]?.[0]?.["@value"] ?? '';
+    const diagramText = node[OKEA.HAS_MERMAID_TEXT]?.[0]?.["@value"] ?? '';
     addMermaidDiagramItem(diagramText);
   });
 
@@ -292,11 +292,11 @@ function loadCQIntoForm(cqId) {
   databaseQueryList.innerHTML = '';
 
   const databaseQueryNodes = allNodesCache.filter(n =>
-    (cq[SEMARTO.HAS_FORMALIZATION] || []).some(item => item["@id"] === n["@id"]) &&
+    (cq[OKEA.HAS_FORMALIZATION] || []).some(item => item["@id"] === n["@id"]) &&
     (
-      hasType(n, SEMARTO.SPARQL_QUERY) ||
-      hasType(n, SEMARTO.SQL_QUERY) ||
-      hasType(n, SEMARTO.DATABASE_QUERY)
+      hasType(n, OKEA.SPARQL_QUERY) ||
+      hasType(n, OKEA.SQL_QUERY) ||
+      hasType(n, OKEA.DATABASE_QUERY)
     )
   );
 
@@ -705,30 +705,30 @@ function generateJSONLD() {
     "http://www.w3.org/2000/01/rdf-schema#comment": [{ "@value": dr.quality }]
   }));
   const subquestionNodes = subquestions.map((sq, index) => ({
-    "@id": `https://github.com/jonathanvajda/SemanticArtifactOntology/ont000001_IterrogativeICE_${cqUniqueId}_${index + 1}`,
+    "@id": `https://github.com/jonathanvajda/okea/ont000001_IterrogativeICE_${cqUniqueId}_${index + 1}`,
     // ... rest of subquestion node ...
-    "@type": ["https://github.com/jonathanvajda/SemanticArtifactOntology/ont000001", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+    "@type": ["https://github.com/jonathanvajda/okea/ont000001", "http://www.w3.org/2002/07/owl#NamedIndividual"],
     "https://www.commoncoreontologies.org/ont00001761": [{ "@value": sq }],
   }));
   const decisionLogicNodes = decisionLogic.map((dl, index) => ({
-    "@id": `https://github.com/jonathanvajda/SemanticArtifactOntology/ont000009_DecisionLogic_${cqUniqueId}_${index + 1}`,
+    "@id": `https://github.com/jonathanvajda/okea/ont000009_DecisionLogic_${cqUniqueId}_${index + 1}`,
     // ... rest of logic node ...
-    "@type": ["https://github.com/jonathanvajda/SemanticArtifactOntology/ont000009", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+    "@type": ["https://github.com/jonathanvajda/okea/ont000009", "http://www.w3.org/2002/07/owl#NamedIndividual"],
     "https://www.commoncoreontologies.org/ont00001761": [{ "@value": dl }],
   }));
   
   const mermaidDiagramNodes = mermaidDiagram.map((dl, index) => ({
-    "@id": `https://github.com/jonathanvajda/SemanticArtifactOntology/ont000004_MermaidDiagram_${cqUniqueId}_${index + 1}`,
+    "@id": `https://github.com/jonathanvajda/okea/ont000004_MermaidDiagram_${cqUniqueId}_${index + 1}`,
     // ... rest of logic node ...
-    "@type": ["https://github.com/jonathanvajda/SemanticArtifactOntology/ont000004", "http://www.w3.org/2002/07/owl#NamedIndividual"],
-    "https://github.com/jonathanvajda/SemanticArtifactOntology/has_mermaid_diagram_text_value": [{ "@value": dl }],
+    "@type": ["https://github.com/jonathanvajda/okea/ont000004", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+    "https://github.com/jonathanvajda/okea/has_mermaid_diagram_text_value": [{ "@value": dl }],
   }));
   
   const databaseQueryNodes = databaseQuery.map((dq, index) => {
     const semantics = getDatabaseQuerySemantics(dq.syntax);
 
     return {
-      "@id": `https://github.com/jonathanvajda/SemanticArtifactOntology/ont000016_DatabaseQuery_${cqUniqueId}_${index + 1}`,
+      "@id": `https://github.com/jonathanvajda/okea/ont000016_DatabaseQuery_${cqUniqueId}_${index + 1}`,
       "@type": [semantics.classIri, "http://www.w3.org/2002/07/owl#NamedIndividual"],
       [semantics.textPredicate]: [{ "@value": dq.text }]
     };
@@ -749,8 +749,8 @@ function generateJSONLD() {
     ...mermaidDiagramNodes,
     ...databaseQueryNodes,
     {
-      "@id": `https://github.com/jonathanvajda/SemanticArtifactOntology/ont000002_CQ_${cqUniqueId}`,
-      "@type": ["https://github.com/jonathanvajda/SemanticArtifactOntology/ont000002", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+      "@id": `https://github.com/jonathanvajda/okea/ont000002_CQ_${cqUniqueId}`,
+      "@type": ["https://github.com/jonathanvajda/okea/ont000002", "http://www.w3.org/2002/07/owl#NamedIndividual"],
       "http://www.w3.org/2000/01/rdf-schema#label": [{ "@value": title }],
       "http://purl.org/dc/terms/description": [{ "@value": description }],
       "http://purl.org/dc/terms/created": createdTimestamp,
@@ -762,8 +762,8 @@ function generateJSONLD() {
         ...decisionLogicNodes.map(n => ({ "@id": n['@id'] })),
         ...subquestionNodes.map(n => ({ "@id": n['@id'] }))
       ],
-      [SEMARTO.HAS_MERMAID_DIAGRAM]: mermaidDiagramNodes.map(n => ({ "@id": n['@id'] })),
-      [SEMARTO.HAS_FORMALIZATION]: databaseQueryNodes.map(n => ({ "@id": n['@id'] })),
+      [OKEA.HAS_MERMAID_DIAGRAM]: mermaidDiagramNodes.map(n => ({ "@id": n['@id'] })),
+      [OKEA.HAS_FORMALIZATION]: databaseQueryNodes.map(n => ({ "@id": n['@id'] })),
     },
   ];
   return jsonLD;
@@ -797,7 +797,7 @@ async function saveJSONLD() {
   const result = await performSave();
   if (result.success) {
     const isUpdate = !!currentCQId;
-    const savedDsqId = isUpdate ? currentCQId : result.newJsonLD.find(n => n["@type"].includes("https://github.com/jonathanvajda/SemanticArtifactOntology/ont000002"))["@id"];
+    const savedDsqId = isUpdate ? currentCQId : result.newJsonLD.find(n => n["@type"].includes("https://github.com/jonathanvajda/okea/ont000002"))["@id"];
     allNodesCache = await readFromIndexedDB();
     const cqNode = allNodesCache.find(n => n['@id'] === savedDsqId);
     if (!cqNode) {
@@ -895,7 +895,7 @@ function downloadCSV() {
 
   // 2. Find all the master CQ nodes
   const cqNodes = allNodesCache.filter(n =>
-    hasType(n, "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000002")
+    hasType(n, "https://github.com/jonathanvajda/okea/ont000002")
   );
 
   // 3. Process each CQ and its related items
@@ -943,11 +943,11 @@ function downloadCSV() {
 
     // Process other item types (Subquestions, Logic, Data Sources)
     const itemTypes = [
-      { type: 'Subquestion', iri: 'https://github.com/jonathanvajda/SemanticArtifactOntology/ont000001', link: 'http://purl.obolibrary.org/obo/BFO_0000178' },
-      { type: 'DecisionLogic', iri: 'https://github.com/jonathanvajda/SemanticArtifactOntology/ont000009', link: 'http://purl.obolibrary.org/obo/BFO_0000178' },
+      { type: 'Subquestion', iri: 'https://github.com/jonathanvajda/okea/ont000001', link: 'http://purl.obolibrary.org/obo/BFO_0000178' },
+      { type: 'DecisionLogic', iri: 'https://github.com/jonathanvajda/okea/ont000009', link: 'http://purl.obolibrary.org/obo/BFO_0000178' },
       { type: 'DataSource', iri: 'https://www.commoncoreontologies.org/ont00000756', link: 'http://purl.org/dc/terms/requires' },
-      { type: 'MermaidDiagram', iri: 'https://github.com/jonathanvajda/SemanticArtifactOntology/ont000004', link: 'https://github.com/jonathanvajda/SemanticArtifactOntology/ont000012'},
-      { type: 'DatabaseQuery', iri: 'https://github.com/jonathanvajda/SemanticArtifactOntology/ont000016', link: 'https://github.com/jonathanvajda/SemanticArtifactOntology/ont000014'}
+      { type: 'MermaidDiagram', iri: 'https://github.com/jonathanvajda/okea/ont000004', link: 'https://github.com/jonathanvajda/okea/ont000012'},
+      { type: 'DatabaseQuery', iri: 'https://github.com/jonathanvajda/okea/ont000016', link: 'https://github.com/jonathanvajda/okea/ont000014'}
     ];
 
     itemTypes.forEach(config => {
@@ -983,12 +983,12 @@ function downloadCSV() {
         }
 
         if (config.type === 'MermaidDiagram') {
-          row.item_text = node["https://github.com/jonathanvajda/SemanticArtifactOntology/has_mermaid_diagram_text_value"]?.[0]?.['@value'] ?? '';
+          row.item_text = node["https://github.com/jonathanvajda/okea/has_mermaid_diagram_text_value"]?.[0]?.['@value'] ?? '';
           row.mermaid_diagram_text = row.item_text;
         }
 
         if (config.type === 'DatabaseQuery') {
-          row.item_text = node["https://github.com/jonathanvajda/SemanticArtifactOntology/has_query_text_value"]?.[0]?.['@value'] ?? '';
+          row.item_text = node["https://github.com/jonathanvajda/okea/has_query_text_value"]?.[0]?.['@value'] ?? '';
           row.database_query_text = row.item_text;
         }
 
@@ -1065,7 +1065,7 @@ async function handleCSVUpload(event) {
 
       const cqNode = {
         "@id": baseRow.cq_id,
-        "@type": ["https://github.com/jonathanvajda/SemanticArtifactOntology/ont000002", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+        "@type": ["https://github.com/jonathanvajda/okea/ont000002", "http://www.w3.org/2002/07/owl#NamedIndividual"],
         "http://www.w3.org/2000/01/rdf-schema#label": [{ "@value": baseRow.cq_title }],
         "http://purl.org/dc/terms/description": [{ "@value": baseRow.cq_description }],
         "http://purl.org/dc/terms/created": [{ "@value": baseRow.cq_created_date, "@type": "http://www.w3.org/2001/XMLSchema#dateTime" }],
@@ -1117,7 +1117,7 @@ async function handleCSVUpload(event) {
           case 'Subquestion':
             if (!processedNodeIds.has(row.item_id)) {
               const sqNode = {
-                "@id": row.item_id, "@type": ["https://github.com/jonathanvajda/SemanticArtifactOntology/ont000001", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+                "@id": row.item_id, "@type": ["https://github.com/jonathanvajda/okea/ont000001", "http://www.w3.org/2002/07/owl#NamedIndividual"],
                 "https://www.commoncoreontologies.org/ont00001761": [{ "@value": row.item_text }],
               };
               newGraph.push(sqNode);
@@ -1129,7 +1129,7 @@ async function handleCSVUpload(event) {
           case 'DecisionLogic':
             if (!processedNodeIds.has(row.item_id)) {
               const dlNode = {
-                "@id": row.item_id, "@type": ["https://github.com/jonathanvajda/SemanticArtifactOntology/ont000009", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+                "@id": row.item_id, "@type": ["https://github.com/jonathanvajda/okea/ont000009", "http://www.w3.org/2002/07/owl#NamedIndividual"],
                 "https://www.commoncoreontologies.org/ont00001761": [{ "@value": row.item_text }],
               };
               newGraph.push(dlNode);
@@ -1156,8 +1156,8 @@ async function handleCSVUpload(event) {
             if (!processedNodeIds.has(row.item_id)) {
               const mermaidNode = {
                 "@id": row.item_id,
-                "@type": ["https://github.com/jonathanvajda/SemanticArtifactOntology/ont000004", "http://www.w3.org/2002/07/owl#NamedIndividual"],
-                "https://github.com/jonathanvajda/SemanticArtifactOntology/has_mermaid_diagram_text_value": [{ "@value": row.mermaid_diagram_text || row.item_text }]
+                "@type": ["https://github.com/jonathanvajda/okea/ont000004", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+                "https://github.com/jonathanvajda/okea/has_mermaid_diagram_text_value": [{ "@value": row.mermaid_diagram_text || row.item_text }]
               };
               newGraph.push(mermaidNode);
               processedNodeIds.add(row.item_id);
@@ -1169,8 +1169,8 @@ async function handleCSVUpload(event) {
             if (!processedNodeIds.has(row.item_id)) {
               const dbQueryNode = {
                 "@id": row.item_id,
-                "@type": ["https://github.com/jonathanvajda/SemanticArtifactOntology/ont000016", "http://www.w3.org/2002/07/owl#NamedIndividual"],
-                "https://github.com/jonathanvajda/SemanticArtifactOntology/has_query_text_value": [{ "@value": row.database_query_text || row.item_text }]
+                "@type": ["https://github.com/jonathanvajda/okea/ont000016", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+                "https://github.com/jonathanvajda/okea/has_query_text_value": [{ "@value": row.database_query_text || row.item_text }]
               };
               newGraph.push(dbQueryNode);
               processedNodeIds.add(row.item_id);

@@ -214,11 +214,11 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX dcterms: <http://purl.org/dc/terms/>
 PREFIX cco: <https://www.commoncoreontologies.org/>
-PREFIX semarto: <https://github.com/jonathanvajda/SemanticArtifactOntology/>
+PREFIX okea: <https://github.com/jonathanvajda/okea/>
 
 SELECT DISTINCT ?cq ?cqLabel ?dataset ?datasetLabel ?qualityNote
 WHERE {
-  ?cq rdf:type semarto:ont000002 ;
+  ?cq rdf:type okea:ont000002 ;
       rdfs:label ?cqLabel ;
       dcterms:requires ?dataset .
 
@@ -230,8 +230,6 @@ WHERE {
 ORDER BY ?datasetLabel ?cqLabel
 ```
 
-> IRI note: The current CQ Ferret JavaScript uses `https://github.com/jonathanvajda/SemanticArtifactOntology/` for the CQ Ferret artifact terms. The ontology file shown with this tutorial uses the newer `https://github.com/jonathanvajda/okea/` base. If the app IRIs are migrated, update the `semarto:` prefix in this query to the new application-ontology base and keep the local names aligned.
-
 ## Design Pattern Notes
 
 BFO is published as ISO/IEC 21838-2:2021 by ISO, where it is described as a top-level ontology supporting information interchange among heterogeneous information systems: <https://www.iso.org/standard/74572.html>.
@@ -242,22 +240,22 @@ CQ Ferret follows that spirit at the application level: it treats questions, dia
 
 ```mermaid
 flowchart TD
-    CQ["Competency Question<br/>semarto:ont000002"] -->|rdfs:label| CQText["Question text"]
+    CQ["Competency Question<br/>okea:ont000002"] -->|rdfs:label| CQText["Question text"]
     CQ -->|dcterms:description| Context["CQ context"]
     CQ -->|dcterms:contributor| Person["Contributor<br/>cco:ont00001262"]
     Person -->|BFO:has role| Role["Project role<br/>BFO_0000023"]
     Person -->|cco:designated by| Email["Contact information"]
 
-    CQ -->|BFO:has continuant part| Subquestion["Subquestion<br/>semarto:ont000001"]
-    CQ -->|BFO:has continuant part| DecisionLogic["Decision logic / business rule<br/>semarto:ont000009"]
+    CQ -->|BFO:has continuant part| Subquestion["Subquestion<br/>okea:ont000001"]
+    CQ -->|BFO:has continuant part| DecisionLogic["Decision logic / business rule<br/>okea:ont000009"]
     CQ -->|dcterms:requires| DataSource["Data source<br/>cco:ont00000756"]
     DataSource -->|rdfs:comment| DataQuality["Data quality note"]
 
-    CQ -->|semarto:has mermaid diagram| Diagram["Mermaid diagram<br/>semarto:ont000004"]
-    Diagram -->|semarto:has mermaid text value| MermaidText["Mermaid syntax text"]
+    CQ -->|okea:has mermaid diagram| Diagram["Mermaid diagram<br/>okea:ont000004"]
+    Diagram -->|okea:has mermaid text value| MermaidText["Mermaid syntax text"]
 
-    CQ -->|semarto:has formalization| Query["Database query<br/>semarto:ont000016"]
-    Query -->|semarto:has query text value| QueryText["SQL / SPARQL / other query text"]
+    CQ -->|okea:has formalization| Query["Database query<br/>okea:ont000016"]
+    Query -->|okea:has query text value| QueryText["SQL / SPARQL / other query text"]
 
     CQ -->|vocabulary extraction| Vocab["Vocabulary candidate"]
     Vocab -->|rdfs:label| VocabLabel["Term label"]
