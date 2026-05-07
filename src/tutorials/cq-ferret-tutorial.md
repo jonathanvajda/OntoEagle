@@ -9,7 +9,7 @@ This tutorial focuses only on two static pages:
 - `cq-ferret.html`: the competency-question workspace.
 - `vocabulary.html`: the extracted vocabulary review and export page.
 
-Both pages run as static web pages, use JavaScript from `docs/app`, and store their working data locally in IndexedDB. CQ Ferret's native data model is aligned with BFO, Common Core Ontologies, and the small knowledge-engineering artifact ontology shipped with this project.
+For those who would like to fork and deploy this app in their own environment, these pages run as static web pages, use JavaScript from `docs/app`, and store their working data locally in the user's browser (via IndexedDB). CQ Ferret's native data model is aligned with BFO, Common Core Ontologies, and the small knowledge-engineering artifact ontology shipped with this project. By design, it does not store user's data on the web, in order to keep data secure and reduce overhead costs for projects. The static site is also deployable locally or on a server with Node.
 
 ## Table of Contents
 
@@ -59,27 +59,6 @@ That question can be asked by a logistics planner, reviewed by a data steward, m
 
 Open `docs/cq-ferret.html` in a browser. The app runs locally as a static page. Data is saved in your browser's IndexedDB database named `CQDatabase`, in the object store `CQStore`.
 
-The page has a left panel for the list of CQs and import/export actions. The main panel has the editing form for the selected question.
-
-![CQ Ferret list of competency questions](screenshots/cq-list.png)
-
-## Create or Import Competency Questions
-
-You can start in either direction:
-
-- Create a new CQ manually in the form.
-- Import a normalized CSV file.
-- Import JSON-LD if your workflow has already generated graph data.
-
-For a hands-on start, use the sample CSV in this folder:
-
-```text
-src/tutorials/sample-cq-ferret-import.csv
-```
-
-On `cq-ferret.html`, choose **Upload CSV** and select that file. The app will add new records or update matching records if the IDs already exist.
-
-The normalized CQ CSV is row-oriented. A CQ appears once as a row group identified by `cq_id`. Each associated artifact is a typed row using `item_type`, such as `Contributor`, `Subquestion`, `DecisionLogic`, `DataSource`, `MermaidDiagram`, or `DatabaseQuery`.
 
 ![Formulation of a competency question](screenshots/formulation-of-question.png)
 
@@ -339,3 +318,25 @@ JSON-LD preserves graph structure. After export, the CQ graph can be loaded into
 ### Why export CSV?
 
 CSV is easy to inspect, move, and normalize. It is useful for review, issue tracking, spreadsheet workflows, and import into tools that expect tabular vocabulary or requirements data.
+
+The page has a left panel for the list of CQs and import/export actions. The main panel has the editing form for the selected question.
+
+![CQ Ferret list of competency questions](screenshots/cq-list.png)
+
+#### Import Competency Questions
+
+You can start in either direction:
+
+- Create a new CQ manually in the form.
+- Import a normalized CSV file.
+- Import JSON-LD if your workflow has already generated graph data.
+
+For a hands-on start, use the sample CSV in this folder:
+
+```text
+src/tutorials/sample-cq-ferret-import.csv
+```
+
+On `cq-ferret.html`, choose **Upload CSV** and select that file. The app will add new records or update matching records if the IDs already exist.
+
+The normalized CQ CSV is row-oriented. A CQ appears once as a row group identified by `cq_id`. Each associated artifact is a typed row using `item_type`, such as `Contributor`, `Subquestion`, `DecisionLogic`, `DataSource`, `MermaidDiagram`, or `DatabaseQuery`.
