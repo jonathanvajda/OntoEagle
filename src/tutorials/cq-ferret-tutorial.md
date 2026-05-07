@@ -6,8 +6,8 @@ CQ Ferret helps ontology and knowledge-graph teams move competency questions out
 
 This tutorial focuses only on two static pages:
 
-- `cq-ferret.html`: the competency-question workspace.
-- `vocabulary.html`: the extracted vocabulary review and export page.
+- [CQ Ferret](https://jonathanvajda.github.io/OntoEagle/cq-ferret.html): the competency-question workspace.
+- [Extracted Vocabulary](https://jonathanvajda.github.io/OntoEagle/vocabulary.html): the vocabulary review and export page.
 
 For those who would like to fork and deploy this app in their own environment, these pages run as static web pages, use JavaScript from `docs/app`, and store their working data locally in the user's browser (via IndexedDB). CQ Ferret's native data model is aligned with BFO, Common Core Ontologies, and the small knowledge-engineering artifact ontology shipped with this project. By design, it does not store user's data on the web, in order to keep data secure and reduce overhead costs for projects. The static site is also deployable locally or on a server with Node.
 
@@ -57,7 +57,7 @@ That question can be asked by a logistics planner, reviewed by a data steward, m
 
 ## Open the App
 
-Open `docs/cq-ferret.html` in a browser. The app runs locally as a static page. Data is saved in your browser's IndexedDB database named `CQDatabase`, in the object store `CQStore`.
+Open [CQ Ferret](https://jonathanvajda.github.io/OntoEagle/cq-ferret.html) in a browser. The app runs locally as a static page. Data is saved in your browser's IndexedDB database named `CQDatabase`, in the object store `CQStore`.
 
 
 ![Formulation of a competency question](screenshots/formulation-of-question.png)
@@ -175,7 +175,7 @@ WHERE {
 
 ## Rebuild and Export Vocabulary
 
-Open `docs/vocabulary.html` after you have CQ data in the browser. Choose **Rebuild from CQ graph**. The vocabulary page reads the CQ graph from IndexedDB, extracts key terms from text-bearing fields, and displays an editable table.
+Open [Extracted Vocabulary](https://jonathanvajda.github.io/OntoEagle/vocabulary.html) after you have CQ data in the browser. Choose **Rebuild from CQ graph**. The vocabulary page reads the CQ graph from IndexedDB, extracts key terms from text-bearing fields, and displays an editable table.
 
 The vocabulary table supports:
 
@@ -198,7 +198,7 @@ This gives vocabulary stewards a bridge from CQ wording to controlled vocabulary
 
 ## Export JSON-LD and Query the Graph
 
-On `cq-ferret.html`, choose **Download JSON-LD** to export the current CQ graph. The JSON-LD export can be loaded into an RDF graph database or graph-processing tool.
+On [CQ Ferret](https://jonathanvajda.github.io/OntoEagle/cq-ferret.html), choose **Download JSON-LD** to export the current CQ graph. The JSON-LD export can be loaded into an RDF graph database or graph-processing tool.
 
 Once the graph is loaded, SPARQL can answer project-status questions, such as:
 
@@ -337,6 +337,6 @@ For a hands-on start, use the sample CSV in this folder:
 src/tutorials/sample-cq-ferret-import.csv
 ```
 
-On `cq-ferret.html`, choose **Upload CSV** and select that file. The app will add new records or update matching records if the IDs already exist.
+On [CQ Ferret](https://jonathanvajda.github.io/OntoEagle/cq-ferret.html), choose **Upload CSV** and select that file. The app will add new records or update matching records if the IDs already exist.
 
 The normalized CQ CSV is row-oriented. A CQ appears once as a row group identified by `cq_id`. Each associated artifact is a typed row using `item_type`, such as `Contributor`, `Subquestion`, `DecisionLogic`, `DataSource`, `MermaidDiagram`, or `DatabaseQuery`.
