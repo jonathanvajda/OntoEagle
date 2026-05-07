@@ -61,6 +61,8 @@ Open `docs/cq-ferret.html` in a browser. The app runs locally as a static page. 
 
 The page has a left panel for the list of CQs and import/export actions. The main panel has the editing form for the selected question.
 
+![CQ Ferret list of competency questions](screenshots/cq-list.png)
+
 ## Create or Import Competency Questions
 
 You can start in either direction:
@@ -79,9 +81,17 @@ On `cq-ferret.html`, choose **Upload CSV** and select that file. The app will ad
 
 The normalized CQ CSV is row-oriented. A CQ appears once as a row group identified by `cq_id`. Each associated artifact is a typed row using `item_type`, such as `Contributor`, `Subquestion`, `DecisionLogic`, `DataSource`, `MermaidDiagram`, or `DatabaseQuery`.
 
+![Formulation of a competency question](screenshots/formulation-of-question.png)
+
+The operational context section can hold supporting technical artifacts for the CQ, including Mermaid syntax and notional SQL or SPARQL query text.
+
+![Operational context for a competency question](screenshots/cq-operational-context.png)
+
 ## Add Contributors and Roles
 
 In the **CQ Contributors** section, add people who created, reviewed, approved, or need to validate the question. Record a contact method and notes about their responsibility.
+
+![CQ contributor form section](screenshots/cq-contributors.png)
 
 For the worked scenario:
 
@@ -110,9 +120,13 @@ Decision logic can then capture how the answers combine:
 A vehicle is at service-risk when service is due within 14 days, at least one required part is below reorder threshold at the assigned depot, and no alternate source can deliver before the service date.
 ```
 
+![Decomposition of a competency question](screenshots/decomposition-of-question.png)
+
 ## Attach Data Sources and Data Quality Notes
 
 Use **What data sources are relevant to finding the answer?** to list systems, datasets, files, or data products needed to answer the CQ.
+
+![Relevant data sources and data quality notes](screenshots/relevant-data-sources.png)
 
 Examples:
 
@@ -143,6 +157,10 @@ flowchart LR
 ```
 
 This allows the diagramming work to stay attached to the question it is meant to support. A developer can draft the diagram, a domain expert can validate it, and an ontologist can use it as evidence for model coverage.
+
+The rendered Mermaid view gives reviewers a fast way to inspect the diagram implied by the text captured in the operational context section.
+
+![Rendered Mermaid diagram attached to a competency question](screenshots/mermaid-diagram.png)
 
 ## Attach SQL or SPARQL Query Ideas
 
@@ -194,6 +212,8 @@ You can edit candidate terms, add definitions, classify them as OWL classes or p
 ```text
 src/tutorials/sample-vocabulary-export.csv
 ```
+
+![Extracted vocabulary list](screenshots/vocabulary-list.png)
 
 This gives vocabulary stewards a bridge from CQ wording to controlled vocabulary work. It also gives downstream tools a normalized CSV that can be used in the next stage of the ontology-development cycle.
 
@@ -269,45 +289,32 @@ The important pattern is simple: every CQ becomes a small hub. Around it, the te
 
 ## Screenshot Checklist
 
-Replace these placeholders with screenshots as you create them.
+Use this as the working checklist for tutorial screenshot coverage.
 
-| Placeholder | Suggested screenshot |
-| --- | --- |
-| `screenshots/cq-question-decomposition.png` | CQ form showing the question, context, subquestions, and decision logic. |
-| `screenshots/cq-contributors.png` | Contributor section with name, role, contact, and notes. |
-| `screenshots/cq-data-sources.png` | Data sources section with at least two systems and data quality notes. |
-| `screenshots/cq-mermaid-diagram.png` | Mermaid diagram input area, ideally with the rendered diagram visible if available. |
-| `screenshots/cq-query.png` | Query area with a SQL or SPARQL example attached to the CQ. |
-| `screenshots/cq-list.png` | Left CQ list showing multiple competency questions. |
-| `screenshots/cq-import-export.png` | CQ upload and download buttons, with callouts for CSV and JSON-LD. |
-| `screenshots/vocabulary-table.png` | Vocabulary table after rebuild, with edited definitions or type assignments. |
-| `screenshots/vocabulary-export.png` | Vocabulary export button or vocabulary table with an export callout. |
+| Tutorial need | Screenshot file | Covered? | Notes |
+| --- | --- | --- | --- |
+| CQ list showing multiple competency questions | `screenshots/cq-list.png` | Yes | Inserted in [Open the App](#open-the-app). |
+| CQ upload and download/export buttons | `screenshots/cq-list.png` | Yes | Covered by the CQ list screenshot; buttons are visible without a callout. |
+| Question formulation | `screenshots/formulation-of-question.png` | Yes | Inserted in [Create or Import Competency Questions](#create-or-import-competency-questions). |
+| Question context / operational context | `screenshots/cq-operational-context.png` | Yes | Inserted in [Create or Import Competency Questions](#create-or-import-competency-questions). |
+| Contributor section with name, role, contact, and notes | `screenshots/cq-contributors.png` | Yes | Inserted in [Add Contributors and Roles](#add-contributors-and-roles). |
+| CQ decomposition: subquestions and decision logic | `screenshots/decomposition-of-question.png` | Yes | Inserted in [Decompose the Question](#decompose-the-question). |
+| Data sources and data quality notes | `screenshots/relevant-data-sources.png` | Yes | Inserted in [Attach Data Sources and Data Quality Notes](#attach-data-sources-and-data-quality-notes). |
+| Mermaid syntax area | `screenshots/cq-operational-context.png` | Yes | Covered by the operational context screenshot. |
+| Rendered Mermaid diagram | `screenshots/mermaid-diagram.png` | Yes | Inserted in [Attach Mermaid Diagrams](#attach-mermaid-diagrams). |
+| Query area with SQL or SPARQL attached to the CQ | `screenshots/cq-operational-context.png` | Yes | Covered by the operational context screenshot. |
+| Vocabulary table after rebuild | `screenshots/vocabulary-list.png` | Yes | Inserted in [Rebuild and Export Vocabulary](#rebuild-and-export-vocabulary). |
+| Vocabulary rebuild and export actions | `screenshots/vocabulary-list.png` | Yes | Covered by the vocabulary list screenshot; buttons are visible without a callout. |
 
 ## Frequently Asked Questions
-
-### Is CQ Ferret a replacement for ontology editing tools?
-
-No. It is a requirements and knowledge-engineering capture tool. It helps organize the questions, supporting data, diagrams, query ideas, and vocabulary candidates that later inform ontology editing.
 
 ### Why use competency questions instead of just collecting terms?
 
 Terms without questions are hard to prioritize. A competency question explains why a term matters by connecting it to an information need, a decision, a data source, or a query.
 
-### Why use a browser app with IndexedDB?
+### Is CQ Ferret a replacement for ontology editing tools?
 
-It keeps the workflow lightweight. A project team can collect structured data in a static website without standing up a server. Exports can then move the data into other systems.
-
-### What is the difference between CQ data and use-case data?
-
-CQ data is project metadata: questions, contributors, diagrams, query text, data source references, and vocabulary candidates. Use-case data is the operational domain data, such as vehicles, patients, products, orders, facilities, parts, or work orders.
-
-### Why export JSON-LD?
-
-JSON-LD preserves graph structure. After export, the CQ graph can be loaded into a graph database and queried with SPARQL to find gaps, overlaps, dependencies, and evidence across many CQs.
-
-### Why export CSV?
-
-CSV is easy to inspect, move, and normalize. It is useful for review, issue tracking, spreadsheet workflows, and import into tools that expect tabular vocabulary or requirements data.
+No. It is a requirements and knowledge-engineering capture tool. It helps organize the questions, supporting data, diagrams, query ideas, and vocabulary candidates that later inform ontology editing.
 
 ### Can multiple people work from the same CQ set?
 
@@ -317,3 +324,18 @@ Yes, by exchanging normalized CSV or JSON-LD exports. CQ Ferret itself is local-
 
 Treat extraction as a starting point, not an authority. Review labels, remove noise, add definitions, assign OWL element types, and export only the terms that are useful for the next modeling step.
 
+### What is the difference between CQ data and use-case data?
+
+CQ data is project metadata: questions, contributors, diagrams, query text, data source references, and vocabulary candidates. Use-case data is the operational domain data, such as vehicles, patients, products, orders, facilities, parts, or work orders.
+
+### Why use a browser app with IndexedDB?
+
+It keeps the workflow lightweight. A project team can collect structured data in a static website without standing up a server. Exports can then move the data into other systems.
+
+### Why export JSON-LD?
+
+JSON-LD preserves graph structure. After export, the CQ graph can be loaded into a graph database and queried with SPARQL to find gaps, overlaps, dependencies, and evidence across many CQs.
+
+### Why export CSV?
+
+CSV is easy to inspect, move, and normalize. It is useful for review, issue tracking, spreadsheet workflows, and import into tools that expect tabular vocabulary or requirements data.
