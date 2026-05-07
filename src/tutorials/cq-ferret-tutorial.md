@@ -266,25 +266,6 @@ flowchart TD
 
 The important pattern is simple: every CQ becomes a small hub. Around it, the team attaches the evidence needed to decide whether the model and data environment can answer the question.
 
-## Screenshot Checklist
-
-Use this as the working checklist for tutorial screenshot coverage.
-
-| Tutorial need | Screenshot file | Covered? | Notes |
-| --- | --- | --- | --- |
-| CQ list showing multiple competency questions | `screenshots/cq-list.png` | Yes | Inserted in [Open the App](#open-the-app). |
-| CQ upload and download/export buttons | `screenshots/cq-list.png` | Yes | Covered by the CQ list screenshot; buttons are visible without a callout. |
-| Question formulation | `screenshots/formulation-of-question.png` | Yes | Inserted in [Create or Import Competency Questions](#create-or-import-competency-questions). |
-| Question context / operational context | `screenshots/cq-operational-context.png` | Yes | Inserted in [Create or Import Competency Questions](#create-or-import-competency-questions). |
-| Contributor section with name, role, contact, and notes | `screenshots/cq-contributors.png` | Yes | Inserted in [Add Contributors and Roles](#add-contributors-and-roles). |
-| CQ decomposition: subquestions and decision logic | `screenshots/decomposition-of-question.png` | Yes | Inserted in [Decompose the Question](#decompose-the-question). |
-| Data sources and data quality notes | `screenshots/relevant-data-sources.png` | Yes | Inserted in [Attach Data Sources and Data Quality Notes](#attach-data-sources-and-data-quality-notes). |
-| Mermaid syntax area | `screenshots/cq-operational-context.png` | Yes | Covered by the operational context screenshot. |
-| Rendered Mermaid diagram | `screenshots/mermaid-diagram.png` | Yes | Inserted in [Attach Mermaid Diagrams](#attach-mermaid-diagrams). |
-| Query area with SQL or SPARQL attached to the CQ | `screenshots/cq-operational-context.png` | Yes | Covered by the operational context screenshot. |
-| Vocabulary table after rebuild | `screenshots/vocabulary-list.png` | Yes | Inserted in [Rebuild and Export Vocabulary](#rebuild-and-export-vocabulary). |
-| Vocabulary rebuild and export actions | `screenshots/vocabulary-list.png` | Yes | Covered by the vocabulary list screenshot; buttons are visible without a callout. |
-
 ## Frequently Asked Questions
 
 ### Why use competency questions instead of just collecting terms?
