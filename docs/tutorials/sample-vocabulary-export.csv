@@ -1,8 +1,0 @@
-iri,label,element type,definition,is a,is defined by
-"https://example.org/fleet-vocabulary/Vehicle","Vehicle","http://www.w3.org/2002/07/owl#Class","A conveyance asset whose maintenance status is tracked by the fleet organization.","Material artifact","https://example.org/fleet-vocabulary"
-"https://example.org/fleet-vocabulary/ScheduledService","Scheduled Service","http://www.w3.org/2002/07/owl#Class","A planned maintenance activity assigned to a vehicle for a specified service date or planning window.","Planned process","https://example.org/fleet-vocabulary"
-"https://example.org/fleet-vocabulary/RequiredPart","Required Part","http://www.w3.org/2002/07/owl#Class","A part specified as necessary for completing a scheduled service type.","Material artifact","https://example.org/fleet-vocabulary"
-"https://example.org/fleet-vocabulary/AssignedDepot","Assigned Depot","http://www.w3.org/2002/07/owl#Class","A depot designated as responsible for servicing a vehicle.","Facility role bearer","https://example.org/fleet-vocabulary"
-"https://example.org/fleet-vocabulary/DepotInventory","Depot Inventory","http://www.w3.org/2002/07/owl#Class","A dataset or information content entity describing part quantities available at a depot.","Information content entity","https://example.org/fleet-vocabulary"
-"https://example.org/fleet-vocabulary/ServiceRiskAssessment","Service Risk Assessment","http://www.w3.org/2002/07/owl#Class","An assessment that identifies vehicles at risk of missing scheduled service because supporting conditions are not satisfied.","Information content entity","https://example.org/fleet-vocabulary"
-

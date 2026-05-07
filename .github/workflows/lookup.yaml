@@ -29,7 +29,7 @@ jobs:
       - name: Install Python deps
         run: |
           python -m pip install --upgrade pip
-          pip install rdflib
+          pip install rdflib mkdocs
 
       - name: Build consolidated dataset -> docs/data/graph.jsonld
         run: |
@@ -45,11 +45,9 @@ jobs:
           find docs/ontologies -type f -delete
           find src/ontologies -type f \( -name "*.ttl" -o -name "*.rdf" -o -name "*.owl" -o -name "*.nt" -o -name "*.nq" -o -name "*.trig" -o -name "*.jsonld" \) -exec cp {} docs/ontologies/ \;
 
-      - name: Publish tutorial artifacts -> docs/tutorials
+      - name: Build tutorials with MkDocs -> docs/tutorials
         run: |
-          mkdir -p docs/tutorials
-          find docs/tutorials -maxdepth 1 -type f \( -name "*.md" -o -name "*.csv" -o -name "*.jsonld" -o -name "*.ttl" \) ! -name "README.md" -delete
-          cp -R src/tutorials/. docs/tutorials/
+          python -m mkdocs build --config-file mkdocs.tutorials.yml --clean
 
       - name: Stamp service worker build id
         run: |
