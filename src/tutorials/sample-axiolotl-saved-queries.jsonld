@@ -1,0 +1,36 @@
+[
+  {
+    "@id": "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000007_SPARQLQuery_service_risk",
+    "@type": [
+      "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000007",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "https://github.com/jonathanvajda/SemanticArtifactOntology/has_sparql_query_text_value": [
+      {
+        "@value": "PREFIX ex: <https://example.org/fleet/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n\nSELECT ?vehicle ?vehicleLabel ?depot ?part\nWHERE {\n  ?vehicle ex:assignedToDepot ?depot ;\n           ex:hasScheduledService ?service .\n  OPTIONAL { ?vehicle rdfs:label ?vehicleLabel . }\n  ?service ex:requiresPart ?part .\n}"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Service-risk vehicles"
+      }
+    ]
+  },
+  {
+    "@id": "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000007_SPARQLQuery_inferred_inverse",
+    "@type": [
+      "https://github.com/jonathanvajda/SemanticArtifactOntology/ont000007",
+      "http://www.w3.org/2002/07/owl#NamedIndividual"
+    ],
+    "https://github.com/jonathanvajda/SemanticArtifactOntology/has_sparql_query_text_value": [
+      {
+        "@value": "PREFIX ex: <https://example.org/fleet/>\n\nSELECT ?depot ?vehicle\nWHERE {\n  ?depot ex:hasAssignedVehicle ?vehicle .\n}"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Inferred depot assignments"
+      }
+    ]
+  }
+]

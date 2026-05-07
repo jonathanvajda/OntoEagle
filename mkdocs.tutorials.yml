@@ -7,6 +7,7 @@ use_directory_urls: true
 nav:
   - Tutorials: index.md
   - CQ Ferret Tutorial: cq-ferret-tutorial.md
+  - Axiolotl Tutorial: axiolotl-tutorial.md
 
 theme:
   name: mkdocs
@@ -21,4 +22,3 @@ markdown_extensions:
 extra_javascript:
   - https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js
   - assets/mermaid-init.js
-

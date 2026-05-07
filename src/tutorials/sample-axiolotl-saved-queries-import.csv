@@ -1,0 +1,17 @@
+query ID (IRI),label,type (class iri),value ('has sparql query text value')
+https://github.com/jonathanvajda/SemanticArtifactOntology/ont000007_SPARQLQuery_service_risk,Service-risk vehicles,https://github.com/jonathanvajda/SemanticArtifactOntology/ont000007,"PREFIX ex: <https://example.org/fleet/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?vehicle ?vehicleLabel ?depot ?part
+WHERE {
+  ?vehicle ex:assignedToDepot ?depot ;
+           ex:hasScheduledService ?service .
+  OPTIONAL { ?vehicle rdfs:label ?vehicleLabel . }
+  ?service ex:requiresPart ?part .
+}"
+https://github.com/jonathanvajda/SemanticArtifactOntology/ont000007_SPARQLQuery_inferred_inverse,Inferred depot assignments,https://github.com/jonathanvajda/SemanticArtifactOntology/ont000007,"PREFIX ex: <https://example.org/fleet/>
+
+SELECT ?depot ?vehicle
+WHERE {
+  ?depot ex:hasAssignedVehicle ?vehicle .
+}"

@@ -1,0 +1,55 @@
+@prefix ex: <https://example.org/fleet/> .
+@prefix cco: <https://www.commoncoreontologies.org/> .
+@prefix okea: <https://github.com/jonathanvajda/okea/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+ex:assignedToDepot a owl:ObjectProperty ;
+    rdfs:label "assigned to depot" ;
+    owl:inverseOf ex:hasAssignedVehicle ;
+    rdfs:domain ex:Vehicle ;
+    rdfs:range ex:Depot .
+
+ex:hasAssignedVehicle a owl:ObjectProperty ;
+    rdfs:label "has assigned vehicle" .
+
+ex:requiresPart a owl:ObjectProperty ;
+    rdfs:label "requires part" ;
+    rdfs:domain ex:ServiceActivity ;
+    rdfs:range ex:Part .
+
+ex:hasScheduledService a owl:ObjectProperty ;
+    rdfs:label "has scheduled service" ;
+    rdfs:domain ex:Vehicle ;
+    rdfs:range ex:ServiceActivity .
+
+ex:suppliesPart a owl:ObjectProperty ;
+    rdfs:label "supplies part" ;
+    rdfs:domain ex:Depot ;
+    rdfs:range ex:Part .
+
+ex:Vehicle rdfs:subClassOf cco:ont00000443 ;
+    rdfs:label "vehicle" .
+
+ex:Depot rdfs:subClassOf cco:ont00000472 ;
+    rdfs:label "depot" .
+
+ex:Part rdfs:subClassOf cco:ont00001069 ;
+    rdfs:label "part" .
+
+ex:ServiceActivity rdfs:subClassOf cco:ont00000216 ;
+    rdfs:label "service activity" .
+
+ex:vehicle-17 ex:assignedToDepot ex:depot-east ;
+    ex:hasScheduledService ex:service-9001 ;
+    rdfs:label "Vehicle 17" .
+
+ex:service-9001 ex:requiresPart ex:filter-kit-88 ;
+    dcterms:description "Scheduled service due within the planning window." .
+
+ex:depot-east ex:suppliesPart ex:filter-kit-88 ;
+    rdfs:label "East depot" .
+
+ex:filter-kit-88 rdfs:label "Filter kit 88" .
