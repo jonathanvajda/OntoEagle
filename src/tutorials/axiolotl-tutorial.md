@@ -15,12 +15,13 @@ This tutorial focuses only on the deployed [Axiolotl](https://jonathanvajda.gith
 3. [Open the App](#open-the-app)
 4. [Create or Import Data](#create-or-import-data)
 5. [Query the Active Workspace](#query-the-active-workspace)
-6. [Save and Reuse Queries](#save-and-reuse-queries)
-7. [Run Inference](#run-inference)
-8. [Export or Reuse the Data](#export-or-reuse-the-data)
-9. [Design Pattern Notes](#design-pattern-notes)
-10. [Screenshot Checklist](#screenshot-checklist)
-11. [Frequently Asked Questions](#frequently-asked-questions)
+6. [Render a Query Diagram Before Running](#render-a-query-diagram-before-running)
+7. [Save and Reuse Queries](#save-and-reuse-queries)
+8. [Run Inference](#run-inference)
+9. [Export or Reuse the Data](#export-or-reuse-the-data)
+10. [Design Pattern Notes](#design-pattern-notes)
+11. [Screenshot Checklist](#screenshot-checklist)
+12. [Frequently Asked Questions](#frequently-asked-questions)
 
 ## The Problem Axiolotl Solves
 
@@ -36,6 +37,7 @@ The key problem dimensions are:
 - Import/export: RDF files can be loaded, saved queries can be imported/exported, and inferred output can be downloaded.
 - Traceability: query labels and IRIs preserve which reusable query artifact was used.
 - Data quality and validation: local SPARQL checks can reveal missing labels, unexpected classes, or unmaterialized relationships.
+- Query review: a SPARQL pattern diagram can expose joins, optional branches, and disconnected patterns before the query is run.
 - Reuse: exported query artifacts and inferred RDF can move into graph databases, CI checks, ontology-review workflows, or issue tickets.
 
 > Design note: A saved SPARQL query is treated as a semantic artifact, not just text in a textarea. The app stores it with an IRI, label, class IRI, and query-text predicate so it can be exported as CSV or JSON-LD.
@@ -131,6 +133,35 @@ WHERE {
 The query should return the vehicle, depot, and required part from the sample graph. If it does not, check that you loaded the Turtle file into the active workspace and that **Active Workspace** is selected instead of **SPARQL Endpoint**.
 
 To query a remote graph database instead, use **Manage Data** to set a SPARQL endpoint URL and authentication mode, then choose **SPARQL Endpoint** in the query tab. The browser sends the query to that endpoint from your machine.
+
+## Render a Query Diagram Before Running
+
+Before running a new or changed query in Axiolotl, you can render its graph pattern as a diagram directly on the **SPARQL Query** tab. This is a useful review step when the query has several joins, `OPTIONAL` blocks, property paths, or variables with similar names.
+
+Use this workflow:
+
+1. Open **SPARQL Query** in Axiolotl.
+2. Paste or draft the query in the SPARQL query editor.
+3. Choose **Render diagram** before running the query.
+4. Inspect the rendered pattern diagram.
+5. If the diagram matches the intended graph pattern, choose **Run Query**.
+
+For the fleet scenario, the visualizer should make the join path visible:
+
+```text
+vehicle -> depot
+vehicle -> service
+service -> part
+```
+
+This step catches common query-design issues early:
+
+- A variable appears only once and is not joined to the rest of the pattern.
+- An `OPTIONAL` block is doing more work than intended.
+- A property direction is reversed.
+- The diagram shows a pattern that does not match the use-case question.
+
+Rendering the diagram does not execute the query and does not validate whether data exists in the active workspace. Treat it as a pre-run design check, then run the query against the active workspace or configured endpoint.
 
 ## Save and Reuse Queries
 
@@ -277,6 +308,7 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 | Axiolotl identity | `screenshots/axiolotl-icon.png` | Yes | Inserted near the title. |
 | Manage Data tab | `screenshots/axiolotl-manage-data.png` | No | Still needed. Capture file upload, ontology checklist, and workspace status. |
 | SPARQL Query tab | `screenshots/axiolotl-query.png` | No | Still needed. Capture active workspace selection, query editor, results, and saved-query sidebar. |
+| SPARQL query visualizer | `screenshots/axiolotl-query-visualizer.png` | No | Still needed. Capture a rendered query diagram before the query is run. |
 | Saved queries import/export | `screenshots/axiolotl-saved-queries.png` | No | Still needed. Capture CSV upload and JSON-LD/CSV download buttons. |
 | Inference rule selection and preview | `screenshots/axiolotl-inference.png` | Partial | Inserted in [Run Inference](#run-inference); screenshot is from an earlier app layout but still shows rule selection and output preview. |
 | Inferred export controls | `screenshots/axiolotl-export.png` | Partial | Visible in the inference screenshot, but a fresh capture would be better. |

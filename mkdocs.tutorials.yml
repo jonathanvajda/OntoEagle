@@ -8,6 +8,8 @@ nav:
   - Tutorials: index.md
   - CQ Ferret Tutorial: cq-ferret-tutorial.md
   - Axiolotl Tutorial: axiolotl-tutorial.md
+  - Mermaid Project IDE Tutorial: mermaid-project-ide-tutorial.md
+  - Knowledge Graph Modeler Tutorial: kg-modeler-tutorial.md
 
 theme:
   name: mkdocs

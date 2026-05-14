@@ -1,0 +1,428 @@
+# Knowledge Graph Modeler Tutorial: Draw ABox Assertions and Export RDF
+
+## BLUF
+
+The [RDF Knowledge Graph Modeler](https://skreen5hot.github.io/kgModeler/) is a static browser app for sketching RDF instance graphs. It lets a user load or create a small ontology vocabulary, drag instances onto a canvas, assign each instance a label, IRI, and `rdf:type`, draw object-property relations between instances, and then generate Mermaid syntax, a rendered Mermaid diagram, and RDF/Turtle output.
+
+Use it when you want a fast visual workflow for turning domain examples into semantic statement triples:
+
+```text
+subject IRI -> predicate IRI -> object IRI
+```
+
+The app does not currently use IndexedDB or local persistence. Treat export as the save mechanism: download Turtle, copy Mermaid syntax, or keep the source `.ttl` file in a project repository.
+
+This tutorial focuses on the deployed app at <https://skreen5hot.github.io/kgModeler/>. For developers who want to inspect or modify the implementation, the app is defined by:
+
+- `index.html`: the static page, controls, modals, canvas, and output areas.
+- `script.js`: ontology loading, TBox editing, drag/drop instances, relation editing, Mermaid generation, and Turtle generation.
+- `styles.css`: layout, canvas, sidebar, modal, and output styling.
+
+## Table of Contents
+
+1. [The Problem This App Solves](#the-problem-this-app-solves)
+2. [Open the App](#open-the-app)
+3. [Understand the Workspace](#understand-the-workspace)
+4. [Load or Create an Ontology Vocabulary](#load-or-create-an-ontology-vocabulary)
+5. [Create Instances on the Canvas](#create-instances-on-the-canvas)
+6. [Draw Semantic Relations](#draw-semantic-relations)
+7. [Review Mermaid Output](#review-mermaid-output)
+8. [Generate and Download Turtle](#generate-and-download-turtle)
+9. [Worked Scenario: Vehicle Use and Datasets](#worked-scenario-vehicle-use-and-datasets)
+10. [Example Turtle Import](#example-turtle-import)
+11. [Export and Persistence Notes](#export-and-persistence-notes)
+12. [Architecture Notes](#architecture-notes)
+13. [Frequently Asked Questions](#frequently-asked-questions)
+
+## The Problem This App Solves
+
+Knowledge graph modeling often starts with a concrete example:
+
+- A person uses a truck.
+- A vehicle dataset is about that truck.
+- An employee dataset is about that person.
+- An information system is the carrier of those datasets.
+- An act of vehicle use has the person as agent and the truck as participant.
+
+Those are easy to say in a meeting, but the modeling team still has to turn them into RDF triples with stable IRIs, classes, object properties, and labels. The Knowledge Graph Modeler supports that middle step. It gives domain experts and ontologists a visual canvas where each box is an individual and each line is an object-property assertion.
+
+The app helps answer practical review questions:
+
+- What individuals are we asserting?
+- What class is each individual an instance of?
+- Which predicate connects each pair of individuals?
+- Does the Mermaid diagram match the intended graph?
+- Does the generated Turtle contain the intended classes, properties, labels, and instance assertions?
+
+## Open the App
+
+Open the deployed app in a browser:
+
+```text
+https://skreen5hot.github.io/kgModeler/
+```
+
+The visible page title is **RDF Knowledge Graph Modeler**. The page runs as a static web app and loads two browser libraries from CDNs:
+
+| Library | Use |
+| --- | --- |
+| N3.js | Parse uploaded Turtle and support RDF/Turtle work. |
+| Mermaid.js | Render the generated Mermaid graph. |
+
+For local development, serve the `kgModeler` folder with a local static server, then open the local URL. The deployed site is the recommended path for ordinary tutorial use.
+
+## Understand the Workspace
+
+The app has four major regions:
+
+| Region | Purpose |
+| --- | --- |
+| Toolbox | Drag an **Instance** onto the canvas, upload a `.ttl` file, or clear the workspace. |
+| Ontology sidebar | Add or review TBox classes and object properties. |
+| Instance Graph canvas | Build the ABox by placing individuals and connecting them with predicates. |
+| Output panels | Inspect generated Mermaid syntax, rendered Mermaid diagram, and Turtle output. |
+
+The app uses three main in-memory data stores:
+
+| Store | Meaning |
+| --- | --- |
+| `ontologyClasses` | TBox class options, each with label and IRI. |
+| `ontologyProperties` | Object-property options, each with label and IRI. |
+| `elementsOnCanvas` | ABox instances, coordinates, labels, IRIs, selected class, and outgoing connections. |
+
+Because these stores live in browser memory, refreshes clear unsaved work. Export before leaving the page.
+
+## Load or Create an Ontology Vocabulary
+
+You need classes before instances can receive useful `rdf:type` values. You need object properties before relation lines can become semantic triples.
+
+There are two ways to populate the TBox sidebar.
+
+### Upload Turtle
+
+Choose **Upload .ttl file** and select a Turtle file. The app parses:
+
+- `owl:Class` and `rdfs:Class` declarations as class options.
+- `owl:ObjectProperty` declarations as object-property options.
+- `rdfs:label` values as human-readable labels.
+- Prefix declarations for later Turtle generation.
+
+Uploading a Turtle file clears the current canvas and ontology after confirmation. The import currently populates the ontology vocabulary; it does not reconstruct a full saved canvas layout.
+
+### Create Classes and Properties Manually
+
+Use the **+** buttons in the Ontology sidebar.
+
+For a class:
+
+1. Choose **+** beside **Classes**.
+2. Enter a label, such as `Person`.
+3. Enter a base IRI, such as `https://purl.example.org/`.
+4. Enter a prefix, such as `ex`.
+5. Enter or accept an IRI suffix, such as `Person`.
+6. Save.
+
+For an object property:
+
+1. Choose **+** beside **Object Properties**.
+2. Enter a label, such as `is about`.
+3. Enter the same base IRI and prefix if appropriate.
+4. Enter a suffix, such as `isAbout`.
+5. Save.
+
+The app keeps a prefix map so generated Turtle can use compact names when a base IRI and prefix are known.
+
+## Create Instances on the Canvas
+
+1. Drag **Instance** from the Toolbox onto the canvas.
+2. In the **Edit Instance** modal, set:
+   - **Label**
+   - **IRI**
+   - **Type (Class)**
+3. Choose **Save**.
+4. Repeat for the individuals in your example.
+
+Each instance appears as a movable card. The card shows the label, type, and IRI. You can drag cards to arrange the graph, use the mouse wheel to zoom, and drag the canvas background to pan.
+
+The generated Mermaid node for each instance follows this pattern:
+
+```mermaid
+graph TD
+    rdfInstance1["Label: Barry Guarino<br>Type: Person<br>IRI: https://purl.example.org/Person_BarryGuarino"]
+```
+
+## Draw Semantic Relations
+
+Relations are object-property assertions between two instances.
+
+1. Find the small connector dot on the right side of a source instance.
+2. Drag from that connector to the target instance.
+3. Release over the target instance.
+4. Click the relation line.
+5. In **Edit Connection Property**, choose an object property.
+6. Save the connection.
+
+The relation line can also be edited after creation:
+
+| Action | Use |
+| --- | --- |
+| Save Connection | Assign or update the predicate. |
+| Reverse Direction | Move the assertion from `A -> B` to `B -> A`. |
+| Delete Relation | Remove the object-property assertion. |
+
+Direction matters. If the intended triple is:
+
+```text
+Vehicle Dataset -> is about -> Truck
+```
+
+then the source node should be the vehicle dataset and the target node should be the truck.
+
+## Review Mermaid Output
+
+The app automatically generates Mermaid syntax whenever instances or connections change. It also renders that syntax in the Mermaid output panel.
+
+Generated Mermaid is useful for:
+
+- Documentation.
+- MkDocs tutorials.
+- Pull request discussion.
+- Semantic design pattern review.
+- Comparing diagram direction with RDF predicate direction.
+
+For example, a relation from `rdfInstance2` to `rdfInstance5` with predicate label `is about` becomes:
+
+```mermaid
+graph TD
+    rdfInstance2["Label: Vehicle Dataset<br>Type: Information Content Entity<br>IRI: https://purl.example.org/VehicleDataSet"]
+    rdfInstance5["Label: Truck<br>Type: Truck<br>IRI: https://purl.example.org/Truck_FordF150"]
+
+    rdfInstance2 -- "is about" --> rdfInstance5
+```
+
+## Generate and Download Turtle
+
+Choose **Generate Turtle** after the canvas has the intended instances and relations. The app fills the Turtle output textarea with:
+
+- Default prefixes: `owl`, `rdf`, `rdfs`, `xsd`, `foaf`, and `skos`.
+- Custom prefixes from uploaded Turtle or manual TBox entry.
+- Object-property declarations used in the graph.
+- Class declarations used in the graph.
+- Instance data with `rdf:type`, `owl:NamedIndividual`, `rdfs:label`, and object-property assertions.
+
+Then choose **Download .ttl** to export:
+
+```text
+graph.ttl
+```
+
+This Turtle file is the main durable artifact for the model. It can be loaded into Axiolotl, a graph database, ROBOT-based workflows, ontology review scripts, or a Git repository.
+
+## Worked Scenario: Vehicle Use and Datasets
+
+This scenario models a small set of information artifacts and domain entities:
+
+- An information system carries two datasets.
+- One dataset is about a truck.
+- One dataset is about a person.
+- The person uses the truck.
+- The person is agent in an act of vehicle use.
+- The act of vehicle use participates in the truck.
+
+Create these classes:
+
+| Label | Suggested suffix |
+| --- | --- |
+| Information Processing Artifact | `InformationProcessingArtifact` |
+| Information Content Entity | `InformationContentEntity` |
+| Person | `Person` |
+| Truck | `Truck` |
+| Act of Vehicle Use | `ActOfVehicleUse` |
+
+Create these object properties:
+
+| Label | Suggested suffix |
+| --- | --- |
+| is carrier of | `isCarrierOf` |
+| is about | `isAbout` |
+| uses | `uses` |
+| agent in | `agentIn` |
+| participates in | `participatesIn` |
+
+Use this base IRI and prefix for the example:
+
+```text
+Base IRI: https://purl.example.org/
+Prefix: ex
+```
+
+Create these instances:
+
+| Label | Type | Suggested IRI suffix |
+| --- | --- | --- |
+| Information System | Information Processing Artifact | `ont00000053_InformationSystem` |
+| Vehicle Dataset | Information Content Entity | `ont00000057_VehicleDataSet` |
+| Employee Dataset | Information Content Entity | `ont00000057_EmployeeDataSet` |
+| Barry Guarino | Person | `ont00001262_Person_BarryGuarino` |
+| Truck | Truck | `ont00001262_Truck_FordF150` |
+| Act of Using Ford F150 | Act of Vehicle Use | `ont00001262_ActOfVehicleUse` |
+
+Draw these relations:
+
+| Source | Predicate | Target |
+| --- | --- | --- |
+| Information System | is carrier of | Employee Dataset |
+| Information System | is carrier of | Vehicle Dataset |
+| Vehicle Dataset | is about | Truck |
+| Employee Dataset | is about | Barry Guarino |
+| Barry Guarino | uses | Truck |
+| Barry Guarino | agent in | Act of Using Ford F150 |
+| Act of Using Ford F150 | participates in | Truck |
+
+The generated Mermaid should resemble:
+
+```mermaid
+graph TD
+    rdfInstance1["Label: Information System<br>Type: Information Processing Artifact<br>IRI: https://purl.example.org/ont00000053_InformationSystem"]
+    rdfInstance2["Label: Vehicle Dataset<br>Type: Information Content Entity<br>IRI: https://purl.example.org/ont00000057_VehicleDataSet"]
+    rdfInstance3["Label: Employee Dataset<br>Type: Information Content Entity<br>IRI: https://purl.example.org/ont00000057_EmployeeDataSet"]
+    rdfInstance4["Label: Barry Guarino<br>Type: Person<br>IRI: https://purl.example.org/ont00001262_Person_BarryGuarino"]
+    rdfInstance5["Label: Truck<br>Type: Truck<br>IRI: https://purl.example.org/ont00001262_Truck_FordF150"]
+    rdfInstance6["Label: Act of Using Ford F150<br>Type: Act of Vehicle Use<br>IRI: https://purl.example.org/ont00001262_ActOfVehicleUse"]
+
+    rdfInstance1 -- "is carrier of" --> rdfInstance3
+    rdfInstance1 -- "is carrier of" --> rdfInstance2
+    rdfInstance2 -- "is about" --> rdfInstance5
+    rdfInstance3 -- "is about" --> rdfInstance4
+    rdfInstance4 -- "uses" --> rdfInstance5
+    rdfInstance4 -- "agent in" --> rdfInstance6
+    rdfInstance6 -- "participates in" --> rdfInstance5
+```
+
+Review the Mermaid first, then generate Turtle and inspect the RDF triples.
+
+## Example Turtle Import
+
+Use this small Turtle file if you want to preload the class and property options before drawing instances:
+
+```turtle
+@prefix ex: <https://purl.example.org/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+ex:InformationProcessingArtifact
+    rdf:type owl:Class ;
+    rdfs:label "Information Processing Artifact"@en .
+
+ex:InformationContentEntity
+    rdf:type owl:Class ;
+    rdfs:label "Information Content Entity"@en .
+
+ex:Person
+    rdf:type owl:Class ;
+    rdfs:label "Person"@en .
+
+ex:Truck
+    rdf:type owl:Class ;
+    rdfs:label "Truck"@en .
+
+ex:ActOfVehicleUse
+    rdf:type owl:Class ;
+    rdfs:label "Act of Vehicle Use"@en .
+
+ex:isCarrierOf
+    rdf:type owl:ObjectProperty ;
+    rdfs:label "is carrier of"@en .
+
+ex:isAbout
+    rdf:type owl:ObjectProperty ;
+    rdfs:label "is about"@en .
+
+ex:uses
+    rdf:type owl:ObjectProperty ;
+    rdfs:label "uses"@en .
+
+ex:agentIn
+    rdf:type owl:ObjectProperty ;
+    rdfs:label "agent in"@en .
+
+ex:participatesIn
+    rdf:type owl:ObjectProperty ;
+    rdfs:label "participates in"@en .
+```
+
+After uploading this file, the canvas remains empty. Drag instances onto the canvas and select the imported classes and object properties from the modals.
+
+## Export and Persistence Notes
+
+The current app is export-oriented rather than project-oriented.
+
+| Need | Current path |
+| --- | --- |
+| Save RDF | Generate Turtle, then download `graph.ttl`. |
+| Save diagram source | Copy the generated Mermaid syntax from the Mermaid output panel. |
+| Save rendered diagram | Use Mermaid source as the durable artifact, then render it in MkDocs, GitHub, or another Mermaid-capable tool. |
+| Save editable canvas state | Not currently available. Rebuild from exported Turtle and manual layout if needed. |
+| Persist in browser | Not currently available. IndexedDB support may be added later. |
+
+Because canvas layout is not exported as a project file yet, keep modeling sessions focused and export often.
+
+## Architecture Notes
+
+The app is a single static page with event-driven JavaScript.
+
+```mermaid
+flowchart TD
+    HTML["index.html<br>controls, canvas, modals, outputs"]
+    Script["script.js<br>state and event handlers"]
+    TBox["TBox stores<br>ontologyClasses / ontologyProperties"]
+    ABox["ABox store<br>elementsOnCanvas"]
+    Canvas["Canvas<br>drag/drop, pan, zoom, SVG relation lines"]
+    Mermaid["Mermaid output<br>syntax and rendered graph"]
+    Turtle["Turtle output<br>Generate Turtle / Download .ttl"]
+    Upload["TTL upload<br>N3 Parser"]
+
+    HTML --> Script
+    Script --> TBox
+    Script --> ABox
+    Script --> Canvas
+    Script --> Mermaid
+    Script --> Turtle
+    Upload --> Script
+    TBox --> ABox
+    ABox --> Mermaid
+    ABox --> Turtle
+```
+
+Important implementation details:
+
+- Mermaid is initialized with `securityLevel: 'loose'`.
+- Turtle import uses the N3 parser.
+- The app ignores blank-node subjects when loading Turtle.
+- Relation lines are SVG paths with wider transparent hitboxes for editing.
+- Turtle generation includes used classes and properties, not the entire uploaded ontology.
+- The download file name is currently `graph.ttl`.
+
+## Frequently Asked Questions
+
+### Is this an ontology editor?
+
+No. It is a lightweight model sketcher for TBox options and ABox assertions. Use an ontology editor or source repository for authoritative ontology release work.
+
+### Does uploading Turtle load instance diagrams?
+
+No. The current Turtle import is primarily for populating classes, object properties, labels, and prefixes. It clears the workspace and leaves the canvas empty for new visual modeling.
+
+### Where is my work saved?
+
+Only in browser memory until you export. Download Turtle or copy Mermaid syntax before refreshing, closing the tab, or clearing the canvas.
+
+### What does the Turtle export include?
+
+It includes default and custom prefixes, object properties used by connections, classes used by instances, and instance data with type, label, and object-property assertions.
+
+### Can I use this with OntoEagle tutorials?
+
+Yes. Copy the generated Mermaid syntax into a fenced `mermaid` block, or download Turtle and use it as a sample graph artifact for later RDF review.
+
