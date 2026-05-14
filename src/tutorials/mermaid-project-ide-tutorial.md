@@ -2,18 +2,13 @@
 
 ## BLUF
 
-The [Mermaid Project IDE](https://skreen5hot.github.io/mermaid/) is a lightweight browser workspace for creating, previewing, organizing, importing, and exporting Mermaid diagrams. It is useful when ontology and knowledge-graph teams need a fast place to sketch semantic design patterns, ABox instance graphs, RBox property relationships, TBox class structures, ontology imports, process patterns, equipment relationships, identifier schemes, and review diagrams.
+The [Mermaid Project IDE](https://skreen5hot.github.io/mermaid/) is a simple browser workspace for making Mermaid diagrams. If you have used Lucidchart, PowerPoint, Visio, draw.io, or a whiteboard, think of this as a text-based diagram notebook: you write Mermaid text on one side and preview the diagram on the other.
 
-The application stores projects and diagrams in the browser with IndexedDB, so the working data stays local to the user's browser origin. It is not a cloud repository and it does not require a server-side database. Teams can collaborate by exporting individual `.mmd` files or whole project `.zip` bundles and committing those artifacts to Git, attaching them to tickets, or exchanging them during model review.
+Use it to collect related diagrams into projects, preview them while you work, and export them as `.mmd` files or a `.zip` bundle. Your work is saved in your browser for the deployed site, so you can come back later on the same browser and keep working.
 
-This tutorial focuses on the deployed app at <https://skreen5hot.github.io/mermaid/>. For developers who want to inspect or modify the implementation, the local `./mermaid` source files define the app behavior:
+The tool is free, open source, and released under CC0 1.0; no account signup is needed, and the app does not get or sell your data.
 
-- `index.html`: the browser entry point and application shell.
-- `src/synchronizations.js`: the event wiring between independent concepts.
-- `src/concepts/projectConcept.js`: project list and current-project state.
-- `src/concepts/diagramConcept.js`: diagram list, current diagram, saving, deletion, renaming, and `.mmd` export.
-- `src/concepts/storageConcept.js`: IndexedDB persistence for projects and diagrams.
-- `src/concepts/uiConcept.js`: DOM rendering, split view, Mermaid rendering, downloads, thumbnails, modals, and button state.
+This tutorial focuses on using the deployed app at <https://skreen5hot.github.io/mermaid/>. Developer notes and source-file details are collected near the end.
 
 ## Table of Contents
 
@@ -35,19 +30,19 @@ This tutorial focuses on the deployed app at <https://skreen5hot.github.io/merma
 
 ## The Problem This App Solves
 
-Ontology-development projects often need diagrams before the formal model is finished. A team may need to show how persons participate in processes, how equipment bears identifiers, how organizations own assets, how information artifacts designate entities, or how one ontology imports another. Those diagrams are often drafted in notes, slides, chat threads, or one-off Mermaid snippets.
+Teams often need quick diagrams before the final model, report, or architecture document is ready. Those diagrams may start in meeting notes, slide decks, chat messages, or a shared whiteboard. The problem is that they are easy to lose and hard to reuse.
 
-The Mermaid Project IDE gives those snippets a stable local workspace:
+The Mermaid Project IDE gives those diagrams a small workspace:
 
-- Projects group related diagrams.
-- Diagrams are stored as named Mermaid source files.
-- The editor and preview can be shown side by side.
-- Diagrams can be exported individually as `.mmd`.
-- A project can be exported as a `.zip` containing all diagrams.
-- Existing `.mmd` files can be uploaded in bulk.
-- Browser-local IndexedDB persistence preserves work between sessions.
+- Put related diagrams in one project.
+- Give each diagram a name.
+- Edit the Mermaid text and preview the picture.
+- Save diagrams in the browser.
+- Export one diagram as `.mmd`.
+- Export the whole project as a `.zip`.
+- Upload existing `.mmd` files when you want to bring prior work in.
 
-The design goal is practical: keep diagram drafting close to semantic modeling work without forcing a heavyweight ontology editor into every early conversation.
+For ontology and knowledge-graph work, this is useful for sketching relationships between people, equipment, processes, datasets, identifiers, classes, properties, and ontology imports. You do not need to start in an ontology editor just to have a useful diagram conversation.
 
 ## Run the App
 
@@ -57,58 +52,25 @@ Open the deployed app in a browser:
 https://skreen5hot.github.io/mermaid/
 ```
 
-That is the recommended starting point for tutorial use. The app runs as a static site and stores work in the browser's IndexedDB for that site origin.
-
-For local development or offline review, run the app from a local web server instead of opening `index.html` directly from the filesystem. The app uses JavaScript modules, and browsers restrict module loading from raw filesystem URLs.
-
-From the `./mermaid` directory:
-
-```bash
-npx serve
-```
-
-Then open the local URL shown by the command, commonly:
-
-```text
-http://localhost:3000
-```
-
-In VS Code, you can also use Live Server:
-
-1. Open the `mermaid` folder.
-2. Right-click `index.html`.
-3. Choose **Open with Live Server**.
+That is the recommended starting point for tutorial use.
 
 The page title is **Mermaid Syntax Viewer & Editor**, and the visible header is **Mermaid Project IDE**.
 
 ## Understand the Workspace
 
-The app has three working regions:
+The screen has three main areas:
 
 | Region | Purpose |
 | --- | --- |
-| Project sidebar | Select, create, and delete projects; choose diagrams; upload `.mmd`; download the current project as `.zip`. |
-| Code view | Edit Mermaid source, create diagrams, save, rename, delete, export `.mmd`, and enter fullscreen. |
-| Diagram view | Render the active Mermaid source as SVG. |
+| Project sidebar | Choose a project, choose a diagram, upload `.mmd` files, or download a project `.zip`. |
+| Code view | Write or edit the Mermaid text. |
+| Diagram view | See the diagram preview. |
 
-The app starts by opening the IndexedDB database named:
-
-```text
-mermaid_viewer_db
-```
-
-It creates two object stores:
-
-| Store | Purpose |
-| --- | --- |
-| `projects` | Project records with generated numeric IDs and names. |
-| `diagrams` | Diagram records with generated numeric IDs, project IDs, names, content, and modification dates. |
-
-When no projects exist, the app creates a **Default Project** and a starter diagram named `generic`.
+When you first open the app, it creates a **Default Project** and a starter diagram named `generic`. You can use those, rename your work, or create a new project.
 
 ## Create a Project
 
-Use a project for a modeling topic, review package, ontology module, application pattern, or customer/domain use case.
+Use a project like a folder. It can hold all diagrams for one topic.
 
 1. Choose the **+** button next to the project selector.
 2. Enter a project name, such as:
@@ -120,14 +82,14 @@ Fleet readiness semantic patterns
 3. Confirm the prompt.
 4. The project selector switches to the newly created project.
 
-Project examples:
+Simple project examples:
 
 - `Person and role patterns`
 - `Equipment identifier patterns`
 - `Maintenance process diagrams`
 - `Ontology import maps`
 - `Competency question diagrams`
-- `TBox-ABox-RBox examples`
+- `Example relationship diagrams`
 
 ## Create and Preview a Diagram
 
@@ -143,7 +105,7 @@ vehicle-depot-instance-relations
 5. Choose **Save**.
 6. Choose **Diagram** or **Render** to inspect the rendered output.
 
-Use short, stable diagram names when the files may be exported to Git. For example:
+Use short diagram names if you plan to share the files later. For example:
 
 ```text
 fleet-abox-rbox.mmd
@@ -153,7 +115,7 @@ fleet-ontology-imports.mmd
 
 ## Use Split View for Realtime Review
 
-The **Split** button shows the code editor and rendered diagram side by side. This is the most useful mode for semantic pattern work because reviewers can compare the intended assertion pattern with the actual Mermaid syntax.
+The **Split** button shows the text and the diagram side by side. This is often the easiest way to work: edit the text on the left, watch the picture update on the right.
 
 In split view:
 
@@ -163,7 +125,7 @@ In split view:
 - Content changes are debounced and re-rendered automatically.
 - Syntax errors are shown in the diagram pane instead of breaking the page.
 
-This is especially helpful when checking relationship direction. For ontology diagrams, a reversed edge can change the meaning of the pattern.
+This is especially helpful when checking arrow direction. A reversed arrow can change the meaning of the diagram.
 
 ## Manage Diagrams in a Project
 
@@ -174,12 +136,12 @@ Common actions:
 | Action | Use |
 | --- | --- |
 | **New** | Create a new named diagram in the current project. |
-| **Save** | Persist the current Mermaid source to IndexedDB. |
+| **Save** | Save the current diagram in the browser. |
 | **Rename** | Change the active diagram name. |
 | **Delete** | Delete the active diagram from the current project. |
 | Select a sidebar item | Load another diagram into the editor and preview pane. |
 
-Deletion is permanent within the browser-local database. Export important diagrams before clearing browser data or deleting a project.
+Deletion is permanent. Export important diagrams before clearing browser data or deleting a project.
 
 ## Import and Export Artifacts
 
@@ -189,10 +151,10 @@ The app supports simple file exchange.
 | --- | --- | --- | --- |
 | Single Mermaid diagram | Upload `.mmd` through the sidebar | **Export .mmd** from the editor toolbar | Best for Git commits, issue attachments, or copying into Markdown docs. |
 | Mermaid project bundle | Upload multiple `.mmd` files | **Download .zip** from the sidebar | Best for moving a group of related diagrams between browsers or teammates. |
-| Rendered SVG | Not currently imported | Rendered in the browser, but no dedicated SVG export button yet | Use `.mmd` as the source artifact. |
-| JSON-LD | Event wiring exists for a JSON-LD export action, but the current HTML does not expose a button for it | Not visible in the current UI | Treat `.mmd` and `.zip` as the supported user-facing exports. |
 
 Uploaded `.mmd` files become diagrams in the current project. The file name, minus `.mmd`, becomes the diagram name.
+
+The rendered diagram is a preview, not an export format in the current UI. JSON-LD export is also not exposed in the current UI. Treat `.mmd` and `.zip` as the supported user-facing exchange formats.
 
 ## Worked Scenario: Fleet Readiness Semantic Pattern
 
@@ -351,6 +313,60 @@ Review questions:
 
 ## Architecture Notes
 
+For developers, the source repository is:
+
+```text
+https://github.com/skreen5hot/mermaid
+```
+
+### Local Development
+
+For normal tutorial use, you can skip local setup. Use the deployed app.
+
+For local development or offline review, run the app from a local web server instead of opening `index.html` directly from the filesystem.
+
+From the `./mermaid` directory:
+
+```bash
+npx serve
+```
+
+Then open the local URL shown by the command, commonly:
+
+```text
+http://localhost:3000
+```
+
+In VS Code, you can also use Live Server:
+
+1. Open the `mermaid` folder.
+2. Right-click `index.html`.
+3. Choose **Open with Live Server**.
+
+The main implementation files are:
+
+| File | Role |
+| --- | --- |
+| `index.html` | Browser entry point and application shell. |
+| `src/synchronizations.js` | Event wiring between independent concepts. |
+| `src/concepts/projectConcept.js` | Project list and current-project state. |
+| `src/concepts/diagramConcept.js` | Diagram list, current diagram, saving, deletion, renaming, and `.mmd` export. |
+| `src/concepts/storageConcept.js` | IndexedDB persistence for projects and diagrams. |
+| `src/concepts/uiConcept.js` | DOM rendering, split view, Mermaid preview, downloads, thumbnails, modals, and button state. |
+
+The app stores browser-local data in an IndexedDB database named:
+
+```text
+mermaid_viewer_db
+```
+
+It uses two object stores:
+
+| Store | Purpose |
+| --- | --- |
+| `projects` | Project records with generated numeric IDs and names. |
+| `diagrams` | Diagram records with generated numeric IDs, project IDs, names, content, and modification dates. |
+
 The app follows a Concepts and Synchronizations architecture. Each concept owns its state and exposes actions through a `listen(event, payload)` interface. Cross-concept behavior is centralized in `src/synchronizations.js`.
 
 ```mermaid
@@ -399,7 +415,7 @@ Security guidance:
 
 - Treat diagram names and Mermaid source as user input.
 - Prefer `textContent` for dynamic text in the DOM.
-- When HTML insertion is required for rendered SVG or error display, keep escaping and containment behavior explicit.
+- When HTML insertion is required for rendered preview output or error display, keep escaping and containment behavior explicit.
 - Do not store passwords, tokens, or other secrets in IndexedDB.
 - Keep dependency use minimal and run `npm audit` as part of routine maintenance.
 
@@ -412,6 +428,12 @@ No. It is a diagram workspace. Use it to draft and review semantic patterns, rel
 ### Where is my data stored?
 
 Projects and diagrams are stored in IndexedDB under the browser origin where the app is served. If you run the app at a different local URL or clear browser site data, you may see a different workspace or lose local data.
+
+### Is the app free and open source?
+
+Yes. The repository owner has adopted the [CC0 1.0 Universal license](https://creativecommons.org/publicdomain/zero/1.0/) for this tool, which means it is intended to be freely reusable with no account signup or license fee.
+
+The deployed app is a static web page. It stores project data in your browser for that site origin and does not require a backend account, so there is no app service receiving your diagrams to sell them.
 
 ### How should a team share diagrams?
 

@@ -2,21 +2,22 @@
 
 ## BLUF
 
-The [RDF Knowledge Graph Modeler](https://skreen5hot.github.io/kgModeler/) is a static browser app for sketching RDF instance graphs. It lets a user load or create a small ontology vocabulary, drag instances onto a canvas, assign each instance a label, IRI, and `rdf:type`, draw object-property relations between instances, and then generate Mermaid syntax, a rendered Mermaid diagram, and RDF/Turtle output.
+The [RDF Knowledge Graph Modeler](https://skreen5hot.github.io/kgModeler/) is a browser app for drawing small knowledge graphs. If you have used Lucidchart, PowerPoint, Visio, or draw.io, think of this as a diagramming tool where the boxes and arrows can also become RDF data.
 
-Use it when you want a fast visual workflow for turning domain examples into semantic statement triples:
+Use it to:
 
-```text
-subject IRI -> predicate IRI -> object IRI
-```
+- Add boxes for real things, such as people, vehicles, datasets, systems, or events.
+- Choose what kind of thing each box is.
+- Draw arrows between boxes.
+- Choose what each arrow means.
+- Generate a Mermaid diagram.
+- Export the graph as Turtle (`.ttl`) when you want RDF data.
 
-The app does not currently use IndexedDB or local persistence. Treat export as the save mechanism: download Turtle, copy Mermaid syntax, or keep the source `.ttl` file in a project repository.
+The app does not save projects in the browser yet. Treat export as the save button: download Turtle or copy the Mermaid text before leaving the page.
 
-This tutorial focuses on the deployed app at <https://skreen5hot.github.io/kgModeler/>. For developers who want to inspect or modify the implementation, the app is defined by:
+The tool is free, open source, and released under CC0 1.0; no account signup is needed, and the app does not get or sell your data.
 
-- `index.html`: the static page, controls, modals, canvas, and output areas.
-- `script.js`: ontology loading, TBox editing, drag/drop instances, relation editing, Mermaid generation, and Turtle generation.
-- `styles.css`: layout, canvas, sidebar, modal, and output styling.
+This tutorial focuses on using the deployed app at <https://skreen5hot.github.io/kgModeler/>. Developer notes and source-file details are collected near the end.
 
 ## Table of Contents
 
@@ -36,7 +37,7 @@ This tutorial focuses on the deployed app at <https://skreen5hot.github.io/kgMod
 
 ## The Problem This App Solves
 
-Knowledge graph modeling often starts with a concrete example:
+Knowledge graph work often starts with a plain-language example:
 
 - A person uses a truck.
 - A vehicle dataset is about that truck.
@@ -44,15 +45,15 @@ Knowledge graph modeling often starts with a concrete example:
 - An information system is the carrier of those datasets.
 - An act of vehicle use has the person as agent and the truck as participant.
 
-Those are easy to say in a meeting, but the modeling team still has to turn them into RDF triples with stable IRIs, classes, object properties, and labels. The Knowledge Graph Modeler supports that middle step. It gives domain experts and ontologists a visual canvas where each box is an individual and each line is an object-property assertion.
+Those statements are easy to discuss in a meeting, but they can be harder to turn into a clean data model. The Knowledge Graph Modeler helps with the middle step. You draw the example as boxes and arrows, then let the app produce Mermaid and Turtle output.
 
-The app helps answer practical review questions:
+The app helps a team check simple questions:
 
-- What individuals are we asserting?
-- What class is each individual an instance of?
-- Which predicate connects each pair of individuals?
-- Does the Mermaid diagram match the intended graph?
-- Does the generated Turtle contain the intended classes, properties, labels, and instance assertions?
+- What things are in the example?
+- What kind of thing is each one?
+- Which things are connected?
+- What does each connection mean?
+- Does the exported data match the picture?
 
 ## Open the App
 
@@ -62,64 +63,49 @@ Open the deployed app in a browser:
 https://skreen5hot.github.io/kgModeler/
 ```
 
-The visible page title is **RDF Knowledge Graph Modeler**. The page runs as a static web app and loads two browser libraries from CDNs:
-
-| Library | Use |
-| --- | --- |
-| N3.js | Parse uploaded Turtle and support RDF/Turtle work. |
-| Mermaid.js | Render the generated Mermaid graph. |
-
-For local development, serve the `kgModeler` folder with a local static server, then open the local URL. The deployed site is the recommended path for ordinary tutorial use.
+The visible page title is **RDF Knowledge Graph Modeler**.
 
 ## Understand the Workspace
 
-The app has four major regions:
+The screen has four main areas:
 
 | Region | Purpose |
 | --- | --- |
-| Toolbox | Drag an **Instance** onto the canvas, upload a `.ttl` file, or clear the workspace. |
-| Ontology sidebar | Add or review TBox classes and object properties. |
-| Instance Graph canvas | Build the ABox by placing individuals and connecting them with predicates. |
-| Output panels | Inspect generated Mermaid syntax, rendered Mermaid diagram, and Turtle output. |
+| Toolbox | Drag a new **Instance** onto the canvas, upload a `.ttl` file, or clear the workspace. |
+| Ontology sidebar | Add the kinds of things and kinds of relationships you want to use. |
+| Canvas | Arrange boxes and draw arrows between them. |
+| Output panels | See Mermaid text, a Mermaid preview, and Turtle output. |
 
-The app uses three main in-memory data stores:
-
-| Store | Meaning |
-| --- | --- |
-| `ontologyClasses` | TBox class options, each with label and IRI. |
-| `ontologyProperties` | Object-property options, each with label and IRI. |
-| `elementsOnCanvas` | ABox instances, coordinates, labels, IRIs, selected class, and outgoing connections. |
-
-Because these stores live in browser memory, refreshes clear unsaved work. Export before leaving the page.
+Because the app does not save a project file yet, refreshes clear unsaved work. Export before leaving the page.
 
 ## Load or Create an Ontology Vocabulary
 
-You need classes before instances can receive useful `rdf:type` values. You need object properties before relation lines can become semantic triples.
+Before drawing, add the vocabulary you want to use.
 
-There are two ways to populate the TBox sidebar.
+In plain terms:
+
+- A **class** is a kind of thing, such as `Person`, `Truck`, or `Dataset`.
+- An **object property** is a kind of relationship, such as `uses`, `is about`, or `is carrier of`.
+
+There are two ways to populate the Ontology sidebar.
 
 ### Upload Turtle
 
-Choose **Upload .ttl file** and select a Turtle file. The app parses:
+Choose **Upload .ttl file** and select a Turtle file. The app reads class and relationship options from the file.
 
-- `owl:Class` and `rdfs:Class` declarations as class options.
-- `owl:ObjectProperty` declarations as object-property options.
-- `rdfs:label` values as human-readable labels.
-- Prefix declarations for later Turtle generation.
-
-Uploading a Turtle file clears the current canvas and ontology after confirmation. The import currently populates the ontology vocabulary; it does not reconstruct a full saved canvas layout.
+Uploading a Turtle file clears the current canvas and vocabulary after confirmation. In the current app, upload is mainly for loading the menu choices. It does not rebuild a saved diagram layout.
 
 ### Create Classes and Properties Manually
 
-Use the **+** buttons in the Ontology sidebar.
+Use the **+** buttons in the Ontology sidebar when you want to type the choices yourself.
 
 For a class:
 
 1. Choose **+** beside **Classes**.
 2. Enter a label, such as `Person`.
 3. Enter a base IRI, such as `https://purl.example.org/`.
-4. Enter a prefix, such as `ex`.
-5. Enter or accept an IRI suffix, such as `Person`.
+4. Enter a short prefix, such as `ex`.
+5. Enter or accept an IRI ending, such as `Person`.
 6. Save.
 
 For an object property:
@@ -127,10 +113,10 @@ For an object property:
 1. Choose **+** beside **Object Properties**.
 2. Enter a label, such as `is about`.
 3. Enter the same base IRI and prefix if appropriate.
-4. Enter a suffix, such as `isAbout`.
+4. Enter an IRI ending, such as `isAbout`.
 5. Save.
 
-The app keeps a prefix map so generated Turtle can use compact names when a base IRI and prefix are known.
+The IRI fields make the export more precise. If you are new to IRIs, start with the examples in this tutorial and keep the same base IRI and prefix for all items.
 
 ## Create Instances on the Canvas
 
@@ -144,7 +130,7 @@ The app keeps a prefix map so generated Turtle can use compact names when a base
 
 Each instance appears as a movable card. The card shows the label, type, and IRI. You can drag cards to arrange the graph, use the mouse wheel to zoom, and drag the canvas background to pan.
 
-The generated Mermaid node for each instance follows this pattern:
+The Mermaid output updates automatically. A box will look roughly like this in the generated Mermaid text:
 
 ```mermaid
 graph TD
@@ -153,7 +139,7 @@ graph TD
 
 ## Draw Semantic Relations
 
-Relations are object-property assertions between two instances.
+Relations are arrows between boxes.
 
 1. Find the small connector dot on the right side of a source instance.
 2. Drag from that connector to the target instance.
@@ -162,33 +148,33 @@ Relations are object-property assertions between two instances.
 5. In **Edit Connection Property**, choose an object property.
 6. Save the connection.
 
-The relation line can also be edited after creation:
+After the arrow exists, click the line to edit it:
 
 | Action | Use |
 | --- | --- |
-| Save Connection | Assign or update the predicate. |
+| Save Connection | Assign or update the relationship. |
 | Reverse Direction | Move the assertion from `A -> B` to `B -> A`. |
 | Delete Relation | Remove the object-property assertion. |
 
-Direction matters. If the intended triple is:
+Direction matters. If the intended statement is:
 
 ```text
 Vehicle Dataset -> is about -> Truck
 ```
 
-then the source node should be the vehicle dataset and the target node should be the truck.
+then start the arrow at the vehicle dataset and end it at the truck.
 
 ## Review Mermaid Output
 
-The app automatically generates Mermaid syntax whenever instances or connections change. It also renders that syntax in the Mermaid output panel.
+The app automatically generates Mermaid syntax whenever boxes or arrows change. It also renders that syntax in the Mermaid output panel.
 
 Generated Mermaid is useful for:
 
 - Documentation.
 - MkDocs tutorials.
 - Pull request discussion.
-- Semantic design pattern review.
-- Comparing diagram direction with RDF predicate direction.
+- Design review.
+- Checking arrow direction before export.
 
 For example, a relation from `rdfInstance2` to `rdfInstance5` with predicate label `is about` becomes:
 
@@ -202,13 +188,9 @@ graph TD
 
 ## Generate and Download Turtle
 
-Choose **Generate Turtle** after the canvas has the intended instances and relations. The app fills the Turtle output textarea with:
+Choose **Generate Turtle** after the canvas has the boxes and arrows you want. The app fills the Turtle output box with RDF text.
 
-- Default prefixes: `owl`, `rdf`, `rdfs`, `xsd`, `foaf`, and `skos`.
-- Custom prefixes from uploaded Turtle or manual TBox entry.
-- Object-property declarations used in the graph.
-- Class declarations used in the graph.
-- Instance data with `rdf:type`, `owl:NamedIndividual`, `rdfs:label`, and object-property assertions.
+You do not need to understand every line of Turtle to use this step. The important check is whether the labels, types, and relationships match the diagram.
 
 Then choose **Download .ttl** to export:
 
@@ -216,7 +198,7 @@ Then choose **Download .ttl** to export:
 graph.ttl
 ```
 
-This Turtle file is the main durable artifact for the model. It can be loaded into Axiolotl, a graph database, ROBOT-based workflows, ontology review scripts, or a Git repository.
+This Turtle file is the main durable artifact for the model. It can be loaded into RDF tools later or kept with project notes.
 
 ## Worked Scenario: Vehicle Use and Datasets
 
@@ -370,6 +352,41 @@ Because canvas layout is not exported as a project file yet, keep modeling sessi
 
 ## Architecture Notes
 
+For developers, the source repository is:
+
+```text
+https://github.com/skreen5hot/kgModeler
+```
+
+### Local Development
+
+For normal tutorial use, you can skip local setup. Use the deployed app.
+
+For local development or offline review, serve the `kgModeler` folder with a local static server, then open the local URL. The deployed site is the recommended path for ordinary tutorial use.
+
+The main implementation files are:
+
+| File | Role |
+| --- | --- |
+| `index.html` | Static page, controls, modals, canvas, and output areas. |
+| `script.js` | Ontology loading, TBox editing, drag/drop instances, relation editing, Mermaid generation, and Turtle generation. |
+| `styles.css` | Layout, canvas, sidebar, modal, and output styling. |
+
+The page loads two browser libraries from CDNs:
+
+| Library | Use |
+| --- | --- |
+| N3.js | Parse uploaded Turtle and support RDF/Turtle work. |
+| Mermaid.js | Render the generated Mermaid graph. |
+
+The app uses three main in-memory data stores:
+
+| Store | Meaning |
+| --- | --- |
+| `ontologyClasses` | Class options, each with label and IRI. |
+| `ontologyProperties` | Object-property options, each with label and IRI. |
+| `elementsOnCanvas` | Instances, coordinates, labels, IRIs, selected class, and outgoing connections. |
+
 The app is a single static page with event-driven JavaScript.
 
 ```mermaid
@@ -418,6 +435,12 @@ No. The current Turtle import is primarily for populating classes, object proper
 
 Only in browser memory until you export. Download Turtle or copy Mermaid syntax before refreshing, closing the tab, or clearing the canvas.
 
+### Is the app free and open source?
+
+Yes. The repository owner has adopted the [CC0 1.0 Universal license](https://creativecommons.org/publicdomain/zero/1.0/) for this tool, which means it is intended to be freely reusable with no account signup or license fee.
+
+The deployed app is a static web page. It works in your browser and does not provide a backend account or project database, so there is no app service receiving your model to sell it.
+
 ### What does the Turtle export include?
 
 It includes default and custom prefixes, object properties used by connections, classes used by instances, and instance data with type, label, and object-property assertions.
@@ -425,4 +448,3 @@ It includes default and custom prefixes, object properties used by connections, 
 ### Can I use this with OntoEagle tutorials?
 
 Yes. Copy the generated Mermaid syntax into a fenced `mermaid` block, or download Turtle and use it as a sample graph artifact for later RDF review.
-
