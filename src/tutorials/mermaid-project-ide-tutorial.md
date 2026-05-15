@@ -196,17 +196,17 @@ Paste this into a diagram named `fleet-abox-rbox`:
 
 ```mermaid
 graph TD
-    rdfInstance1["Label: Information System<br>Type: Information Processing Artifact<br>IRI: https://purl.example.org/ont00000053_InformationSystem"]
-    rdfInstance2["Label: Vehicle Dataset<br>Type: Information Content Entity<br>IRI: https://purl.example.org/ont00000057_VehicleDataSet"]
-    rdfInstance3["Label: Employee Dataset<br>Type: Information Content Entity<br>IRI: https://purl.example.org/ont00000057_EmployeeDataSet"]
-    rdfInstance4["Label: Barry Guarino<br>Type: Person<br>IRI: https://purl.example.org/ont00001262_Person_BarryGuarino"]
-    rdfInstance5["Label: Truck<br>Type: Truck<br>IRI: https://purl.example.org/ont00001262_Truck_FordF150"]
-    rdfInstance6["Label: Act of Using Ford F150<br>Type: Act of Vehicle Use<br>IRI: https://purl.example.org/ont00001262_ActOfVehicleUse"]
+    rdfInstance1["Label: Information System<br>Type: Information Processing Artifact<br>IRI: https://www.commoncoreontologies.org/ont00000117_InformationSystem"]
+    rdfInstance2["Label: Vehicle Dataset<br>Type: Information Content Entity<br>IRI: https://www.commoncoreontologies.org/ont00000958_VehicleDataSet"]
+    rdfInstance3["Label: Employee Dataset<br>Type: Information Content Entity<br>IRI: https://www.commoncoreontologies.org/ont00000958_EmployeeDataSet"]
+    rdfInstance4["Label: Barry Guarino<br>Type: Person<br>IRI: https://www.commoncoreontologies.org/ont00001262_Person_BarryGuarino"]
+    rdfInstance5["Label: Truck<br>Type: Truck<br>IRI: https://www.commoncoreontologies.org/ont00000606_Truck_FordF150"]
+    rdfInstance6["Label: Act of Using Ford F150<br>Type: Act of Vehicle Use<br>IRI: https://www.commoncoreontologies.org/ont00000515_ActOfVehicleUse"]
 
-    rdfInstance1 -- "is carrier of" --> rdfInstance3
     rdfInstance1 -- "is carrier of" --> rdfInstance2
-    rdfInstance2 -- "is about" --> rdfInstance5
-    rdfInstance3 -- "is about" --> rdfInstance4
+    rdfInstance1 -- "is carrier of" --> rdfInstance3
+    rdfInstance2 -- "is about" --> rdfInstance4
+    rdfInstance3 -- "is about" --> rdfInstance5
     rdfInstance4 -- "uses" --> rdfInstance5
     rdfInstance4 -- "agent in" --> rdfInstance6
     rdfInstance6 -- "participates in" --> rdfInstance5

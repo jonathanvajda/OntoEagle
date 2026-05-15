@@ -265,17 +265,17 @@ The generated Mermaid should resemble:
 
 ```mermaid
 graph TD
-    rdfInstance1["Label: Information System<br>Type: Information Processing Artifact<br>IRI: https://purl.example.org/ont00000053_InformationSystem"]
-    rdfInstance2["Label: Vehicle Dataset<br>Type: Information Content Entity<br>IRI: https://purl.example.org/ont00000057_VehicleDataSet"]
-    rdfInstance3["Label: Employee Dataset<br>Type: Information Content Entity<br>IRI: https://purl.example.org/ont00000057_EmployeeDataSet"]
-    rdfInstance4["Label: Barry Guarino<br>Type: Person<br>IRI: https://purl.example.org/ont00001262_Person_BarryGuarino"]
-    rdfInstance5["Label: Truck<br>Type: Truck<br>IRI: https://purl.example.org/ont00001262_Truck_FordF150"]
-    rdfInstance6["Label: Act of Using Ford F150<br>Type: Act of Vehicle Use<br>IRI: https://purl.example.org/ont00001262_ActOfVehicleUse"]
+    rdfInstance1["Label: Information System<br>Type: Information Processing Artifact<br>IRI: https://www.commoncoreontologies.org/ont00000117_InformationSystem"]
+    rdfInstance2["Label: Vehicle Dataset<br>Type: Information Content Entity<br>IRI: https://www.commoncoreontologies.org/ont00000958_VehicleDataSet"]
+    rdfInstance3["Label: Employee Dataset<br>Type: Information Content Entity<br>IRI: https://www.commoncoreontologies.org/ont00000958_EmployeeDataSet"]
+    rdfInstance4["Label: Barry Guarino<br>Type: Person<br>IRI: https://www.commoncoreontologies.org/ont00001262_Person_BarryGuarino"]
+    rdfInstance5["Label: Truck<br>Type: Truck<br>IRI: https://www.commoncoreontologies.org/ont00000606_Truck_FordF150"]
+    rdfInstance6["Label: Act of Using Ford F150<br>Type: Act of Vehicle Use<br>IRI: https://www.commoncoreontologies.org/ont00000515_ActOfVehicleUse"]
 
-    rdfInstance1 -- "is carrier of" --> rdfInstance3
     rdfInstance1 -- "is carrier of" --> rdfInstance2
-    rdfInstance2 -- "is about" --> rdfInstance5
-    rdfInstance3 -- "is about" --> rdfInstance4
+    rdfInstance1 -- "is carrier of" --> rdfInstance3
+    rdfInstance2 -- "is about" --> rdfInstance4
+    rdfInstance3 -- "is about" --> rdfInstance5
     rdfInstance4 -- "uses" --> rdfInstance5
     rdfInstance4 -- "agent in" --> rdfInstance6
     rdfInstance6 -- "participates in" --> rdfInstance5
@@ -288,50 +288,41 @@ Review the Mermaid first, then generate Turtle and inspect the RDF triples.
 Use this small Turtle file if you want to preload the class and property options before drawing instances:
 
 ```turtle
-@prefix ex: <https://purl.example.org/> .
+@prefix cco2: <https://www.commoncoreontologies.org/> .
+@prefix obo: <http://purl.obolibrary.org/obo/> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-ex:InformationProcessingArtifact
-    rdf:type owl:Class ;
-    rdfs:label "Information Processing Artifact"@en .
+cco2:ont00000117 rdf:type owl:Class ;
+                 rdfs:label "Information Processing Artifact"@en .
 
-ex:InformationContentEntity
-    rdf:type owl:Class ;
-    rdfs:label "Information Content Entity"@en .
+cco2:ont00000958 rdf:type owl:Class ;
+                 rdfs:label "Information Content Entity"@en .
 
-ex:Person
-    rdf:type owl:Class ;
-    rdfs:label "Person"@en .
+cco2:ont00001262 rdf:type owl:Class ;
+                 rdfs:label "Person"@en .
 
-ex:Truck
-    rdf:type owl:Class ;
-    rdfs:label "Truck"@en .
+cco2:ont00000606 rdf:type owl:Class ;
+                 rdfs:label "Truck"@en .
 
-ex:ActOfVehicleUse
-    rdf:type owl:Class ;
-    rdfs:label "Act of Vehicle Use"@en .
+cco2:ont00000515 rdf:type owl:Class ;
+                 rdfs:label "Act of Vehicle Use"@en .
 
-ex:isCarrierOf
-    rdf:type owl:ObjectProperty ;
-    rdfs:label "is carrier of"@en .
+obo:BFO_0000101 rdf:type owl:ObjectProperty ;
+                rdfs:label "is carrier of"@en .
 
-ex:isAbout
-    rdf:type owl:ObjectProperty ;
-    rdfs:label "is about"@en .
+cco2:ont00001808 rdf:type owl:ObjectProperty ;
+                 rdfs:label "is about"@en .
 
-ex:uses
-    rdf:type owl:ObjectProperty ;
-    rdfs:label "uses"@en .
+cco2:ont00001813 rdf:type owl:ObjectProperty ;
+                 rdfs:label "uses"@en .
 
-ex:agentIn
-    rdf:type owl:ObjectProperty ;
-    rdfs:label "agent in"@en .
+cco2:ont00001787 rdf:type owl:ObjectProperty ;
+                 rdfs:label "agent in"@en .
 
-ex:participatesIn
-    rdf:type owl:ObjectProperty ;
-    rdfs:label "participates in"@en .
+obo:BFO_0000056 rdf:type owl:ObjectProperty ;
+                rdfs:label "participates in"@en .
 ```
 
 After uploading this file, the canvas remains empty. Drag instances onto the canvas and select the imported classes and object properties from the modals.
