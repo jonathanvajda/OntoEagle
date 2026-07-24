@@ -1,21 +1,21 @@
 
 ## Roadmap overview
 1. Define standards and target package structure.
-2. Survey all apps and build a capability matrix.
-3. Build a function inventory with reuse maturity ratings.
-4. Establish a minimal common Jest setup in all apps.
-5. Rank shared capability families.
-6. Select one capability family.
-7. Survey that capability across all apps.
-8. Deeply compare the best 2–4 implementations.
-9. Write characterization and fixture tests.
-10. Define a canonical API.
-11. Extract a tested, documented shared package.
-12. Pilot it in one simple and one demanding app.
-13. Roll it out two apps at a time.
-14. Delete local duplicates immediately.
-15. Repeat for the next capability family. (Step 6)
-16. Modernize remaining app-local code after shared boundaries stabilize.
+1. Survey all apps and build a capability matrix.
+1. Build a function inventory with reuse maturity ratings.
+1. Establish a minimal common Jest setup in all apps.
+1. Rank shared capability families.
+1. Select one capability family.
+1. Survey that capability across all apps.
+1. Deeply compare the best 2–4 implementations.
+1. Write characterization and fixture tests.
+1. Define a canonical API.
+1. Extract a tested, documented shared package.
+1. Pilot it in one simple and one demanding app.
+1. Roll it out two apps at a time.
+1. Delete local duplicates immediately.
+1. Repeat for the next capability family. (Step 6)
+1. Modernize remaining app-local code after shared boundaries stabilize.
 
 
 ## Phase 0: Migration Rules
@@ -39,9 +39,7 @@ For every candidate implementation, record:
     dependencies,
     known callers,
     side effects,
-    browser assumptions,
-    DOM assumptions,
-    storage assumptions,
+    browser, DOM, and storage assumptions,
     error behavior,
     supported formats,
     tests,
@@ -580,6 +578,47 @@ A function is not truly “shared” when it is copied into packages/. It become
 
 Tests and documentation are promotion accelerators, but they do not automatically make an implementation the best architecture.
 
+## Capability Families and Packages
+
+Tentative families to start with:
+1. Format and MIME Registry
+    - RDF formats, tabular formats, extensions, MIME types, labels, import/export compatibility.
+1. Namespace and Prefix Registry
+    - RDF, RDFS, OWL, XSD, DCTERMS, SKOS, OBO, CCO, OKEA, app-specific defaults.
+1. Browser File I/O
+    - Reading files as text/array buffer, Blob creation, downloads, file naming, extension handling.
+1. Project Storage
+    - IndexedDB project records, settings, recent projects, project metadata, FSA folder sync, OPFS boundary.
+1. Tabular Parsing
+    - CSV/TSV/XLS/XLSX ingestion, delimiter handling, headers, rows, empty cells, BOM/newlines.
+1. Tabular Serialization
+    - CSV/TSV/XLS/XLSX export, escaping, headers, sheet names, workbook generation.
+1. RDF Parsing
+    - TTL, TriG, N-Triples, N-Quads, JSON-LD, RDF/XML ingestion into quads/datasets.
+1. RDF Serialization
+    - Export quads/datasets to TTL, TriG, N-Triples, N-Quads, JSON-LD, RDF/XML.
+1. IRI and CURIE Utilities
+    - IRI validation, compact/expand CURIEs, prefix lookup, safe IRI generation, replacement.
+1. Ontology Metadata Extraction
+    - Ontology IRI, version IRI, title, description, imports, license, creator, modified date.
+1. RDF Graph Operations
+    - Filtering quads, graph merging, graph diffing, graph overlays, graph validation helpers.
+1. Project Data Model
+    - Project entity, staged ontology RDF, staged instance RDF, provenance metadata, operation history.
+1. Validation and Diagnostics
+    - Structured validation results, warnings/errors, compliance reports, user-facing outcome payloads.
+1. SPARQL Utilities
+   - Query parsing, update parsing, pattern extraction, IRI replacement, query visualization input model.
+1. Inference Utilities
+   - EL-style forward chaining, closure preview, inference overlay generation, triplestore update helpers.
+1. Visualization Data Models
+   - RDF-to-node-edge transforms, SPARQL-to-node-edge transforms, Mermaid graph output, Cytoscape/D3 adapters.
+1. Report Export
+   - YAML, HTML, Markdown, CSV reports, print-friendly report models.
+1. UI Rendering Adapters
+   - Toasts, tabs, tables, graph canvases, settings panels. I’d keep this later and more conservative.
+
+
 Initial 'armchair' prediction of packages:
 ```
 packages/
@@ -642,6 +681,63 @@ packages/
             adapter/
                 cytoscape-canvas.js
     report-export/
+        core/
+            create-report-model.js
+            normalize-report-section.js
+            normalize-report-table.js
+            report-result.js
+            report-error.js
+        serializer/
+            serialize-report-to-csv.js
+            serialize-report-to-tsv.js
+            serialize-report-to-yaml.js
+            serialize-report-to-html.js
+            serialize-report-to-markdown.js
+        adapter/
+            create-printable-report-document.js
+            create-report-blob.js
     download-utils/
+        core/
+            create-blob-from-text.js
+            create-blob-from-array-buffer.js
+            get-extension-for-mime-type.js
+            get-mime-type-for-extension.js
+            normalize-download-filename.js
+            create-download-descriptor.js
+        browser/
+            download-blob.js
+            download-text.js
+            revoke-object-url.js
+        adapter/
+            export-text-as-download.js
+            export-array-buffer-as-download.js
+            export-json-as-download.js
     test-fixtures/
+        rdf/
+            turtle/
+            trig/
+            n-triples/
+            n-quads/
+            json-ld/
+            rdf-xml/
+            malformed/
+        tabular/
+            csv/
+            tsv/
+            excel/
+            malformed/
+        sparql/
+            query/
+            update/
+            malformed/
+        reports/
+            yaml/
+            html/
+            markdown/
+            csv/
+        projects/
+            indexeddb-records/
+            file-system-access/
+            opfs/
+        README.md
 ```
