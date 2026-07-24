@@ -2,19 +2,20 @@
 ## Roadmap overview
 1. Define standards and target package structure.
 2. Survey all apps and build a capability matrix.
-3. Establish a minimal common Jest setup in all apps.
-4. Rank shared capability families.
-5. Select one capability family.
-6. Survey that capability across all apps.
-7. Deeply compare the best 2–4 implementations.
-8. Write characterization and fixture tests.
-9. Define a canonical API.
-10. Extract a tested, documented shared package.
-11. Pilot it in one simple and one demanding app.
-12. Roll it out two apps at a time.
-13. Delete local duplicates immediately.
-14. Repeat for the next capability family. (Step 5)
-15. Modernize remaining app-local code after shared boundaries stabilize.
+3. Build a function inventory with reuse maturity ratings.
+4. Establish a minimal common Jest setup in all apps.
+5. Rank shared capability families.
+6. Select one capability family.
+7. Survey that capability across all apps.
+8. Deeply compare the best 2–4 implementations.
+9. Write characterization and fixture tests.
+10. Define a canonical API.
+11. Extract a tested, documented shared package.
+12. Pilot it in one simple and one demanding app.
+13. Roll it out two apps at a time.
+14. Delete local duplicates immediately.
+15. Repeat for the next capability family. (Step 6)
+16. Modernize remaining app-local code after shared boundaries stabilize.
 
 
 ## Phase 0: Migration Rules
@@ -33,18 +34,108 @@ Perform one relatively shallow pass through all applications. Do not refactor du
 
 For every candidate implementation, record:
     file and function name,
+    purpose,
     inputs and outputs,
     dependencies,
+    known callers,
     side effects,
+    browser assumptions,
+    DOM assumptions,
+    storage assumptions,
     error behavior,
     supported formats,
     tests,
     documentation,
+    apparent equivalent functions,
+    maturity rating for reuse.
+
+The census should produce a function inventory, not just an app inventory. The goal is to identify which functions are duplicates, which are near-duplicates, which are better treated as adapters, and which are mature enough to become shared package candidates.
+
+## Phase 1.5: Function Inventory and Reuse Readiness
+
+Create a reusable inventory artifact before choosing canonical implementations.
+
+For each candidate function, document:
+    current name,
+    proposed action-oriented name,
+    source app,
+    file path,
+    capability family,
+    input contract,
+    output contract,
+    sync or async behavior,
+    error and warning model,
+    side effects,
+    environment assumptions,
+    vendor dependencies,
     known callers,
-    apparent equivalent functions.
+    equivalent or overlapping functions,
+    test fixture availability,
+    promotion maturity rating.
+
+### Reuse maturity ladder
+
+Use explicit maturity levels:
+
+```
+0 - Local only
+    App-specific, unclear contract, or tightly coupled to DOM/storage.
+
+1 - Candidate
+    Useful behavior exists, but it is under-tested, underspecified, or partially coupled.
+
+2 - Characterized
+    Current behavior is documented with representative fixtures and comparison notes.
+
+3 - Reusable
+    Function is pure or mostly pure, named by action, has clear JSDoc, and has focused tests.
+
+4 - Package ready
+    Function is environment-neutral, has predictable error handling, and separates adapters from core logic.
+
+5 - Canonical
+    Shared package is adopted by all intended consumers and local duplicates have been deleted.
+```
+
+### Naming principles
+
+Promoted functions should be named for what they do, not for the original app, screen, file format, or one current use case.
+
+The name must be clear without deep knowledge of the source app. Long names are acceptable when they make the function's action, domain, and range unambiguous.
+
+Avoid names such as:
+```
+downloadRDF()
+exportRDF()
+handleFile()
+processData()
+```
+
+Prefer names such as:
+```
+downloadBlob(data, mimeType, filename)
+serializeGraph(quads, format, options)
+parseDelimitedText(text, options)
+readFileAsText(file, options)
+```
+
+If an existing function can be made more reusable without breaking its intended behavior, modify the original function and cascade the refactor. Do not preserve narrow or ambiguous functions merely because they already exist.
+
+### Required inventory artifacts
+
+Each capability family should maintain:
+    inventory.md,
+    maturity.md,
+    equivalence-matrix.md,
+    naming-decisions.md,
+    side-effect-boundaries.md.
+
+The equivalence matrix should compare implementations across behavior, inputs, outputs, formats, error handling, side effects, dependencies, browser assumptions, and test coverage.
 
 ## Phase 2: Common Testing Foundation
 The goal is not comprehensive coverage. The goal is to make every repo capable of running tests consistently.
+
+This phase must be complete before any deep implementation comparison becomes binding. Without a shared testing and fixture convention, comparison can become taste-driven rather than evidence-driven.
 
 Standardize:
     Jest version,
@@ -59,7 +150,7 @@ Standardize:
 
 After the census, rank capabilities rather than apps.
 
-A good extraction score can use six factors:
+A good extraction score can use these factors:
 
 Factor	Question
 Reuse	How many apps use it?
@@ -68,6 +159,8 @@ Testability	Can it be tested without a browser UI?
 Purity	Can DOM, storage, and download side effects be separated?
 Variation	Are implementations genuinely equivalent?
 Payoff	Would one fix benefit several apps?
+Maturity	Is there a clear path to maturity level 4 or 5?
+Boundary fit	Can core logic be separated from browser, storage, vendor, and DOM adapters?
 
 Start with capabilities that are:
     repeated in several apps,
@@ -79,13 +172,16 @@ Start with capabilities that are:
 A likely order would be:
     string and data normalization,
     filename and MIME helpers,
+    browser file/download utilities,
+    browser storage boundary utilities,
     CSV parsing and serialization,
     RDF parsing and serialization,
-    file reading and downloads,
     IndexedDB wrappers,
     validation,
     DOM components,
     app-specific orchestration.
+
+Browser platform utilities should be stabilized early because file reading, Blob creation, MIME handling, download behavior, IndexedDB, File System Access, and OPFS boundaries influence many later packages.
 
 ## Phase 4: Consolidation Cycle for one Capability Family
 This becomes the repeating unit of work.
@@ -139,6 +235,8 @@ The purpose is not to prove that every current behavior is desirable. It is to d
     which differences are legitimate options.
 
 This is especially important when functionally equivalent functions have different names.
+
+After characterization, assign or update each candidate function's maturity rating. Do not define the canonical API until the strongest candidates have been characterized and rated.
 
 Step 4.3 — Separate the layers
 
@@ -203,6 +301,19 @@ and newly written normalization behavior.
 
 The result can be a synthesis rather than a winner copied verbatim.
 
+The contract document should include:
+    canonical function name,
+    rejected names and why,
+    input schema,
+    output schema,
+    options schema,
+    error and warning model,
+    sync or async behavior,
+    side-effect classification,
+    browser, worker, and Node compatibility expectations,
+    examples,
+    migration notes for old app-local names.
+
 Step 4.5 — Create the shared package
 
 Move the canonical implementation into a package with:
@@ -230,6 +341,16 @@ packages/tabular/
   package.json
 ```
 At this point, the package exists, but it is not yet proven as a replacement.
+
+Every shared package should include:
+    README.md,
+    contract.md,
+    migration.md,
+    decision-log.md,
+    fixtures/README.md,
+    package-level test command,
+    explicit package exports,
+    dependency and vendor provenance notes.
 
 Step 4.6 — Pilot in two applications
 
@@ -283,6 +404,8 @@ As soon as an app successfully consumes the shared package:
     retain app-specific adapter tests,
     search for stale function names,
     document the package dependency.
+
+After duplicate deletion, update the capability family's inventory and maturity files so the package is marked canonical only when all intended consumers have adopted it.
 
 Do not leave old implementations “temporarily” available. That recreates uncertainty about which implementation is authoritative.
 
@@ -339,7 +462,9 @@ Do this after major development periods, not after every commit.
 Frequent and narrow:
 1. compare the implementations,
 1. identify the newest or most capable version,
+1. rate candidate maturity,
 1. add characterization tests,
+1. define the canonical contract,
 1. extract it,
 1. migrate all known copies,
 1. delete the copies.
@@ -382,6 +507,7 @@ Here are all of the apps:
 Given this portfolio, I would prioritize:
 1. MIME type/format/extension registry
 1. Namespace prefix registry
+1. Browser file/download utilities
 1. RDF parsing
 1. RDF export/serialization
 1. Tabular parsing
@@ -390,7 +516,7 @@ Given this portfolio, I would prioritize:
 1. IndexedDB data storage conventions for graph data
 1. IndexedDB data storage conventions for user/app settings
 
-After those six, a large portion of your current duplicated infrastructure should already be centralized.
+After these foundational capabilities, a large portion of your current duplicated infrastructure should already be centralized.
 ```
 Application-specific workflow
     ↓
@@ -410,7 +536,6 @@ Then continuing onto:
 1. Visualization of SPARQL in Cytoscape
 1. YAML export
 1. HTML export
-1. Browser file/download utilities
 
 # Promoting Code into Common library
 Since many of these code bases have common parentage or common principles (and developers), deduplication should usually be easier than ordinary legacy consolidation. The primary challenge is less “discover whether these implementations are related” and more:
@@ -426,6 +551,8 @@ Discovered
 Grouped with equivalents
     ↓
 Characterized
+    ↓
+Maturity rated
     ↓
 Contract defined
     ↓
@@ -472,7 +599,6 @@ packages/
         vendor/
             papaparse.min.js
             xlsx.full.min.js
-            glide-data-grid.min.js
         adapter/
             parse-tabular.js
             serialize-tabular.js
@@ -500,6 +626,11 @@ packages/
             user-settings-db.js
             file-system-access.js
     visualization/
+        grid/
+            vendor/
+                glide-data-grid.min.js
+            adapter/
+                tabular-grid-canvas.js
         mermaid/
             vendor/
                 mermaid.min.js
@@ -513,3 +644,4 @@ packages/
     report-export/
     download-utils/
     test-fixtures/
+```

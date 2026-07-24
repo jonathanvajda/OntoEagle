@@ -9,7 +9,7 @@ The application maximizes raw runtime performance and development simplicity by 
 
 * Single Source of Truth (Application Controller)
 * Implementation: A global, immutable-style plain JavaScript object (AppState) holds properties like selected node IDs, layout modes, or filtering states.
-   * Benefit: Functions remain clean and easy to test. Components do not guess what the other is doing; they read from the state layer. [1] 
+   * Benefit: Functions remain clean and easy to test. Components do not guess what the other is doing; they read from the state layer. 
 * Downstream Projection (Unidirectional Rendering Flow)
 * Implementation: Canvas systems do not interact directly. Instead, interactions trigger state updates, which are immediately passed into the dedicated APIs of each canvas (e.g., cy.batch() or tableCanvas.setData()).
    * Benefit: Bypasses complex framework re-renders. This ensures that user interactions—like zooming or sorting—do not accidentally tear down, reset, or redraw the underlying HTML wrapper elements.
