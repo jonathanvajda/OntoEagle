@@ -10,6 +10,7 @@ module.exports = {
 
   collectCoverageFrom: [
     'docs/app/**/*.js',
+    'monorepo-staging/packages/**/*.js',
     '!docs/app/search-main.js',
     '!docs/app/indexeddb.min.js',
     '!docs/app/mermaid.min.js',
