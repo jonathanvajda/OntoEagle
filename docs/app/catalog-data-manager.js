@@ -7,6 +7,8 @@ import {
   mergeRegistryEntries,
   removeStoredUserOntologyRecordsForDataset
 } from './ontology-meta.js';
+import { downloadTextFile } from './shared/format-registry/browser-download.js';
+import { SUPPORTED_MIME_DESCRIPTORS } from './shared/format-registry/index.js';
 import {
   idbDeleteDataset,
   idbGetAllDatasetMeta,
@@ -17,6 +19,10 @@ const modalId = 'ontCatalogDataManagerModal';
 const fileInputId = 'ontCatalogDataManagerFile';
 const listId = 'ontCatalogDataManagerList';
 const statusId = 'ontCatalogDataManagerStatus';
+const rdfFileAccept = Object.values(SUPPORTED_MIME_DESCRIPTORS)
+  .filter((descriptor) => descriptor.category === 'rdf')
+  .flatMap((descriptor) => descriptor.extensions.map((extension) => `.${extension}`))
+  .join(',');
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -42,18 +48,6 @@ function setDbStatus(state, text) {
   }));
 }
 
-function downloadTextFile(fileName, text) {
-  const blob = new Blob([text], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-}
-
 function ensureModal() {
   let modal = document.getElementById(modalId);
   if (modal) return modal;
@@ -75,7 +69,7 @@ function ensureModal() {
         type="file"
         hidden
         multiple
-        accept=".ttl,.turtle,.n3,.nt,.ntriples,.nq,.trig,.jsonld,.json-ld,.rdf,.owl,.xml"
+        accept="${rdfFileAccept}"
       />
       <button class="ont-search__btn ont-search__btn--secondary" type="button" data-manager-action="add">Add ontology</button>
       <button class="ont-search__btn ont-search__btn--secondary" type="button" data-manager-action="refresh">Refresh local snapshot</button>

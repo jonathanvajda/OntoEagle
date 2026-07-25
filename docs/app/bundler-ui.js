@@ -25,6 +25,7 @@ import {
 import { extractDocumentsFromJsonLd, mapByIri, parseGraphJsonLdText } from './rdf_extract.js';
 import { buildSlimFromSeeds } from './slim-core.js';
 import { readFileAsText } from './rdf_io.js';
+import { downloadTextFile } from './shared/format-registry/browser-download.js';
 
 // Minimal IDB wrappers (you can expand these in indexeddb.min.js later)
 import {
@@ -105,18 +106,6 @@ function escapeHtml(s) {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;');
-}
-
-function downloadText(filename, text) {
-  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
 }
 
 function setSlimStatus(message) {
@@ -306,7 +295,7 @@ function bundlerInit() {
 
     const includeLabels = !!chkIncludeLabels?.checked;
     const text = toRobotSeedText(doc, bundleId, includeLabels);
-    downloadText(`bundle-${shortId(bundleId)}.txt`, text);
+    downloadTextFile(`bundle-${shortId(bundleId)}.txt`, text);
     console.info('Exported bundle seed text:');
   });
 
@@ -329,12 +318,12 @@ function bundlerInit() {
 
   btnExportSlimTurtle?.addEventListener('click', async () => {
     const slim = await buildCurrentSlim();
-    downloadText(`ontoeagle-slim-${Date.now()}.ttl`, slim.turtle);
+    downloadTextFile(`ontoeagle-slim-${Date.now()}.ttl`, slim.turtle);
   });
 
   btnExportSlimJsonLd?.addEventListener('click', async () => {
     const slim = await buildCurrentSlim();
-    downloadText(`ontoeagle-slim-${Date.now()}.jsonld`, JSON.stringify(slim.jsonld, null, 2));
+    downloadTextFile(`ontoeagle-slim-${Date.now()}.jsonld`, JSON.stringify(slim.jsonld, null, 2));
   });
 
   btnMerge?.addEventListener('click', () => {

@@ -1841,3 +1841,10 @@ class GDCManager {
         });
     }
 }
+
+if (typeof window !== 'undefined') {
+    window.POSTagger = POSTagger;
+    window.Lemmatizer = Lemmatizer;
+    window.GDCService = GDCService;
+    window.GDCManager = GDCManager;
+}

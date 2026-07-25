@@ -3,45 +3,28 @@ const RDF_FIRST = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#first';
 const RDF_REST = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest';
 const RDF_NIL = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil';
 
+import {
+  SUPPORTED_MIME_DESCRIPTORS,
+  getN3ParserFormatForMimeType,
+  getSupportedMimeTypeForFilename
+} from './shared/format-registry/index.js';
+
 export const RDF_FORMATS = Object.freeze({
-  TURTLE: 'text/turtle',
-  N3: 'text/n3',
-  N_TRIPLES: 'application/n-triples',
-  N_QUADS: 'application/n-quads',
-  TRIG: 'application/trig',
-  JSON_LD: 'application/ld+json',
-  RDF_XML: 'application/rdf+xml'
-});
-
-const extensionToFormat = Object.freeze({
-  '.ttl': RDF_FORMATS.TURTLE,
-  '.turtle': RDF_FORMATS.TURTLE,
-  '.n3': RDF_FORMATS.N3,
-  '.nt': RDF_FORMATS.N_TRIPLES,
-  '.ntriples': RDF_FORMATS.N_TRIPLES,
-  '.nq': RDF_FORMATS.N_QUADS,
-  '.trig': RDF_FORMATS.TRIG,
-  '.jsonld': RDF_FORMATS.JSON_LD,
-  '.json-ld': RDF_FORMATS.JSON_LD,
-  '.rdf': RDF_FORMATS.RDF_XML,
-  '.owl': RDF_FORMATS.RDF_XML,
-  '.xml': RDF_FORMATS.RDF_XML
-});
-
-const n3FormatByMime = Object.freeze({
-  [RDF_FORMATS.TURTLE]: RDF_FORMATS.TURTLE,
-  [RDF_FORMATS.N3]: RDF_FORMATS.N3,
-  [RDF_FORMATS.N_TRIPLES]: RDF_FORMATS.N_TRIPLES,
-  [RDF_FORMATS.N_QUADS]: RDF_FORMATS.N_QUADS,
-  [RDF_FORMATS.TRIG]: RDF_FORMATS.TRIG
+  TURTLE: SUPPORTED_MIME_DESCRIPTORS.turtle.mimeType,
+  N3: SUPPORTED_MIME_DESCRIPTORS.n3.mimeType,
+  N_TRIPLES: SUPPORTED_MIME_DESCRIPTORS.nTriples.mimeType,
+  N_QUADS: SUPPORTED_MIME_DESCRIPTORS.nQuads.mimeType,
+  TRIG: SUPPORTED_MIME_DESCRIPTORS.trig.mimeType,
+  JSON_LD: SUPPORTED_MIME_DESCRIPTORS.jsonLd.mimeType,
+  RDF_XML: SUPPORTED_MIME_DESCRIPTORS.rdfXml.mimeType
 });
 
 export function detectRdfFormat(fileName) {
-  const lower = String(fileName || '').toLowerCase();
-  for (const [ext, format] of Object.entries(extensionToFormat)) {
-    if (lower.endsWith(ext)) return format;
+  const result = getSupportedMimeTypeForFilename(fileName);
+  if (!result.ok || result.value.category !== 'rdf') {
+    throw new Error(`Unsupported RDF file type: ${String(fileName || '') || '(unknown filename)'}`);
   }
-  return RDF_FORMATS.TURTLE;
+  return result.value.mimeType;
 }
 
 export function readFileAsText(file) {
@@ -98,9 +81,11 @@ function rdflibTermToRdfJs(term, targetStore) {
 
 function parseN3Like(text, format, baseIRI) {
   const N3 = requireN3();
+  const parserFormat = getN3ParserFormatForMimeType(format);
+  if (!parserFormat.ok) throw new Error(`Unsupported N3 parser format: ${format}`);
   const store = new N3.Store();
   const parser = new N3.Parser({
-    format: n3FormatByMime[format],
+    format: parserFormat.value,
     ...(baseIRI ? { baseIRI } : {})
   });
   let parseError = null;

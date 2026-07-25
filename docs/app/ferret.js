@@ -1,11 +1,13 @@
 
+import { downloadTextFile } from './shared/format-registry/browser-download.js';
+
 // ======================================================
 // SECTION 1: GLOBAL STATE
 // ======================================================
 let currentCQId = null;
 let allNodesCache = [];
-const tagger = new POSTagger(window.POSTAGGER_LEXICON);
-const gdcManager = new GDCManager(tagger, allNodesCache);
+const tagger = new window.POSTagger(window.POSTAGGER_LEXICON);
+const gdcManager = new window.GDCManager(tagger, allNodesCache);
 
 const OKEA = {
   CQ: "https://github.com/jonathanvajda/okea/ont000002",
@@ -859,13 +861,7 @@ async function deleteCQ(cqId) {
 
 function downloadJSONLD() {
   const jsonLD = JSON.stringify(allNodesCache, null, 2);
-  const blob = new Blob([jsonLD], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "CQDatabase.jsonld";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  downloadTextFile('CQDatabase.jsonld', jsonLD);
 }
 
 function downloadCSV() {
@@ -1005,15 +1001,7 @@ function downloadCSV() {
 
   // 4. Trigger the file download
   const csvContent = csvRows.join('\n');
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `CQ_Export_${new Date().toISOString().slice(0, 10)}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  downloadTextFile(`CQ_Export_${new Date().toISOString().slice(0, 10)}.csv`, csvContent);
   console.log("CSV generation complete.");
 }
 
