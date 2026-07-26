@@ -1,5 +1,8 @@
 
 import { downloadTextFile } from './shared/format-registry/browser-download.js';
+import {
+  iriForNamespaceId
+} from './shared/namespace-registry/index.js';
 
 // ======================================================
 // SECTION 1: GLOBAL STATE
@@ -8,6 +11,24 @@ let currentCQId = null;
 let allNodesCache = [];
 const tagger = new window.POSTagger(window.POSTAGGER_LEXICON);
 const gdcManager = new window.GDCManager(tagger, allNodesCache);
+
+const RDFS = Object.freeze({
+  label: iriForNamespaceId('rdfs', 'label').value,
+  comment: iriForNamespaceId('rdfs', 'comment').value
+});
+const OWL = Object.freeze({
+  NamedIndividual: iriForNamespaceId('owl', 'NamedIndividual').value
+});
+const XSD = Object.freeze({
+  dateTime: iriForNamespaceId('xsd', 'dateTime').value
+});
+const DCTERMS = Object.freeze({
+  contributor: iriForNamespaceId('dcterms', 'contributor').value,
+  created: iriForNamespaceId('dcterms', 'created').value,
+  description: iriForNamespaceId('dcterms', 'description').value,
+  modified: iriForNamespaceId('dcterms', 'modified').value,
+  requires: iriForNamespaceId('dcterms', 'requires').value
+});
 
 const OKEA = {
   CQ: "https://github.com/jonathanvajda/okea/ont000002",
@@ -144,7 +165,7 @@ function renderSidebarFromCache() {
     hasType(n, "https://github.com/jonathanvajda/okea/ont000002")
   );
 
-  const titleProperty = "http://www.w3.org/2000/01/rdf-schema#label";
+  const titleProperty = RDFS.label;
   cqNodes.sort((a, b) => {
     const titleA = a[titleProperty]?.[0]?.['@value'] ?? '';
     const titleB = b[titleProperty]?.[0]?.['@value'] ?? '';
@@ -164,7 +185,7 @@ function addCQToSidebar(cq) {
     }
   };
   const titleSpan = document.createElement("span");
-  const titleProperty = "http://www.w3.org/2000/01/rdf-schema#label";
+  const titleProperty = RDFS.label;
   titleSpan.textContent = cq[titleProperty]?.[0]?.['@value'] ?? 'Untitled CQ';
   const deleteBtn = document.createElement("button");
   deleteBtn.textContent = "✖";
@@ -183,7 +204,7 @@ function addCQToSidebar(cq) {
 function updateCQInSidebar(cq) {
   const listItem = document.querySelector(`.cq-list-item[data-id="${cq['@id']}"]`);
   if (listItem) {
-    const titleProperty = "http://www.w3.org/2000/01/rdf-schema#label";
+    const titleProperty = RDFS.label;
     listItem.querySelector('span').textContent = cq[titleProperty]?.[0]?.['@value'] ?? 'Untitled CQ';
   }
 }
@@ -205,12 +226,12 @@ function loadCQIntoForm(cqId) {
   console.log("Found CQ Node:", cq);
 
   currentCQId = cqId;
-  document.getElementById("cq-title").value = cq["http://www.w3.org/2000/01/rdf-schema#label"]?.[0]?.['@value'] ?? '';
-  document.getElementById("cq-description").value = cq["http://purl.org/dc/terms/description"]?.[0]?.['@value'] ?? '';
+  document.getElementById("cq-title").value = cq[RDFS.label]?.[0]?.['@value'] ?? '';
+  document.getElementById("cq-description").value = cq[DCTERMS.description]?.[0]?.['@value'] ?? '';
   document.getElementById("cq-status").value = cq["http://example.com/ns/status"]?.[0]?.['@value'] ?? 'Draft';
   const personsList = document.getElementById('persons-list');
   personsList.innerHTML = '';
-  const participantLinks = cq["http://purl.org/dc/terms/contributor"] || [];
+  const participantLinks = cq[DCTERMS.contributor] || [];
   console.log("Found Contributor Links:", participantLinks);
   // Process Contributors
   const participantNodes = allNodesCache.filter(n =>
@@ -221,8 +242,8 @@ function loadCQIntoForm(cqId) {
   participantNodes.forEach(pNode => {
     const personId = pNode['@id'];
     const emailId = pNode["https://www.commoncoreontologies.org/ont00001801"]?.[0]?.['@id'] ?? '';
-    const name = pNode["http://www.w3.org/2000/01/rdf-schema#label"]?.[0]?.['@value'] ?? '';
-    const notes = pNode["http://www.w3.org/2000/01/rdf-schema#comment"]?.[0]?.['@value'] ?? '';
+    const name = pNode[RDFS.label]?.[0]?.['@value'] ?? '';
+    const notes = pNode[RDFS.comment]?.[0]?.['@value'] ?? '';
     let contact = '';
     if (emailId) {
       const emailNode = allNodesCache.find(n => n['@id'] === emailId);
@@ -262,13 +283,13 @@ function loadCQIntoForm(cqId) {
   const dataRequirementsList = document.getElementById('data-requirements-list');
   dataRequirementsList.innerHTML = '';
   const dataSourceNodes = allNodesCache.filter(n =>
-    (cq["http://purl.org/dc/terms/requires"] || []).some(item => item["@id"] === n["@id"]) &&
+    (cq[DCTERMS.requires] || []).some(item => item["@id"] === n["@id"]) &&
     n["@type"].includes("https://www.commoncoreontologies.org/ont00000756")
   );
 
   dataSourceNodes.forEach(dsNode => {
     const sourceText = dsNode["https://www.commoncoreontologies.org/ont00001761"]?.[0]?.["@value"] ?? '';
-    const qualityText = dsNode["http://www.w3.org/2000/01/rdf-schema#comment"]?.[0]?.["@value"] ?? '';
+    const qualityText = dsNode[RDFS.comment]?.[0]?.["@value"] ?? '';
     addDataRequirementItem(sourceText, qualityText);
   });
   if (dataRequirementsList.children.length === 0) addDataRequirementItem();
@@ -537,13 +558,13 @@ function addPersonItem(name = '', role = 'Creator', contact = '', notes = '', pe
       n["@type"].includes("https://www.commoncoreontologies.org/ont00001262")
     );
     const matches = allPeople.filter(p => {
-      const personName = p["http://www.w3.org/2000/01/rdf-schema#label"]?.[0]?.['@value'] ?? '';
+      const personName = p[RDFS.label]?.[0]?.['@value'] ?? '';
       return personName.toLowerCase().includes(searchTerm);
     });
     matches.forEach(match => {
       const resultItem = document.createElement('div');
       resultItem.className = 'person-search-result-item';
-      const personName = match["http://www.w3.org/2000/01/rdf-schema#label"]?.[0]?.['@value'] ?? '';
+      const personName = match[RDFS.label]?.[0]?.['@value'] ?? '';
       const emailIdMatch = match["https://www.commoncoreontologies.org/ont00001801"]?.[0]?.['@id'];
       const emailNode = allNodesCache.find(n => n['@id'] === emailIdMatch);
       const personContact = emailNode?.["https://www.commoncoreontologies.org/ont00001761"]?.[0]?.['@value'] ?? 'No contact info';
@@ -552,7 +573,7 @@ function addPersonItem(name = '', role = 'Creator', contact = '', notes = '', pe
         const selectedPersonId = match['@id'];
         const selectedEmailId = emailIdMatch;
         const selectedName = personName;
-        const selectedNotes = match["http://www.w3.org/2000/01/rdf-schema#comment"]?.[0]?.['@value'] ?? '';
+        const selectedNotes = match[RDFS.comment]?.[0]?.['@value'] ?? '';
         const selectedContact = personContact === 'No contact info' ? '' : personContact;
         nameInput.value = selectedName;
         contactInput.value = selectedContact;
@@ -641,7 +662,7 @@ function generateJSONLD() {
       existingPersonNode = allNodesCache.find(n =>
         n["@type"] && Array.isArray(n["@type"]) && // <-- Add this check
         n["@type"].includes("https://www.commoncoreontologies.org/ont00001262") &&
-        n["http://www.w3.org/2000/01/rdf-schema#label"]?.[0]?.['@value'] === p.name
+        n[RDFS.label]?.[0]?.['@value'] === p.name
       );
       if (existingPersonNode) {
         console.log(`Found existing person for "${p.name}" with ID: ${existingPersonNode['@id']}`);
@@ -669,9 +690,9 @@ function generateJSONLD() {
     if (!allNodesCache.find(n => n['@id'] === personId)) {
       personRelatedNodes.push({
         "@id": personId,
-        "@type": ["https://www.commoncoreontologies.org/ont00001262", "http://www.w3.org/2002/07/owl#NamedIndividual"],
-        "http://www.w3.org/2000/01/rdf-schema#label": [{ "@value": p.name }],
-        "http://www.w3.org/2000/01/rdf-schema#comment": [{ "@value": p.notes }],
+        "@type": ["https://www.commoncoreontologies.org/ont00001262", OWL.NamedIndividual],
+        [RDFS.label]: [{ "@value": p.name }],
+        [RDFS.comment]: [{ "@value": p.notes }],
         "https://www.commoncoreontologies.org/ont00001801": [{ "@id": emailId }],
         "http://purl.obolibrary.org/obo/BFO_0000196": [{ "@id": roleId }]
       });
@@ -681,7 +702,7 @@ function generateJSONLD() {
     if (!allNodesCache.find(n => n['@id'] === emailId)) {
       personRelatedNodes.push({
         "@id": emailId,
-        "@type": ["https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+        "@type": ["https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress", OWL.NamedIndividual],
         // Use a more robust property name here, ensure it matches your email node definition
         "https://www.commoncoreontologies.org/ont00001761": [{ "@value": p.contact }],
       });
@@ -691,7 +712,7 @@ function generateJSONLD() {
     if (!allNodesCache.find(n => n['@id'] === roleId)) {
       personRelatedNodes.push({
         "@id": roleId,
-        "@type": ["http://purl.obolibrary.org/obo/BFO_0000023", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+        "@type": ["http://purl.obolibrary.org/obo/BFO_0000023", OWL.NamedIndividual],
         "https://www.commoncoreontologies.org/ont00001761": [{ "@value": p.role }],
       });
     }
@@ -702,27 +723,27 @@ function generateJSONLD() {
   const dataSourceNodes = dataRequirements.map((dr, index) => ({
     "@id": `https://www.commoncoreontologies.org/ont00000756/Database_${cqUniqueId}_${index + 1}`,
     // ... rest of data source node ...
-    "@type": ["https://www.commoncoreontologies.org/ont00000756", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+    "@type": ["https://www.commoncoreontologies.org/ont00000756", OWL.NamedIndividual],
     "https://www.commoncoreontologies.org/ont00001761": [{ "@value": dr.source }],
-    "http://www.w3.org/2000/01/rdf-schema#comment": [{ "@value": dr.quality }]
+    [RDFS.comment]: [{ "@value": dr.quality }]
   }));
   const subquestionNodes = subquestions.map((sq, index) => ({
     "@id": `https://github.com/jonathanvajda/okea/ont000001_IterrogativeICE_${cqUniqueId}_${index + 1}`,
     // ... rest of subquestion node ...
-    "@type": ["https://github.com/jonathanvajda/okea/ont000001", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+    "@type": ["https://github.com/jonathanvajda/okea/ont000001", OWL.NamedIndividual],
     "https://www.commoncoreontologies.org/ont00001761": [{ "@value": sq }],
   }));
   const decisionLogicNodes = decisionLogic.map((dl, index) => ({
     "@id": `https://github.com/jonathanvajda/okea/ont000009_DecisionLogic_${cqUniqueId}_${index + 1}`,
     // ... rest of logic node ...
-    "@type": ["https://github.com/jonathanvajda/okea/ont000009", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+    "@type": ["https://github.com/jonathanvajda/okea/ont000009", OWL.NamedIndividual],
     "https://www.commoncoreontologies.org/ont00001761": [{ "@value": dl }],
   }));
   
   const mermaidDiagramNodes = mermaidDiagram.map((dl, index) => ({
     "@id": `https://github.com/jonathanvajda/okea/ont000004_MermaidDiagram_${cqUniqueId}_${index + 1}`,
     // ... rest of logic node ...
-    "@type": ["https://github.com/jonathanvajda/okea/ont000004", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+    "@type": ["https://github.com/jonathanvajda/okea/ont000004", OWL.NamedIndividual],
     "https://github.com/jonathanvajda/okea/has_mermaid_diagram_text_value": [{ "@value": dl }],
   }));
   
@@ -731,17 +752,17 @@ function generateJSONLD() {
 
     return {
       "@id": `https://github.com/jonathanvajda/okea/ont000016_DatabaseQuery_${cqUniqueId}_${index + 1}`,
-      "@type": [semantics.classIri, "http://www.w3.org/2002/07/owl#NamedIndividual"],
+      "@type": [semantics.classIri, OWL.NamedIndividual],
       [semantics.textPredicate]: [{ "@value": dq.text }]
     };
   });
 
   // ... (timestamp logic unchanged) ...
   const nowISO = new Date().toISOString();
-  const lastModifiedTimestamp = [{ "@value": nowISO, "@type": "http://www.w3.org/2001/XMLSchema#dateTime" }];
+  const lastModifiedTimestamp = [{ "@value": nowISO, "@type": XSD.dateTime }];
   let createdTimestamp;
-  if (currentCQId) { const existingCQ = allNodesCache.find(n => n['@id'] === currentCQId); if (existingCQ && existingCQ["http://purl.org/dc/terms/created"]) { createdTimestamp = existingCQ["http://purl.org/dc/terms/created"]; } }
-  if (!createdTimestamp) { createdTimestamp = [{ "@value": nowISO, "@type": "http://www.w3.org/2001/XMLSchema#dateTime" }]; }
+  if (currentCQId) { const existingCQ = allNodesCache.find(n => n['@id'] === currentCQId); if (existingCQ && existingCQ[DCTERMS.created]) { createdTimestamp = existingCQ[DCTERMS.created]; } }
+  if (!createdTimestamp) { createdTimestamp = [{ "@value": nowISO, "@type": XSD.dateTime }]; }
 
   const jsonLD = [
     ...personRelatedNodes,
@@ -752,14 +773,14 @@ function generateJSONLD() {
     ...databaseQueryNodes,
     {
       "@id": `https://github.com/jonathanvajda/okea/ont000002_CQ_${cqUniqueId}`,
-      "@type": ["https://github.com/jonathanvajda/okea/ont000002", "http://www.w3.org/2002/07/owl#NamedIndividual"],
-      "http://www.w3.org/2000/01/rdf-schema#label": [{ "@value": title }],
-      "http://purl.org/dc/terms/description": [{ "@value": description }],
-      "http://purl.org/dc/terms/created": createdTimestamp,
-      "http://purl.org/dc/terms/modified": lastModifiedTimestamp,
+      "@type": ["https://github.com/jonathanvajda/okea/ont000002", OWL.NamedIndividual],
+      [RDFS.label]: [{ "@value": title }],
+      [DCTERMS.description]: [{ "@value": description }],
+      [DCTERMS.created]: createdTimestamp,
+      [DCTERMS.modified]: lastModifiedTimestamp,
       "http://example.com/ns/status": [{ "@value": status }],
-      "http://purl.org/dc/terms/contributor": contributorLinks, // Use the collected links
-      "http://purl.org/dc/terms/requires": dataSourceNodes.map(dsn => ({ "@id": dsn['@id'] })),
+      [DCTERMS.contributor]: contributorLinks, // Use the collected links
+      [DCTERMS.requires]: dataSourceNodes.map(dsn => ({ "@id": dsn['@id'] })),
       "http://purl.obolibrary.org/obo/BFO_0000178": [
         ...decisionLogicNodes.map(n => ({ "@id": n['@id'] })),
         ...subquestionNodes.map(n => ({ "@id": n['@id'] }))
@@ -784,7 +805,7 @@ async function performSave() {
   const syncNode = {
     '@id': 'sync_state',
     id: 'sync_state', // Required for the IndexedDB keyPath
-    'http://purl.org/dc/terms/modified': new Date().toISOString()
+    [DCTERMS.modified]: new Date().toISOString()
   };
 
   // 3. Combine the form data with the sync node.
@@ -898,17 +919,17 @@ function downloadCSV() {
   cqNodes.forEach(cq => {
     const baseRow = {
       cq_id: cq['@id'] || '',
-      cq_title: cq["http://www.w3.org/2000/01/rdf-schema#label"]?.[0]?.['@value'] ?? '',
-      cq_description: cq["http://purl.org/dc/terms/description"]?.[0]?.['@value'] ?? '',
-      cq_created_date: cq["http://purl.org/dc/terms/created"]?.[0]?.['@value'] ?? '',
-      cq_modified_date: cq["http://purl.org/dc/terms/modified"]?.[0]?.['@value'] ?? '',
+      cq_title: cq[RDFS.label]?.[0]?.['@value'] ?? '',
+      cq_description: cq[DCTERMS.description]?.[0]?.['@value'] ?? '',
+      cq_created_date: cq[DCTERMS.created]?.[0]?.['@value'] ?? '',
+      cq_modified_date: cq[DCTERMS.modified]?.[0]?.['@value'] ?? '',
       cq_status: cq["http://example.com/ns/status"]?.[0]?.['@value'] ?? '',
     };
 
     let itemsFound = 0;
 
     // Process Contributors (Persons/Roles)
-    const participantLinks = cq["http://purl.org/dc/terms/contributor"] || [];
+    const participantLinks = cq[DCTERMS.contributor] || [];
     const participantNodes = allNodesCache.filter(n =>
       participantLinks.some(p => p["@id"] === n["@id"]) && n["@type"].includes("https://www.commoncoreontologies.org/ont00001262")
     );
@@ -925,10 +946,10 @@ function downloadCSV() {
         ...baseRow,
         item_type: 'Contributor',
         item_id: personId,
-        item_text: pNode["http://www.w3.org/2000/01/rdf-schema#label"]?.[0]?.['@value'] ?? '',
+        item_text: pNode[RDFS.label]?.[0]?.['@value'] ?? '',
         contributor_role: roleNode?.["https://www.commoncoreontologies.org/ont00001761"]?.[0]?.['@value'] ?? '',
         contributor_contact: emailNode?.["https://www.commoncoreontologies.org/ont00001761"]?.[0]?.['@value'] ?? '',
-        contributor_notes: pNode["http://www.w3.org/2000/01/rdf-schema#comment"]?.[0]?.['@value'] ?? '',
+        contributor_notes: pNode[RDFS.comment]?.[0]?.['@value'] ?? '',
         // ADDED: Populate the new ID columns
         contributor_email_id: emailId,
         contributor_role_id: roleLink,
@@ -941,7 +962,7 @@ function downloadCSV() {
     const itemTypes = [
       { type: 'Subquestion', iri: 'https://github.com/jonathanvajda/okea/ont000001', link: 'http://purl.obolibrary.org/obo/BFO_0000178' },
       { type: 'DecisionLogic', iri: 'https://github.com/jonathanvajda/okea/ont000009', link: 'http://purl.obolibrary.org/obo/BFO_0000178' },
-      { type: 'DataSource', iri: 'https://www.commoncoreontologies.org/ont00000756', link: 'http://purl.org/dc/terms/requires' },
+      { type: 'DataSource', iri: 'https://www.commoncoreontologies.org/ont00000756', link: DCTERMS.requires },
       { type: 'MermaidDiagram', iri: 'https://github.com/jonathanvajda/okea/ont000004', link: 'https://github.com/jonathanvajda/okea/ont000012'},
       { type: 'DatabaseQuery', iri: 'https://github.com/jonathanvajda/okea/ont000016', link: 'https://github.com/jonathanvajda/okea/ont000014'}
     ];
@@ -975,7 +996,7 @@ function downloadCSV() {
         }
 
         if (config.type === 'DataSource') {
-          row.datasource_quality_notes = node["http://www.w3.org/2000/01/rdf-schema#comment"]?.[0]?.['@value'] ?? '';
+          row.datasource_quality_notes = node[RDFS.comment]?.[0]?.['@value'] ?? '';
         }
 
         if (config.type === 'MermaidDiagram') {
@@ -1053,14 +1074,14 @@ async function handleCSVUpload(event) {
 
       const cqNode = {
         "@id": baseRow.cq_id,
-        "@type": ["https://github.com/jonathanvajda/okea/ont000002", "http://www.w3.org/2002/07/owl#NamedIndividual"],
-        "http://www.w3.org/2000/01/rdf-schema#label": [{ "@value": baseRow.cq_title }],
-        "http://purl.org/dc/terms/description": [{ "@value": baseRow.cq_description }],
-        "http://purl.org/dc/terms/created": [{ "@value": baseRow.cq_created_date, "@type": "http://www.w3.org/2001/XMLSchema#dateTime" }],
-        "http://purl.org/dc/terms/modified": [{ "@value": baseRow.cq_modified_date, "@type": "http://www.w3.org/2001/XMLSchema#dateTime" }],
+        "@type": ["https://github.com/jonathanvajda/okea/ont000002", OWL.NamedIndividual],
+        [RDFS.label]: [{ "@value": baseRow.cq_title }],
+        [DCTERMS.description]: [{ "@value": baseRow.cq_description }],
+        [DCTERMS.created]: [{ "@value": baseRow.cq_created_date, "@type": XSD.dateTime }],
+        [DCTERMS.modified]: [{ "@value": baseRow.cq_modified_date, "@type": XSD.dateTime }],
         "http://example.com/ns/status": [{ "@value": baseRow.cq_status }],
-        "http://purl.org/dc/terms/contributor": [],
-        "http://purl.org/dc/terms/requires": [],
+        [DCTERMS.contributor]: [],
+        [DCTERMS.requires]: [],
         "http://purl.obolibrary.org/obo/BFO_0000178": []
       };
 
@@ -1073,9 +1094,9 @@ async function handleCSVUpload(event) {
             // Create Person, Email, and Role nodes, ensuring no duplicates within this import
             if (row.item_id && !processedNodeIds.has(row.item_id)) {
               const pNode = {
-                "@id": row.item_id, "@type": ["https://www.commoncoreontologies.org/ont00001262", "http://www.w3.org/2002/07/owl#NamedIndividual"],
-                "http://www.w3.org/2000/01/rdf-schema#label": [{ "@value": row.item_text }],
-                "http://www.w3.org/2000/01/rdf-schema#comment": [{ "@value": row.contributor_notes }],
+                "@id": row.item_id, "@type": ["https://www.commoncoreontologies.org/ont00001262", OWL.NamedIndividual],
+                [RDFS.label]: [{ "@value": row.item_text }],
+                [RDFS.comment]: [{ "@value": row.contributor_notes }],
                 "https://www.commoncoreontologies.org/ont00001801": [{ "@id": row.contributor_email_id }],
                 "http://purl.obolibrary.org/obo/BFO_0000196": [{ "@id": row.contributor_role_id }]
               };
@@ -1084,7 +1105,7 @@ async function handleCSVUpload(event) {
             }
             if (row.contributor_email_id && !processedNodeIds.has(row.contributor_email_id)) {
               const eNode = {
-                "@id": row.contributor_email_id, "@type": ["https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+                "@id": row.contributor_email_id, "@type": ["https://www.commoncoreontologies.org/CommonCoreOntologies/EmailAddress", OWL.NamedIndividual],
                 "https://www.commoncoreontologies.org/ont00001761": [{ "@value": row.contributor_contact }],
               };
               newGraph.push(eNode);
@@ -1092,20 +1113,20 @@ async function handleCSVUpload(event) {
             }
             if (row.contributor_role_id && !processedNodeIds.has(row.contributor_role_id)) {
               const rNode = {
-                "@id": row.contributor_role_id, "@type": ["http://purl.obolibrary.org/obo/BFO_0000023", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+                "@id": row.contributor_role_id, "@type": ["http://purl.obolibrary.org/obo/BFO_0000023", OWL.NamedIndividual],
                 "https://www.commoncoreontologies.org/ont00001761": [{ "@value": row.contributor_role }],
               };
               newGraph.push(rNode);
               processedNodeIds.add(row.contributor_role_id);
             }
-            cqNode["http://purl.org/dc/terms/contributor"].push({ "@id": row.item_id });
+            cqNode[DCTERMS.contributor].push({ "@id": row.item_id });
             break;
 
           // --- ADDED MISSING CASES ---
           case 'Subquestion':
             if (!processedNodeIds.has(row.item_id)) {
               const sqNode = {
-                "@id": row.item_id, "@type": ["https://github.com/jonathanvajda/okea/ont000001", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+                "@id": row.item_id, "@type": ["https://github.com/jonathanvajda/okea/ont000001", OWL.NamedIndividual],
                 "https://www.commoncoreontologies.org/ont00001761": [{ "@value": row.item_text }],
               };
               newGraph.push(sqNode);
@@ -1117,7 +1138,7 @@ async function handleCSVUpload(event) {
           case 'DecisionLogic':
             if (!processedNodeIds.has(row.item_id)) {
               const dlNode = {
-                "@id": row.item_id, "@type": ["https://github.com/jonathanvajda/okea/ont000009", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+                "@id": row.item_id, "@type": ["https://github.com/jonathanvajda/okea/ont000009", OWL.NamedIndividual],
                 "https://www.commoncoreontologies.org/ont00001761": [{ "@value": row.item_text }],
               };
               newGraph.push(dlNode);
@@ -1130,21 +1151,21 @@ async function handleCSVUpload(event) {
             if (!processedNodeIds.has(row.item_id)) {
               const dsNode = {
                 "@id": row.item_id,
-                "@type": ["https://www.commoncoreontologies.org/ont00000756", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+                "@type": ["https://www.commoncoreontologies.org/ont00000756", OWL.NamedIndividual],
                 "https://www.commoncoreontologies.org/ont00001761": [{ "@value": row.item_text }],
-                "http://www.w3.org/2000/01/rdf-schema#comment": [{ "@value": row.datasource_quality_notes }]
+                [RDFS.comment]: [{ "@value": row.datasource_quality_notes }]
               };
               newGraph.push(dsNode);
               processedNodeIds.add(row.item_id);
             }
-            cqNode["http://purl.org/dc/terms/requires"].push({ "@id": row.item_id });
+            cqNode[DCTERMS.requires].push({ "@id": row.item_id });
             break;
 
           case 'MermaidDiagram':
             if (!processedNodeIds.has(row.item_id)) {
               const mermaidNode = {
                 "@id": row.item_id,
-                "@type": ["https://github.com/jonathanvajda/okea/ont000004", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+                "@type": ["https://github.com/jonathanvajda/okea/ont000004", OWL.NamedIndividual],
                 "https://github.com/jonathanvajda/okea/has_mermaid_diagram_text_value": [{ "@value": row.mermaid_diagram_text || row.item_text }]
               };
               newGraph.push(mermaidNode);
@@ -1157,7 +1178,7 @@ async function handleCSVUpload(event) {
             if (!processedNodeIds.has(row.item_id)) {
               const dbQueryNode = {
                 "@id": row.item_id,
-                "@type": ["https://github.com/jonathanvajda/okea/ont000016", "http://www.w3.org/2002/07/owl#NamedIndividual"],
+                "@type": ["https://github.com/jonathanvajda/okea/ont000016", OWL.NamedIndividual],
                 "https://github.com/jonathanvajda/okea/has_query_text_value": [{ "@value": row.database_query_text || row.item_text }]
               };
               newGraph.push(dbQueryNode);
@@ -1305,3 +1326,4 @@ document.addEventListener('DOMContentLoaded', () => {
   initialLoad();
   initTabs();
 });
+

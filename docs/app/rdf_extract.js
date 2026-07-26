@@ -10,13 +10,19 @@
  * - values as strings, {"@value": "..."} objects, or arrays of those
  */
 
-const OWL = 'http://www.w3.org/2002/07/owl#';
-const RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
-const RDFS = 'http://www.w3.org/2000/01/rdf-schema#';
-const SKOS = 'http://www.w3.org/2004/02/skos/core#';
+import {
+  deriveNamespaceStemFromIri,
+  namespacePrefixMapFromRegistry
+} from './shared/namespace-registry/index.js';
+
+const COMMON_PREFIXES = namespacePrefixMapFromRegistry();
+const OWL = COMMON_PREFIXES.owl;
+const RDF = COMMON_PREFIXES.rdf;
+const RDFS = COMMON_PREFIXES.rdfs;
+const SKOS = COMMON_PREFIXES.skos;
 const CCEO = 'http://www.ontologyrepository.com/CommonCoreOntologies/';
 const CCO2 = 'https://www.commoncoreontologies.org/';
-const DCTERMS = 'http://purl.org/dc/terms/';
+const DCTERMS = COMMON_PREFIXES.dcterms;
 const OBO = 'http://purl.obolibrary.org/obo/';
 export const ADDED_BY_USER_IRI = 'https://jonathanvajda.github.io/OntoEagle/added_by_user';
 
@@ -185,12 +191,8 @@ export function inferElementType(typeValue) {
  * @returns {string}
  */
 export function computeNamespace(iri) {
-  if (typeof iri !== 'string') return '';
-  const hash = iri.lastIndexOf('#');
-  if (hash >= 0) return iri.slice(0, hash + 1);
-  const slash = iri.lastIndexOf('/');
-  if (slash >= 0) return iri.slice(0, slash + 1);
-  return iri;
+  const result = deriveNamespaceStemFromIri(iri);
+  return result.ok ? result.value : String(iri || '');
 }
 
 /**

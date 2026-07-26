@@ -21,6 +21,7 @@ import { defaultSearchOptions } from './types.js';
 import { mintBundleIri, BUNDLE_LS_KEY, setShoppingCartCount, loadSlimBundleDoc, getShoppingCartCountFromStorage} from './bundler-core.js';
 import { importUserOntologyFile as importUserOntologyFileToIdb } from './ontology-meta.js';
 import { shortIri } from './namespaces.js';
+import { iriForNamespaceId } from './shared/namespace-registry/index.js';
   
 
 // Minimal IDB wrappers (you can expand these in indexeddb.min.js later)
@@ -80,6 +81,15 @@ let docsByIri = new Map();   // Map<string, OntologyDocument>
 let options = structuredClone(defaultSearchOptions);
 let searchReady = false;
 const DATASET_SCHEMA_VERSION = 2;
+const XSD_ANY_URI_IRI = iriForNamespaceId('xsd', 'anyURI').value;
+const OWL_TYPE_IRIS = Object.freeze([
+  'Class',
+  'ObjectProperty',
+  'DatatypeProperty',
+  'AnnotationProperty',
+  'NamedIndividual',
+  'Ontology'
+].map((id) => iriForNamespaceId('owl', id).value));
 
 /* -----------------------------
  * Utilities
@@ -462,7 +472,7 @@ function isHttpUrl(value) {
 
 function shouldLinkDetailValue(item) {
   const value = String(item?.iri || item?.value || '');
-  return !!item?.iri || item?.datatype === 'http://www.w3.org/2001/XMLSchema#anyURI' || isHttpUrl(value);
+  return !!item?.iri || item?.datatype === XSD_ANY_URI_IRI || isHttpUrl(value);
 }
 
 function splitDetailText(text) {
@@ -536,14 +546,7 @@ function renderIriList(label, iris, options = {}) {
 function renderAdditionalTypeSection(doc) {
   const additionalTypes = (doc.additionalTypes || [])
     .filter((iri) => !['owl:Class', 'owl:ObjectProperty', 'owl:DatatypeProperty', 'owl:AnnotationProperty', 'owl:NamedIndividual', 'owl:Ontology'].includes(iri))
-    .filter((iri) => ![
-      'http://www.w3.org/2002/07/owl#Class',
-      'http://www.w3.org/2002/07/owl#ObjectProperty',
-      'http://www.w3.org/2002/07/owl#DatatypeProperty',
-      'http://www.w3.org/2002/07/owl#AnnotationProperty',
-      'http://www.w3.org/2002/07/owl#NamedIndividual',
-      'http://www.w3.org/2002/07/owl#Ontology'
-    ].includes(iri));
+    .filter((iri) => !OWL_TYPE_IRIS.includes(iri));
   if (!additionalTypes.length) return '';
   const label = doc.type === 'NamedIndividual' ? 'Type assertions' : 'Additional RDF/OWL types';
   return renderIriList(label, additionalTypes, { pills: true });

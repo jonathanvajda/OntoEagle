@@ -1,5 +1,9 @@
 // docs/app/bundler-core.js
 import { inferElementType } from './rdf_extract.js';
+import {
+  iriForNamespaceId,
+  namespacePrefixMapFromRegistry
+} from './shared/namespace-registry/index.js';
 
 /**
  * Bundles are stored as JSON-LD in localStorage:
@@ -9,11 +13,15 @@ import { inferElementType } from './rdf_extract.js';
 
 export const BUNDLE_LS_KEY = 'onto.bundles.jsonld';
 
+const COMMON_PREFIXES = namespacePrefixMapFromRegistry();
+const RDF_TYPE_IRI = iriForNamespaceId('rdf', 'type').value;
+const RDFS_IS_DEFINED_BY_IRI = iriForNamespaceId('rdfs', 'isDefinedBy').value;
+
 export const CONTEXT = Object.freeze({
-  rdf:  'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-  rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
-  skos: 'http://www.w3.org/2004/02/skos/core#',
-  owl:  'http://www.w3.org/2002/07/owl#'
+  rdf: COMMON_PREFIXES.rdf,
+  rdfs: COMMON_PREFIXES.rdfs,
+  skos: COMMON_PREFIXES.skos,
+  owl: COMMON_PREFIXES.owl
 });
 
 export function emptyDoc() {
@@ -71,12 +79,7 @@ export function loadSlimBundleDoc() {
     try { return JSON.parse(raw); } catch (_) { /* fall through */ }
   }
   return {
-    "@context": {
-      "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-      "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-      "skos": "http://www.w3.org/2004/02/skos/core#",
-      "owl": "http://www.w3.org/2002/07/owl#"
-    },
+    "@context": { ...CONTEXT },
     "@graph": []
   };
 }
@@ -251,13 +254,13 @@ export const RDFS_IS_DEFINED_BY_KEYS = Object.freeze([
   'http://www.ontologyrepository.com/CommonCoreOntologies/is_curated_in_ontology',
   'cco:is_curated_in_ontology',
   'rdfs:isDefinedBy',
-  'http://www.w3.org/2000/01/rdf-schema#isDefinedBy'
+  RDFS_IS_DEFINED_BY_IRI
 ]);
 
 export const RDF_TYPE_KEYS = Object.freeze([
   '@type',
   'rdf:type',
-  'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
+  RDF_TYPE_IRI
 ]);
 
 export function getAnyKey(node, keys) {

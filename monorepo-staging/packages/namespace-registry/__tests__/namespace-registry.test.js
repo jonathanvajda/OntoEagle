@@ -32,7 +32,15 @@ describe('namespace-registry package', () => {
     expect(namespacePrefixMapFromRegistry()).toMatchObject({
       rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
       owl: 'http://www.w3.org/2002/07/owl#',
-      cco: 'http://www.ontologyrepository.com/CommonCoreOntologies/'
+      cco: 'http://www.ontologyrepository.com/CommonCoreOntologies/',
+      bfo: 'http://purl.obolibrary.org/obo/BFO_',
+      iao: 'http://purl.obolibrary.org/obo/IAO_',
+      foaf: 'http://xmlns.com/foaf/0.1/',
+      prov: 'http://www.w3.org/ns/prov#',
+      dcat: 'http://www.w3.org/ns/dcat#',
+      geo: 'http://www.w3.org/2003/01/geo/wgs84_pos#',
+      geojson: 'https://purl.org/geojson/vocab#',
+      vcard: 'http://www.w3.org/2006/vcard/ns#'
     });
     expect(namespaceToPrefixMap({ rdf: COMMON_NAMESPACE_REGISTRY.rdf.namespaceIri })).toEqual({
       'http://www.w3.org/1999/02/22-rdf-syntax-ns#': 'rdf'
@@ -90,6 +98,10 @@ describe('namespace-registry package', () => {
     expect(iriForNamespaceId('dcterms', 'modified')).toEqual({
       ok: true,
       value: 'http://purl.org/dc/terms/modified'
+    });
+    expect(iriForNamespaceId('iao', 'definition')).toEqual({
+      ok: true,
+      value: 'http://purl.obolibrary.org/obo/IAO_0000115'
     });
   });
 

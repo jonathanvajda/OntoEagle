@@ -32,7 +32,7 @@ The strongest direction is a small package surface, not one Frankenstein utility
 
 `COMMON_NAMESPACE_REGISTRY` should remain fairly extensive for stable vocabularies. OWL, SKOS, XSD, RDF, RDFS, and DCTERMS terms are slow-changing standards, and pre-processed local IDs reduce repeated hard-coded fragments in ontology tooling, tabular ontology generation, RDF export, SPARQL helpers, and compliance reporting.
 
-App-specific namespaces still belong outside the common registry. OBO, CCO, OKEA, Table Nova, project, and customer prefixes should extend the canonical prefix map through `mergeProjectPrefixes(namespacePrefixMapFromRegistry(), appPrefixes, projectPrefixes)`.
+Stable portfolio-wide namespaces belong in the common registry even when one app surfaced them first. OBO, BFO, IAO, CCO/CCEO/CCO2, FOAF, PROV, DCAT, Geo, GeoJSON, and vCard are promoted registry facts. Truly app-local namespaces such as OKEA, Table Nova placeholders, project IRIs, and customer prefixes should extend the canonical prefix map through `mergeProjectPrefixes(namespacePrefixMapFromRegistry(), appPrefixes, projectPrefixes)`.
 
 ## Candidate Synthesis
 
