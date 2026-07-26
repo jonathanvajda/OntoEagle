@@ -43,6 +43,56 @@ describe('namespace-registry package', () => {
     });
   });
 
+  test('COMMON_NAMESPACE_REGISTRY covers common OWL, SKOS, XSD, and DCTERMS IDs', () => {
+    expect(COMMON_NAMESPACE_REGISTRY.owl.ids).toMatchObject({
+      ObjectProperty: 'ObjectProperty',
+      DatatypeProperty: 'DatatypeProperty',
+      AnnotationProperty: 'AnnotationProperty',
+      Restriction: 'Restriction',
+      inverseOf: 'inverseOf',
+      someValuesFrom: 'someValuesFrom',
+      versionInfo: 'versionInfo'
+    });
+    expect(COMMON_NAMESPACE_REGISTRY.skos.ids).toMatchObject({
+      Concept: 'Concept',
+      ConceptScheme: 'ConceptScheme',
+      hiddenLabel: 'hiddenLabel',
+      scopeNote: 'scopeNote',
+      exactMatch: 'exactMatch'
+    });
+    expect(COMMON_NAMESPACE_REGISTRY.xsd.ids).toMatchObject({
+      anyURI: 'anyURI',
+      normalizedString: 'normalizedString',
+      nonNegativeInteger: 'nonNegativeInteger',
+      unsignedInt: 'unsignedInt'
+    });
+    expect(COMMON_NAMESPACE_REGISTRY.dcterms.ids).toMatchObject({
+      created: 'created',
+      modified: 'modified',
+      creator: 'creator',
+      contributor: 'contributor',
+      bibliographicCitation: 'bibliographicCitation',
+      conformsTo: 'conformsTo'
+    });
+
+    expect(iriForNamespaceId('owl', 'ObjectProperty')).toEqual({
+      ok: true,
+      value: 'http://www.w3.org/2002/07/owl#ObjectProperty'
+    });
+    expect(iriForNamespaceId('skos', 'scopeNote')).toEqual({
+      ok: true,
+      value: 'http://www.w3.org/2004/02/skos/core#scopeNote'
+    });
+    expect(iriForNamespaceId('xsd', 'nonNegativeInteger')).toEqual({
+      ok: true,
+      value: 'http://www.w3.org/2001/XMLSchema#nonNegativeInteger'
+    });
+    expect(iriForNamespaceId('dcterms', 'modified')).toEqual({
+      ok: true,
+      value: 'http://purl.org/dc/terms/modified'
+    });
+  });
+
   test('normalizePrefixMap and mergeProjectPrefixes validate and merge user/file prefixes', () => {
     const normalized = normalizePrefixMap({
       ex: ' https://example.org/ ',
