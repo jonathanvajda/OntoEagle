@@ -292,6 +292,63 @@ export function getPreferredExtensionForMimeType(mimeType) {
 }
 
 /**
+ * Classifies an extension into the legacy import kind used by tabular tools.
+ *
+ * @param {string | null | undefined} extension - Extension with or without dot.
+ * @returns {'spreadsheet'|'ontology'|'query'|'document'|'text'|'data'|'unsupported'}
+ */
+export function getInputKindForExtension(extension) {
+  const result = getOutputMimeTypeForExtension(extension);
+  if (!result.ok) return 'unsupported';
+  if (result.value.category === 'tabular') return 'spreadsheet';
+  if (result.value.category === 'rdf') return 'ontology';
+  return result.value.category;
+}
+
+/**
+ * Resolves a format key or MIME string to a supported descriptor.
+ *
+ * @param {string | null | undefined} formatKey - Extension, alias, descriptor id, or MIME type.
+ * @returns {MimeDescriptorResult}
+ */
+export function getMimeTypeForFormatKey(formatKey) {
+  return normalizeSupportedMimeType(formatKey);
+}
+
+/**
+ * Builds an export key to MIME type map from the promoted registry.
+ *
+ * @param {ReadonlyArray<string>} formatKeys - App-level format keys.
+ * @returns {Readonly<Record<string, string>>}
+ */
+export function createFormatMimeTypeMap(formatKeys) {
+  return Object.freeze((formatKeys || []).reduce((map, key) => {
+    const result = getMimeTypeForFormatKey(key);
+    if (result.ok) map[key] = result.value.mimeType;
+    return map;
+  }, {}));
+}
+
+/**
+ * Builds an export key to preferred extension map from the promoted registry.
+ *
+ * @param {ReadonlyArray<string>} formatKeys - App-level format keys.
+ * @returns {Readonly<Record<string, string>>}
+ */
+export function createFormatExtensionMap(formatKeys) {
+  return Object.freeze((formatKeys || []).reduce((map, key) => {
+    const result = getMimeTypeForFormatKey(key);
+    const extension = normalizeExtension(key);
+    if (result.ok) {
+      map[key] = result.value.extensions.includes(extension)
+        ? extension
+        : result.value.extensions[0];
+    }
+    return map;
+  }, {}));
+}
+
+/**
  * Returns the dedicated descriptor for Mermaid text output.
  *
  * Mermaid is not an RDF serialization and should not be mixed into ordinary
