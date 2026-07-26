@@ -357,6 +357,19 @@ export const COMMON_NAMESPACE_REGISTRY = Object.freeze({
       elucidation: '0000600'
     }
   }),
+  oboInOwl: defineEntry({
+    prefix: 'oboInOwl',
+    namespaceIri: 'http://www.geneontology.org/formats/oboInOwl#',
+    ids: {
+      hasDbXref: 'hasDbXref',
+      hasExactSynonym: 'hasExactSynonym',
+      hasNarrowSynonym: 'hasNarrowSynonym',
+      hasBroadSynonym: 'hasBroadSynonym',
+      hasRelatedSynonym: 'hasRelatedSynonym',
+      hasOBONamespace: 'hasOBONamespace',
+      id: 'id'
+    }
+  }),
   cco: defineEntry({
     prefix: 'cco',
     namespaceIri: 'http://www.ontologyrepository.com/CommonCoreOntologies/',

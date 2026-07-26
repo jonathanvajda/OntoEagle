@@ -35,6 +35,7 @@ describe('namespace-registry package', () => {
       cco: 'http://www.ontologyrepository.com/CommonCoreOntologies/',
       bfo: 'http://purl.obolibrary.org/obo/BFO_',
       iao: 'http://purl.obolibrary.org/obo/IAO_',
+      oboInOwl: 'http://www.geneontology.org/formats/oboInOwl#',
       foaf: 'http://xmlns.com/foaf/0.1/',
       prov: 'http://www.w3.org/ns/prov#',
       dcat: 'http://www.w3.org/ns/dcat#',
@@ -102,6 +103,10 @@ describe('namespace-registry package', () => {
     expect(iriForNamespaceId('iao', 'definition')).toEqual({
       ok: true,
       value: 'http://purl.obolibrary.org/obo/IAO_0000115'
+    });
+    expect(iriForNamespaceId('oboInOwl', 'hasDbXref')).toEqual({
+      ok: true,
+      value: 'http://www.geneontology.org/formats/oboInOwl#hasDbXref'
     });
   });
 
