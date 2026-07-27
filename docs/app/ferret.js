@@ -10,6 +10,10 @@ import {
 import {
   iriForNamespaceId
 } from './shared/namespace-registry/index.js';
+import {
+  createRdfQuadsFromJsonLdGraph,
+  serializeRdfDataset
+} from './shared/rdf-io/index.js';
 
 // ======================================================
 // SECTION 1: GLOBAL STATE
@@ -897,7 +901,17 @@ async function deleteCQ(cqId) {
 }
 
 function downloadJSONLD() {
-  const jsonLD = JSON.stringify(allNodesCache, null, 2);
+  const rdfNodes = allNodesCache.filter((node) =>
+    node &&
+    typeof node === 'object' &&
+    typeof node['@id'] === 'string' &&
+    node['@id'] !== 'sync_state'
+  );
+  const { quads, warnings } = createRdfQuadsFromJsonLdGraph({
+    '@graph': rdfNodes
+  });
+  if (warnings.length) console.warn('CQ JSON-LD export warnings:', warnings);
+  const { text: jsonLD } = serializeRdfDataset(quads, { format: 'jsonld' });
   downloadTextFile('CQDatabase.jsonld', jsonLD, {
     mimeType: 'application/ld+json'
   });

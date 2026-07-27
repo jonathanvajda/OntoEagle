@@ -100,8 +100,12 @@ Converts simple JSON-LD-like app graph objects into quads.
 packages/rdf-io/
   src/
     index.js
+    jsonld-adapter.js
+    n3-adapter.js
     object-to-rdf.js
     rdf-model.js
+    rdflib-adapter.js
+    runtime.js
     serialize-rdf.js
   __tests__/
     rdf-io.test.js
@@ -109,10 +113,19 @@ packages/rdf-io/
   promoted-function-proposal.md
 ```
 
-## Adapter Work Still Required Before Full Migration
+## Adapter Layer Added
 
-- Add N3 adapter for Turtle, TriG, N3, N-Triples, and N-Quads parsing/serialization.
-- Add jsonld.js adapter for real JSON-LD expansion, compaction, and RDF conversion.
-- Add rdflib adapter for RDF/XML parsing/serialization and RDF/JS term conversion.
+- `parseRdfTextWithAdapters(text, options)` dispatches to N3, jsonld.js, or rdflib based on normalized RDF format.
+- `serializeRdfDatasetWithAdapters(dataset, options)` serializes through N3, jsonld.js, or rdflib when a runtime is available.
+- `runtime.js` normalizes RDF aliases and MIME types, resolves browser globals, and maps formats to adapter families.
+- `n3-adapter.js` covers Turtle, TriG, N3, N-Triples, and N-Quads parse/serialize.
+- `jsonld-adapter.js` covers JSON-LD to RDF via `jsonld.toRDF` and RDF to JSON-LD via `jsonld.fromRDF`.
+- `rdflib-adapter.js` covers RDF/XML parse/serialize and RDF/JS/rdflib term conversion.
+
+## Adapter Work Still Required Before Full Migration Waves
+
+- Add real vendor-backed browser smoke tests in at least OntoEagle and one RDF-heavy app.
 - Decide whether Visual Lynx RDF/XML repair is strict opt-in or an app-specific preprocessor.
-- Add fixtures shared with OCM and Visual Lynx before rewiring full RDF import/export pages.
+- Add fixtures shared with OCM and Visual Lynx before migration waves.
+- Characterize N3 prefix preservation and RDF/XML prefix serialization against real vendor libraries.
+- Replace app-local parser/serializer branches incrementally, starting with simple import/export surfaces.

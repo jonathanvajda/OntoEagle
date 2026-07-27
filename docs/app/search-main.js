@@ -21,7 +21,14 @@ import { defaultSearchOptions } from './types.js';
 import { mintBundleIri, BUNDLE_LS_KEY, setShoppingCartCount, loadSlimBundleDoc, getShoppingCartCountFromStorage} from './bundler-core.js';
 import { importUserOntologyFile as importUserOntologyFileToIdb } from './ontology-meta.js';
 import { shortIri } from './namespaces.js';
-import { iriForNamespaceId } from './shared/namespace-registry/index.js';
+import {
+  iriForNamespaceId,
+  namespacePrefixMapFromRegistry
+} from './shared/namespace-registry/index.js';
+import {
+  createRdfQuadsFromObjects,
+  rdfDatasetToJsonLdGraph
+} from './shared/rdf-io/index.js';
   
 
 // Minimal IDB wrappers (you can expand these in indexeddb.min.js later)
@@ -82,6 +89,16 @@ let options = structuredClone(defaultSearchOptions);
 let searchReady = false;
 const DATASET_SCHEMA_VERSION = 2;
 const XSD_ANY_URI_IRI = iriForNamespaceId('xsd', 'anyURI').value;
+const COMMON_PREFIXES = namespacePrefixMapFromRegistry();
+const SLIM_BUNDLE_CONTEXT = Object.freeze({
+  rdf: COMMON_PREFIXES.rdf,
+  rdfs: COMMON_PREFIXES.rdfs,
+  skos: COMMON_PREFIXES.skos,
+  owl: COMMON_PREFIXES.owl,
+  'rdfs:label': iriForNamespaceId('rdfs', 'label').value,
+  'rdfs:isDefinedBy': iriForNamespaceId('rdfs', 'isDefinedBy').value,
+  'skos:definition': iriForNamespaceId('skos', 'definition').value
+});
 const OWL_TYPE_IRIS = Object.freeze([
   'Class',
   'ObjectProperty',
@@ -449,6 +466,34 @@ function addItemToSlimBundle(bundleDoc, itemNode) {
   return { memberCount: members.length, changed };
 }
 
+function createSlimBundleItemNode(doc) {
+  const source = {
+    iri: doc.iri,
+    type: doc.type ? [`owl:${doc.type}`] : [],
+    label: doc.label || doc.iri,
+    definition: doc.definition || '',
+    curatedIn: doc.curatedIn || doc.curated_in || ''
+  };
+  const { quads, warnings } = createRdfQuadsFromObjects([source], {
+    subject: 'iri',
+    type: 'type',
+    properties: {
+      label: 'http://www.w3.org/2000/01/rdf-schema#label',
+      definition: 'http://www.w3.org/2004/02/skos/core#definition',
+      curatedIn: {
+        predicate: 'http://www.w3.org/2000/01/rdf-schema#isDefinedBy',
+        termType: 'iri'
+      }
+    }
+  });
+  if (warnings.length) console.warn('Slim bundle item RDF mapping warnings:', warnings);
+  return rdfDatasetToJsonLdGraph(quads, { context: SLIM_BUNDLE_CONTEXT })[0] || {
+    '@id': doc.iri,
+    '@type': source.type,
+    'rdfs:label': { '@value': source.label }
+  };
+}
+
 
 
 /**
@@ -672,22 +717,7 @@ function renderDetails(doc) {
 
   if (btn) {
     btn.onclick = () => {
-      // Build the JSON-LD node to store. Use your doc object as the source of truth.
-      // Map your OntologyDocument-ish object into JSON-LD node shape.
-      const itemNode = {
-        "@id": doc.iri,
-        "@type": Array.isArray(doc.type)
-          ? doc.type
-          : doc.type
-            ? [`owl:${doc.type}`] // simple mapping; ok for your example
-            : [],
-        "rdfs:label": doc.label || doc.iri
-      };
-
-      // Optional fields (only write if present)
-      if (doc.definition) itemNode["skos:definition"] = doc.definition;
-      if (doc.curatedIn) itemNode["rdfs:isDefinedBy"] = { "@id": doc.curatedIn }; // if you store that
-      // If you store citations/examples/clarifications, you can map them too.
+      const itemNode = createSlimBundleItemNode(doc);
 
       const bundleDoc = loadSlimBundleDoc();
       const { memberCount } = addItemToSlimBundle(bundleDoc, itemNode);

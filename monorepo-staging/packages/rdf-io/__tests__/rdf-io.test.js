@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import {
   RDF_TYPE,
   createRdfDataset,
@@ -6,9 +7,11 @@ import {
   literal,
   namedNode,
   parseRdfText,
+  parseRdfTextWithAdapters,
   quad,
   rdfDatasetToJsonLdGraph,
   serializeRdfDataset,
+  serializeRdfDatasetWithAdapters,
   serializeRdfDatasetToNQuads
 } from '../src/index.js';
 
@@ -192,3 +195,163 @@ describe('JSON-LD projection depends on RDF quads', () => {
     ]);
   });
 });
+
+describe('vendor adapter layer', () => {
+  test('parses and serializes N3-backed formats through an injected N3 runtime', async () => {
+    const runtime = { N3: createMockN3Runtime() };
+    const parsed = await parseRdfTextWithAdapters('<http://ex/s> <http://ex/p> "v" .', {
+      format: 'turtle',
+      runtime
+    });
+
+    expect(parsed.sourceFormat).toBe('turtle');
+    expect(parsed.quads).toHaveLength(1);
+    expect(parsed.prefixes).toEqual({ ex: 'http://ex/' });
+
+    const serialized = await serializeRdfDatasetWithAdapters(parsed.dataset, {
+      format: 'turtle',
+      runtime,
+      prefixes: { ex: 'http://ex/' }
+    });
+    expect(serialized).toEqual({
+      text: '<http://ex/s> <http://ex/p> "v" .\n',
+      format: 'turtle',
+      mimeType: 'text/turtle',
+      warnings: []
+    });
+  });
+
+  test('parses and serializes JSON-LD through injected jsonld plus N3 runtimes', async () => {
+    const runtime = {
+      N3: createMockN3Runtime(),
+      jsonld: {
+        toRDF: jest.fn(async () => '<http://ex/s> <http://ex/p> "v" .\n'),
+        fromRDF: jest.fn(async () => [{ '@id': 'http://ex/s', 'http://ex/p': [{ '@value': 'v' }] }]),
+        compact: jest.fn(async (expanded, context) => ({ '@context': context, '@graph': expanded }))
+      }
+    };
+
+    const parsed = await parseRdfTextWithAdapters('{"@id":"http://ex/s"}', {
+      format: 'jsonld',
+      runtime
+    });
+    expect(parsed.sourceFormat).toBe('jsonld');
+    expect(parsed.quads).toHaveLength(1);
+    expect(runtime.jsonld.toRDF).toHaveBeenCalled();
+
+    const serialized = await serializeRdfDatasetWithAdapters(parsed.dataset, {
+      format: 'jsonld',
+      runtime,
+      context: { p: 'http://ex/p' }
+    });
+    expect(JSON.parse(serialized.text)).toEqual({
+      '@context': { p: 'http://ex/p' },
+      '@graph': [{ '@id': 'http://ex/s', 'http://ex/p': [{ '@value': 'v' }] }]
+    });
+    expect(runtime.jsonld.fromRDF).toHaveBeenCalledWith(expect.stringContaining('<http://ex/s>'), { format: 'application/n-quads' });
+  });
+
+  test('parses and serializes RDF/XML through an injected rdflib runtime', async () => {
+    const runtime = { $rdf: createMockRdflibRuntime() };
+    const parsed = await parseRdfTextWithAdapters('<rdf:RDF />', {
+      format: 'rdfxml',
+      runtime,
+      baseIri: 'http://ex/base'
+    });
+
+    expect(parsed.sourceFormat).toBe('rdfxml');
+    expect(parsed.quads).toHaveLength(1);
+    expect(parsed.quads[0]).toEqual(expect.objectContaining({
+      subject: namedNode('http://ex/s'),
+      predicate: namedNode('http://ex/p')
+    }));
+
+    const serialized = await serializeRdfDatasetWithAdapters(parsed.dataset, {
+      format: 'rdfxml',
+      runtime,
+      baseIri: 'http://ex/base',
+      prefixes: { ex: 'http://ex/' }
+    });
+    expect(serialized.text).toBe('<rdf:RDF />');
+    expect(serialized.mimeType).toBe('application/rdf+xml');
+  });
+});
+
+function createMockN3Runtime() {
+  class Store {
+    constructor() {
+      this.items = [];
+    }
+    addQuad(item) {
+      this.items.push(item);
+    }
+    addQuads(items) {
+      this.items.push(...items);
+    }
+    getQuads() {
+      return this.items.slice();
+    }
+    [Symbol.iterator]() {
+      return this.items[Symbol.iterator]();
+    }
+  }
+
+  return {
+    Store,
+    Parser: class {
+      constructor() {
+        this._prefixes = { ex: 'http://ex/' };
+      }
+      parse() {
+        return [quad('http://ex/s', 'http://ex/p', 'v')];
+      }
+    },
+    Writer: class {
+      constructor() {
+        this.items = [];
+      }
+      addQuads(items) {
+        this.items.push(...items);
+      }
+      end(callback) {
+        callback(null, serializeRdfDatasetToNQuads(this.items).replace(/ <[^>]+> \./g, ' .'));
+      }
+    }
+  };
+}
+
+function createMockRdflibRuntime() {
+  return {
+    graph() {
+      return {
+        statements: [],
+        add(subject, predicate, object) {
+          this.statements.push({ subject, predicate, object });
+        },
+        setPrefixForURI(prefix, iri) {
+          this.prefixes = { ...(this.prefixes || {}), [prefix]: iri };
+        }
+      };
+    },
+    parse(_text, graph, _baseIri, _mime, callback) {
+      graph.statements.push({
+        subject: { termType: 'NamedNode', value: 'http://ex/s' },
+        predicate: { termType: 'NamedNode', value: 'http://ex/p' },
+        object: { termType: 'Literal', value: 'v', datatype: { value: 'http://www.w3.org/2001/XMLSchema#string' } }
+      });
+      callback(null);
+    },
+    serialize(_target, _graph, _baseIri, _mime, callback) {
+      callback(null, '<rdf:RDF />');
+    },
+    sym(value) {
+      return { termType: 'NamedNode', value };
+    },
+    literal(value, language, datatype) {
+      return { termType: 'Literal', value, language: language || '', datatype };
+    },
+    blankNode(value) {
+      return { termType: 'BlankNode', value };
+    }
+  };
+}

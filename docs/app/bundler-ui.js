@@ -29,6 +29,10 @@ import {
   readFileAsText
 } from './shared/browser-file-io/index.js';
 import { parseDelimitedText } from './shared/tabular-io/index.js';
+import {
+  createRdfQuadsFromJsonLdGraph,
+  serializeRdfDataset
+} from './shared/rdf-io/index.js';
 
 // Minimal IDB wrappers (you can expand these in indexeddb.min.js later)
 import {
@@ -367,7 +371,13 @@ function bundlerInit() {
 
   btnExportSlimJsonLd?.addEventListener('click', async () => {
     const slim = await buildCurrentSlim();
-    downloadTextFile(`ontoeagle-slim-${Date.now()}.jsonld`, JSON.stringify(slim.jsonld, null, 2), {
+    const { quads, warnings } = createRdfQuadsFromJsonLdGraph(slim.jsonld);
+    if (warnings.length) console.warn('Slim JSON-LD export warnings:', warnings);
+    const { text } = serializeRdfDataset(quads, {
+      format: 'jsonld',
+      context: slim.jsonld?.['@context']
+    });
+    downloadTextFile(`ontoeagle-slim-${Date.now()}.jsonld`, text, {
       mimeType: DOWNLOAD_MIME.jsonLd
     });
   });
