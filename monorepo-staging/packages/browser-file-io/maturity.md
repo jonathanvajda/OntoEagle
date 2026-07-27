@@ -30,6 +30,7 @@
 |MAT-007|BFI-011 Axiolotl `downloadText`|1|3|Useful app-wide download surface, with fallback if module import fails|Dynamic import makes completion/error behavior opaque; classic-script coupling; no tests|After package adoption, make caller awaitable or document fire-and-forget behavior|TBD|2026-07-26|
 |MAT-008|BFI-007/BFI-008/BFI-012/BFI-018/BFI-020/BFI-023 mixed read+parse flows|1|2|Important consumers expose real app constraints|Not reusable as browser utilities; mixed parser/storage/UI side effects|Document as callers; split browser reads from domain parsing in later capability cycles|TBD|2026-07-26|
 |MAT-009|BFI-002 `getAcceptExtensions`|3|4|Pure, deterministic, easy to test|Currently under browser helper module but depends only on format registry|Decide whether package boundary is `format-registry` or `browser-file-io/createAcceptAttribute`|TBD|2026-07-26|
+|MAT-010|`@ontoeagle/browser-file-io` package candidate|4|5|Dedicated package structure now exists with JSDoc-covered functions, focused Jest tests, DOM/URL/Blob injection points, and documented contracts|No consuming app has adopted the package yet; local duplicates still exist|Pilot adoption in one simple app and one high-constraint app, then delete duplicates once behavior is confirmed|TBD|2026-07-26|
 
 ## Promotion Checklist
 
@@ -58,5 +59,5 @@ Use this checklist before rating anything `5 - Canonical`.
 
 ## Notes
 
-- No function should be rated `5 - Canonical` yet. The capability has been surveyed and partially copied, but no dedicated `browser-file-io` package with tests and fixtures exists yet.
-- Current best candidates for promotion are BFI-001, BFI-024, and BFI-025.
+- No function should be rated `5 - Canonical` yet. The capability has a package-ready candidate, but the intended consumers have not adopted it and local duplicates still exist.
+- The package candidate promotes the stable parts of BFI-001, BFI-002, BFI-024, and BFI-025 without importing parser, serializer, UI, storage, or vendor spreadsheet behavior into the browser utility boundary.
