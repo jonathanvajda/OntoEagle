@@ -25,7 +25,7 @@ import {
 import { extractDocumentsFromJsonLd, mapByIri, parseGraphJsonLdText } from './rdf_extract.js';
 import { buildSlimFromSeeds } from './slim-core.js';
 import { readFileAsText } from './rdf_io.js';
-import { downloadTextFile } from './shared/format-registry/browser-download.js';
+import { downloadTextFile } from './shared/format-registry/browser-file-actions.js';
 
 // Minimal IDB wrappers (you can expand these in indexeddb.min.js later)
 import {

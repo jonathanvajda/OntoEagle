@@ -7,7 +7,7 @@ import {
   mergeRegistryEntries,
   removeStoredUserOntologyRecordsForDataset
 } from './ontology-meta.js';
-import { downloadTextFile } from './shared/format-registry/browser-download.js';
+import { downloadTextFile } from './shared/format-registry/browser-file-actions.js';
 import { SUPPORTED_MIME_DESCRIPTORS } from './shared/format-registry/index.js';
 import {
   idbDeleteDataset,

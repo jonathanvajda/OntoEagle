@@ -1,5 +1,5 @@
 
-import { downloadTextFile } from './shared/format-registry/browser-download.js';
+import { downloadTextFile } from './shared/format-registry/browser-file-actions.js';
 import {
   iriForNamespaceId
 } from './shared/namespace-registry/index.js';
