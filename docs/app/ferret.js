@@ -4,6 +4,10 @@ import {
   readFileAsText
 } from './shared/browser-file-io/index.js';
 import {
+  parseDelimitedText,
+  serializeDelimitedRecords
+} from './shared/tabular-io/index.js';
+import {
   iriForNamespaceId
 } from './shared/namespace-registry/index.js';
 
@@ -32,6 +36,15 @@ const DCTERMS = Object.freeze({
   modified: iriForNamespaceId('dcterms', 'modified').value,
   requires: iriForNamespaceId('dcterms', 'requires').value
 });
+const CQ_CSV_HEADERS = Object.freeze([
+  'cq_id', 'cq_title', 'cq_description', 'cq_created_date', 'cq_modified_date', 'cq_status',
+  'item_type', 'item_id', 'item_text',
+  'contributor_role', 'contributor_contact', 'contributor_notes',
+  'contributor_email_id', 'contributor_role_id',
+  'datasource_quality_notes',
+  'mermaid_diagram_text',
+  'database_query_text'
+]);
 
 const OKEA = {
   CQ: "https://github.com/jonathanvajda/okea/ont000002",
@@ -890,37 +903,13 @@ function downloadJSONLD() {
   });
 }
 
-function downloadCSV() {
-  console.log("Generating CSV...");
-
-  // 1. Define the columns for our normalized CSV
-  const headers = [
-    'cq_id', 'cq_title', 'cq_description', 'cq_created_date', 'cq_modified_date', 'cq_status',
-    'item_type', 'item_id', 'item_text',
-    'contributor_role', 'contributor_contact', 'contributor_notes',
-    'contributor_email_id', 'contributor_role_id',
-    'datasource_quality_notes',
-    'mermaid_diagram_text',
-    'database_query_text'
-  ];
-  const csvRows = [headers.join(',')]; // Start with the header row
-
-  // Helper function to escape CSV data
-  const escapeCSV = (str) => {
-    if (str === null || str === undefined) return '""';
-    const text = String(str);
-    if (text.includes('"') || text.includes(',') || text.includes('\n')) {
-      return `"${text.replace(/"/g, '""')}"`;
-    }
-    return `"${text}"`;
-  };
-
-  // 2. Find all the master CQ nodes
-  const cqNodes = allNodesCache.filter(n =>
+function createCompetencyQuestionCsvRecords(nodes) {
+  const records = [];
+  const sourceNodes = Array.isArray(nodes) ? nodes : [];
+  const cqNodes = sourceNodes.filter(n =>
     hasType(n, "https://github.com/jonathanvajda/okea/ont000002")
   );
 
-  // 3. Process each CQ and its related items
   cqNodes.forEach(cq => {
     const baseRow = {
       cq_id: cq['@id'] || '',
@@ -935,7 +924,7 @@ function downloadCSV() {
 
     // Process Contributors (Persons/Roles)
     const participantLinks = cq[DCTERMS.contributor] || [];
-    const participantNodes = allNodesCache.filter(n =>
+    const participantNodes = sourceNodes.filter(n =>
       participantLinks.some(p => p["@id"] === n["@id"]) && n["@type"].includes("https://www.commoncoreontologies.org/ont00001262")
     );
     participantNodes.forEach(pNode => {
@@ -944,8 +933,8 @@ function downloadCSV() {
       const emailId = pNode["https://www.commoncoreontologies.org/ont00001801"]?.[0]?.['@id'] ?? '';
       const roleLink = pNode["http://purl.obolibrary.org/obo/BFO_0000196"]?.[0]?.['@id'];
 
-      const emailNode = allNodesCache.find(n => n['@id'] === emailId);
-      const roleNode = allNodesCache.find(n => n['@id'] === roleLink);
+      const emailNode = sourceNodes.find(n => n['@id'] === emailId);
+      const roleNode = sourceNodes.find(n => n['@id'] === roleLink);
 
       const row = {
         ...baseRow,
@@ -960,7 +949,7 @@ function downloadCSV() {
         contributor_role_id: roleLink,
         datasource_quality_notes: ''
       };
-      csvRows.push(headers.map(header => escapeCSV(row[header])).join(','));
+      records.push(row);
     });
 
     // Process other item types (Subquestions, Logic, Data Sources)
@@ -974,7 +963,7 @@ function downloadCSV() {
 
     itemTypes.forEach(config => {
       // Process other item types
-      const itemNodes = allNodesCache.filter(n =>
+      const itemNodes = sourceNodes.filter(n =>
         (cq[config.link] || []).some(item => item?.["@id"] === n?.["@id"]) &&
         hasType(n, config.iri)
       );
@@ -1014,19 +1003,40 @@ function downloadCSV() {
           row.database_query_text = row.item_text;
         }
 
-        csvRows.push(headers.map(header => escapeCSV(row[header])).join(','));
+        records.push(row);
       });
   });
 
     // If a CQ has no items, create a single row for it.
     if (itemsFound === 0) {
       const row = { ...baseRow, item_type: 'CQ', item_id: baseRow.cq_id };
-      csvRows.push(headers.map(header => escapeCSV(row[header] || '')).join(','));
+      records.push(row);
     }
   });
 
-  // 4. Trigger the file download
-  const csvContent = csvRows.join('\n');
+  return records;
+}
+
+function parseCompetencyQuestionCsvText(text) {
+  const parsed = parseDelimitedText(text, {
+    delimiter: ',',
+    hasHeader: true,
+    trimHeaders: true,
+    trimCells: true
+  });
+  if (parsed.warnings.length) {
+    console.warn('CSV import warnings:', parsed.warnings);
+  }
+  return parsed.records;
+}
+
+function downloadCSV() {
+  console.log("Generating CSV...");
+  const csvContent = serializeDelimitedRecords(createCompetencyQuestionCsvRecords(allNodesCache), {
+    headers: [...CQ_CSV_HEADERS],
+    delimiter: ',',
+    trailingNewline: false
+  });
   downloadTextFile(`CQ_Export_${new Date().toISOString().slice(0, 10)}.csv`, csvContent, {
     mimeType: 'text/csv'
   });
@@ -1047,18 +1057,7 @@ async function handleCSVUpload(event) {
 
   try {
     const text = await readFileAsText(file);
-
-    // --- 1. PARSE THE CSV TEXT INTO ROW OBJECTS (Unchanged) ---
-    const rows = text.split('\n').filter(row => row.trim() !== '');
-    const headers = rows.shift().split(',').map(h => h.replace(/"/g, '').trim());
-    const data = rows.map(row => {
-      const values = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-      const obj = {};
-      headers.forEach((header, index) => {
-        obj[header] = values[index] ? values[index].replace(/"/g, '').trim() : '';
-      });
-      return obj;
-    });
+    const data = parseCompetencyQuestionCsvText(text);
     console.log("Parsed CSV data:", data);
 
     // --- 2. RECONSTRUCT THE GRAPH FROM THE FLAT DATA ---

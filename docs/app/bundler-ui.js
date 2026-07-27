@@ -28,6 +28,7 @@ import {
   downloadTextFile,
   readFileAsText
 } from './shared/browser-file-io/index.js';
+import { parseDelimitedText } from './shared/tabular-io/index.js';
 
 // Minimal IDB wrappers (you can expand these in indexeddb.min.js later)
 import {
@@ -56,6 +57,7 @@ const DOWNLOAD_MIME = Object.freeze({
   robotSeed: 'text/plain',
   turtle: 'text/turtle'
 });
+const IRI_PATTERN = /^(https?:|urn:)/i;
 
 /* ---------- DOM refs (bundler.html only) ---------- */
 
@@ -142,6 +144,29 @@ async function buildCurrentSlim() {
   const slim = buildSlimFromSeeds(docs, seedText, selectedSlimOptions());
   setSlimStatus(`Slim contains ${slim.iris.length} resources. ${slim.missing.length ? `${slim.missing.length} seed(s) not found.` : 'All seeds found.'}`);
   return slim;
+}
+
+function isCsvSeedFile(fileName) {
+  return /\.csv$/i.test(String(fileName || ''));
+}
+
+function extractSeedTextFromCsv(text) {
+  const parsed = parseDelimitedText(text, {
+    delimiter: ',',
+    hasHeader: false,
+    trimCells: true
+  });
+  const iris = [];
+  for (const row of parsed.rows) {
+    for (const cell of row) {
+      if (IRI_PATTERN.test(cell)) iris.push(cell);
+    }
+  }
+  return Array.from(new Set(iris)).join('\n') + (iris.length ? '\n' : '');
+}
+
+function createSeedTextFromFileContent(file, text) {
+  return isCsvSeedFile(file?.name) ? extractSeedTextFromCsv(text) : text;
 }
 
 function fillBundleSelect(select, bundleIds) {
@@ -313,7 +338,8 @@ function bundlerInit() {
     const file = seedFileInput.files && seedFileInput.files[0];
     if (!file || !txtSeedInput) return;
     try {
-      txtSeedInput.value = await readFileAsText(file);
+      const text = await readFileAsText(file);
+      txtSeedInput.value = createSeedTextFromFileContent(file, text);
       setSlimStatus(`Loaded seeds from ${file.name}.`);
     } catch (err) {
       console.error('Seed file read failed:', err);
