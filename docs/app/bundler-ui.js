@@ -24,8 +24,10 @@ import {
 
 import { extractDocumentsFromJsonLd, mapByIri, parseGraphJsonLdText } from './rdf_extract.js';
 import { buildSlimFromSeeds } from './slim-core.js';
-import { readFileAsText } from './rdf_io.js';
-import { downloadTextFile } from './shared/format-registry/browser-file-actions.js';
+import {
+  downloadTextFile,
+  readFileAsText
+} from './shared/browser-file-io/index.js';
 
 // Minimal IDB wrappers (you can expand these in indexeddb.min.js later)
 import {
@@ -48,6 +50,12 @@ const EX_ITEM_NODE = {
   'skos:definition': 'A Stasis of Regulation wherein the regulation is a legal directive.',
   'rdfs:isDefinedBy': { '@id': 'The Informed Consent Ontology (ICO)' }
 };
+
+const DOWNLOAD_MIME = Object.freeze({
+  jsonLd: 'application/ld+json',
+  robotSeed: 'text/plain',
+  turtle: 'text/turtle'
+});
 
 /* ---------- DOM refs (bundler.html only) ---------- */
 
@@ -295,16 +303,24 @@ function bundlerInit() {
 
     const includeLabels = !!chkIncludeLabels?.checked;
     const text = toRobotSeedText(doc, bundleId, includeLabels);
-    downloadTextFile(`bundle-${shortId(bundleId)}.txt`, text);
+    downloadTextFile(`bundle-${shortId(bundleId)}.txt`, text, {
+      mimeType: DOWNLOAD_MIME.robotSeed
+    });
     console.info('Exported bundle seed text:');
   });
 
   seedFileInput?.addEventListener('change', async () => {
     const file = seedFileInput.files && seedFileInput.files[0];
     if (!file || !txtSeedInput) return;
-    txtSeedInput.value = await readFileAsText(file);
-    setSlimStatus(`Loaded seeds from ${file.name}.`);
-    seedFileInput.value = '';
+    try {
+      txtSeedInput.value = await readFileAsText(file);
+      setSlimStatus(`Loaded seeds from ${file.name}.`);
+    } catch (err) {
+      console.error('Seed file read failed:', err);
+      setSlimStatus(`Failed to read ${file.name}: ${err?.message || err}`);
+    } finally {
+      seedFileInput.value = '';
+    }
   });
 
   btnLoadBundleSeeds?.addEventListener('click', () => {
@@ -318,12 +334,16 @@ function bundlerInit() {
 
   btnExportSlimTurtle?.addEventListener('click', async () => {
     const slim = await buildCurrentSlim();
-    downloadTextFile(`ontoeagle-slim-${Date.now()}.ttl`, slim.turtle);
+    downloadTextFile(`ontoeagle-slim-${Date.now()}.ttl`, slim.turtle, {
+      mimeType: DOWNLOAD_MIME.turtle
+    });
   });
 
   btnExportSlimJsonLd?.addEventListener('click', async () => {
     const slim = await buildCurrentSlim();
-    downloadTextFile(`ontoeagle-slim-${Date.now()}.jsonld`, JSON.stringify(slim.jsonld, null, 2));
+    downloadTextFile(`ontoeagle-slim-${Date.now()}.jsonld`, JSON.stringify(slim.jsonld, null, 2), {
+      mimeType: DOWNLOAD_MIME.jsonLd
+    });
   });
 
   btnMerge?.addEventListener('click', () => {

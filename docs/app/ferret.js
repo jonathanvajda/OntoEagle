@@ -1,5 +1,8 @@
 
-import { downloadTextFile } from './shared/format-registry/browser-file-actions.js';
+import {
+  downloadTextFile,
+  readFileAsText
+} from './shared/browser-file-io/index.js';
 import {
   iriForNamespaceId
 } from './shared/namespace-registry/index.js';
@@ -882,7 +885,9 @@ async function deleteCQ(cqId) {
 
 function downloadJSONLD() {
   const jsonLD = JSON.stringify(allNodesCache, null, 2);
-  downloadTextFile('CQDatabase.jsonld', jsonLD);
+  downloadTextFile('CQDatabase.jsonld', jsonLD, {
+    mimeType: 'application/ld+json'
+  });
 }
 
 function downloadCSV() {
@@ -1022,7 +1027,9 @@ function downloadCSV() {
 
   // 4. Trigger the file download
   const csvContent = csvRows.join('\n');
-  downloadTextFile(`CQ_Export_${new Date().toISOString().slice(0, 10)}.csv`, csvContent);
+  downloadTextFile(`CQ_Export_${new Date().toISOString().slice(0, 10)}.csv`, csvContent, {
+    mimeType: 'text/csv'
+  });
   console.log("CSV generation complete.");
 }
 
@@ -1038,9 +1045,8 @@ async function handleCSVUpload(event) {
     return;
   }
 
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    const text = e.target.result;
+  try {
+    const text = await readFileAsText(file);
 
     // --- 1. PARSE THE CSV TEXT INTO ROW OBJECTS (Unchanged) ---
     const rows = text.split('\n').filter(row => row.trim() !== '');
@@ -1206,9 +1212,12 @@ async function handleCSVUpload(event) {
       console.error("Failed to save uploaded data:", error);
       alert("An error occurred while saving the uploaded data. Check the console for details.");
     }
-  };
-  reader.readAsText(file);
-  event.target.value = ''; // Reset file input
+  } catch (error) {
+    console.error("Failed to read uploaded CSV:", error);
+    alert("An error occurred while reading the uploaded CSV. Check the console for details.");
+  } finally {
+    event.target.value = ''; // Reset file input
+  }
 }
 
 // ======================================================

@@ -7,7 +7,10 @@ import {
   mergeRegistryEntries,
   removeStoredUserOntologyRecordsForDataset
 } from './ontology-meta.js';
-import { downloadTextFile } from './shared/format-registry/browser-file-actions.js';
+import {
+  createAcceptAttribute,
+  downloadTextFile
+} from './shared/browser-file-io/index.js';
 import { SUPPORTED_MIME_DESCRIPTORS } from './shared/format-registry/index.js';
 import {
   idbDeleteDataset,
@@ -19,10 +22,9 @@ const modalId = 'ontCatalogDataManagerModal';
 const fileInputId = 'ontCatalogDataManagerFile';
 const listId = 'ontCatalogDataManagerList';
 const statusId = 'ontCatalogDataManagerStatus';
-const rdfFileAccept = Object.values(SUPPORTED_MIME_DESCRIPTORS)
-  .filter((descriptor) => descriptor.category === 'rdf')
-  .flatMap((descriptor) => descriptor.extensions.map((extension) => `.${extension}`))
-  .join(',');
+const rdfFileAccept = createAcceptAttribute(Object.values(SUPPORTED_MIME_DESCRIPTORS), {
+  category: 'rdf'
+});
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -98,7 +100,9 @@ function ensureModal() {
 
   modal.querySelector('[data-manager-action="export"]')?.addEventListener('click', async () => {
     const registry = mergeRegistryEntries(await loadDefaultRegistry(), loadRegistryOverrides());
-    downloadTextFile('ontology-registry.json', exportRegistryJson(registry));
+    downloadTextFile('ontology-registry.json', exportRegistryJson(registry), {
+      mimeType: 'application/json'
+    });
     setManagerStatus('Registry JSON exported.');
   });
 

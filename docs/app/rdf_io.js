@@ -8,6 +8,7 @@ import {
   getN3ParserFormatForMimeType,
   getSupportedMimeTypeForFilename
 } from './shared/format-registry/index.js';
+import { readFileAsText as readBrowserFileAsText } from './shared/browser-file-io/index.js';
 
 export const RDF_FORMATS = Object.freeze({
   TURTLE: SUPPORTED_MIME_DESCRIPTORS.turtle.mimeType,
@@ -28,12 +29,7 @@ export function detectRdfFormat(fileName) {
 }
 
 export function readFileAsText(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('File read error'));
-    reader.onload = () => resolve(String(reader.result || ''));
-    reader.readAsText(file);
-  });
+  return readBrowserFileAsText(file);
 }
 
 function getRuntime() {
