@@ -7,7 +7,8 @@ Browser file I/O is now separated from parser and serializer behavior. This note
 ## Boundary Rule
 
 - `browser-file-io` should read `File`/`Blob`, create text blobs, trigger downloads, and build file-picker accept attributes.
-- Parser packages should own format detection decisions, parser options, vendor parser adapters, parsed output shapes, parser errors, warning normalization, and fixtures.
+- `format-registry` should remain the authority for generic filename, extension, MIME, descriptor, and parser-format metadata.
+- Parser packages should consume `format-registry` descriptors to choose parser pipelines, parser options, vendor parser adapters, parsed output shapes, parser errors, warning normalization, and fixtures.
 - App modules should orchestrate UI state and call parser/browser packages, but should not own low-level browser I/O or shared parser contracts long term.
 
 ## Follow-Up Targets
