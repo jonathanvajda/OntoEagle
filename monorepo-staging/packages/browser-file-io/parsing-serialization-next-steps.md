@@ -115,6 +115,34 @@ Likely promoted functions:
 |iri-swapper RDF|Promote mapping parser and RDF serializer/rewrite behavior separately.|
 |iri-swapper SPARQL|Promote mapping parser and SPARQL rewrite behavior separately.|
 
+### IRI Swapper Browser-File Read Cleanup
+
+IRI Swapper is aligned with this cycle on downloads, but its read side should be completed during the parsing cycles so parser adoption and file-boundary adoption happen together.
+
+Current state:
+
+- `D:\GitHub\iri-swapper\docs\app\ont-iri-swapper.js` imports and uses `downloadTextFile`.
+- `D:\GitHub\iri-swapper\docs\app\sparql-iri-swapper.js` imports and uses `downloadTextFile`.
+- Both pages include the piecemeal `browser-file-io` shared modules and precache them.
+- The RDF and SPARQL app modules still call native `file.text()` and `file.arrayBuffer()` directly before RDF, SPARQL, CSV/TSV, and XLS/XLSX parsing.
+
+Fix when RDF/SPARQL/tabular parser packages are adopted:
+
+- Import `readFileAsText` and `readFileAsArrayBuffer` from `./shared/browser-file-io/index.js` in both IRI Swapper app modules.
+- Replace ontology/query/mapping text reads with `readFileAsText(file)`.
+- Replace workbook binary reads with `readFileAsArrayBuffer(file)`.
+- Keep parsing decisions in the parser packages: RDF parser, SPARQL parser/rewrite, tabular parser, and IRI mapping parser should consume the text or buffer returned by `browser-file-io`.
+- Do not move PapaParse, SheetJS, N3, jsonld, rdflib, token scanning, rewrite logic, or IndexedDB persistence into `browser-file-io`.
+
+Known direct-read locations as of 2026-07-27:
+
+- `D:\GitHub\iri-swapper\docs\app\ont-iri-swapper.js`: ontology text read in `parseOntologyToNQuads`.
+- `D:\GitHub\iri-swapper\docs\app\ont-iri-swapper.js`: CSV/TSV mapping text read in `ingestMapping`.
+- `D:\GitHub\iri-swapper\docs\app\ont-iri-swapper.js`: XLS/XLSX mapping buffer read in `ingestMapping`.
+- `D:\GitHub\iri-swapper\docs\app\sparql-iri-swapper.js`: query text read in `ingestQueryFile`.
+- `D:\GitHub\iri-swapper\docs\app\sparql-iri-swapper.js`: CSV/TSV mapping text read in `ingestMappingFile`.
+- `D:\GitHub\iri-swapper\docs\app\sparql-iri-swapper.js`: XLS/XLSX mapping buffer read in `ingestMappingFile`.
+
 ## First Inventory Pass
 
 Start by copying the capability templates into one or more new package folders. Recommended order:
