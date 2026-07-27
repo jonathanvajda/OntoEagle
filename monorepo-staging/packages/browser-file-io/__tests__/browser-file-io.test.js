@@ -10,7 +10,7 @@ import {
   readFileAsText
 } from '../src/index.js';
 
-function makeFileReaderCtor({ result, error, throwOnRead = false } = {}) {
+function createMockFileReaderConstructor({ result, error, throwOnRead = false } = {}) {
   const instances = [];
   class MockFileReader {
     constructor() {
@@ -92,14 +92,14 @@ describe('browser-file-io read adapters', () => {
 
   test('readFileAsText uses FileReader when encoding is supplied and preserves error detail', async () => {
     const nativeError = new Error('disk said no');
-    const FileReaderCtor = makeFileReaderCtor({ error: nativeError });
-    await expect(readFileAsText({}, { encoding: 'utf-16le', FileReaderCtor })).rejects.toBe(nativeError);
-    expect(FileReaderCtor.instances[0].encoding).toBe('utf-16le');
+    const FileReaderConstructor = createMockFileReaderConstructor({ error: nativeError });
+    await expect(readFileAsText({}, { encoding: 'utf-16le', FileReaderConstructor })).rejects.toBe(nativeError);
+    expect(FileReaderConstructor.instances[0].encoding).toBe('utf-16le');
   });
 
   test('readFileAsText resolves empty FileReader results as an empty string', async () => {
-    const FileReaderCtor = makeFileReaderCtor({ result: null });
-    await expect(readFileAsText({}, { preferNativeText: false, FileReaderCtor })).resolves.toBe('');
+    const FileReaderConstructor = createMockFileReaderConstructor({ result: null });
+    await expect(readFileAsText({}, { preferNativeText: false, FileReaderConstructor })).resolves.toBe('');
   });
 
   test('readFileAsArrayBuffer prefers native Blob.arrayBuffer when no signal is needed', async () => {
@@ -110,16 +110,45 @@ describe('browser-file-io read adapters', () => {
   });
 
   test('readFileAsArrayBuffer uses FileReader fallback and rejects non-ArrayBuffer results', async () => {
-    const FileReaderCtor = makeFileReaderCtor({ result: 'not binary' });
-    await expect(readFileAsArrayBuffer({}, { preferNativeArrayBuffer: false, FileReaderCtor }))
+    const FileReaderConstructor = createMockFileReaderConstructor({ result: 'not binary' });
+    await expect(readFileAsArrayBuffer({}, { preferNativeArrayBuffer: false, FileReaderConstructor }))
       .rejects.toThrow('File read did not produce an ArrayBuffer.');
   });
 
   test('read adapters reject missing browser primitives clearly', async () => {
-    await expect(readFileAsText({}, { preferNativeText: false, FileReaderCtor: undefined }))
+    await expect(readFileAsText({}, { preferNativeText: false, FileReaderConstructor: undefined }))
       .rejects.toThrow('FileReader is not available');
-    await expect(readFileAsArrayBuffer({}, { preferNativeArrayBuffer: false, FileReaderCtor: undefined }))
+    await expect(readFileAsArrayBuffer({}, { preferNativeArrayBuffer: false, FileReaderConstructor: undefined }))
       .rejects.toThrow('FileReader is not available');
+  });
+
+  test('read adapters reject invalid file inputs before touching browser APIs', async () => {
+    expect(() => readFileAsText(null)).toThrow('readFileAsText expected a File or Blob-like object.');
+    expect(() => readFileAsArrayBuffer(undefined)).toThrow('readFileAsArrayBuffer expected a File or Blob-like object.');
+  });
+
+  test('readFileAsText rejects already-aborted reads without constructing FileReader', async () => {
+    const FileReaderConstructor = jest.fn();
+    const controller = new AbortController();
+    controller.abort('cancelled');
+
+    await expect(readFileAsText({}, {
+      preferNativeText: false,
+      FileReaderConstructor,
+      signal: controller.signal
+    })).rejects.toMatchObject({
+      name: 'AbortError',
+      message: 'cancelled'
+    });
+    expect(FileReaderConstructor).not.toHaveBeenCalled();
+  });
+
+  test('readFileAsArrayBuffer preserves setup errors from FileReader construction/read', async () => {
+    const FileReaderConstructor = createMockFileReaderConstructor({ throwOnRead: true });
+    await expect(readFileAsArrayBuffer({}, {
+      preferNativeArrayBuffer: false,
+      FileReaderConstructor
+    })).rejects.toThrow('setup failed');
   });
 });
 
@@ -175,6 +204,39 @@ describe('browser-file-io Blob and download adapters', () => {
     expect(result.fileName).toBe('rows.csv');
     expect(urlRef.createObjectURL.mock.calls[0][0].type).toBe('text/csv;charset=utf-8');
     expect(await urlRef.createObjectURL.mock.calls[0][0].text()).toBe('a,b');
+  });
+
+  test('downloadBlob supports delayed revocation and no-append mode', () => {
+    jest.useFakeTimers();
+    try {
+      const documentRef = makeDocumentMock();
+      const urlRef = {
+        createObjectURL: jest.fn(() => 'blob:delayed'),
+        revokeObjectURL: jest.fn()
+      };
+
+      const result = downloadBlob('delayed.txt', new Blob(['x']), {
+        documentRef,
+        urlRef,
+        appendToDocument: false,
+        revokeDelayMs: 25
+      });
+
+      expect(result).toEqual({ fileName: 'delayed.txt', objectUrl: 'blob:delayed', revokeDelayMs: 25 });
+      expect(documentRef.body.appended).toHaveLength(0);
+      expect(documentRef.anchors[0].clicked).toBe(true);
+      expect(urlRef.revokeObjectURL).not.toHaveBeenCalled();
+      jest.advanceTimersByTime(25);
+      expect(urlRef.revokeObjectURL).toHaveBeenCalledWith('blob:delayed');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  test('Blob and download helpers fail clearly when required browser APIs are missing', () => {
+    expect(() => downloadBlob('x.txt', {}, { documentRef: {}, urlRef: URL })).toThrow('document.createElement is not available');
+    expect(() => downloadBlob('x.txt', {}, { documentRef: makeDocumentMock(), urlRef: {} }))
+      .toThrow('URL.createObjectURL and URL.revokeObjectURL are required');
   });
 
   test('normalizeDownloadFileName provides a stable fallback', () => {

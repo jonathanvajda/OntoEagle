@@ -6,7 +6,7 @@
  * @typedef {Object} TextBlobOptions
  * @property {string} [mimeType='text/plain'] - MIME type to apply to the Blob.
  * @property {string | false} [charset='utf-8'] - Charset appended unless false or already present.
- * @property {typeof Blob} [BlobCtor] - Test seam or browser Blob constructor.
+ * @property {typeof Blob} [BlobConstructor] - Browser Blob constructor, mainly supplied by tests.
  */
 
 /**
@@ -21,12 +21,12 @@
  * @returns {Blob} Text Blob.
  */
 export function createTextBlob(text, options = {}) {
-  const BlobCtor = options.BlobCtor || globalThis.Blob;
-  if (typeof BlobCtor !== 'function') {
+  const BlobConstructor = options.BlobConstructor || globalThis.Blob;
+  if (typeof BlobConstructor !== 'function') {
     throw new Error('Blob is not available in this environment.');
   }
 
-  return new BlobCtor([String(text ?? '')], {
+  return new BlobConstructor([String(text ?? '')], {
     type: normalizeTextMimeType(options.mimeType, options.charset)
   });
 }
@@ -43,4 +43,3 @@ export function normalizeTextMimeType(mimeType = 'text/plain', charset = 'utf-8'
   if (charset === false || /;\s*charset=/i.test(base)) return base;
   return `${base};charset=${charset || 'utf-8'}`;
 }
-

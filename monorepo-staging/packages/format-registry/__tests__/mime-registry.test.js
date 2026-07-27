@@ -1,6 +1,10 @@
+import { jest } from '@jest/globals';
 import {
+  downloadTextFile,
+  getAcceptExtensions,
   getD3JsonOutputMimeDescriptor,
   getFilenameExtension,
+  guessRdfMimeTypeFromText,
   getMermaidOutputMimeDescriptor,
   getN3ParserFormatForMimeType,
   getOutputMimeTypeForExtension,
@@ -11,6 +15,34 @@ import {
   rdfSerializationPreservesNamedGraphs,
   normalizeSupportedMimeType
 } from '../src/index.js';
+
+function makeDocumentMock() {
+  const body = {
+    appended: [],
+    appendChild(node) {
+      this.appended.push(node);
+    },
+    removeChild(node) {
+      node.removed = true;
+    }
+  };
+  const anchors = [];
+  return {
+    body,
+    anchors,
+    createElement(tagName) {
+      if (tagName !== 'a') throw new Error(`Unexpected element: ${tagName}`);
+      const anchor = {
+        clicked: false,
+        click() {
+          this.clicked = true;
+        }
+      };
+      anchors.push(anchor);
+      return anchor;
+    }
+  };
+}
 
 describe('format-registry MIME helpers', () => {
   test('getFilenameExtension returns a normalized final extension', () => {
@@ -170,5 +202,50 @@ describe('format-registry MIME helpers', () => {
     expect(rdfSerializationPreservesNamedGraphs('ttl')).toBe(false);
     expect(rdfSerializationPreservesNamedGraphs('rdf')).toBe(false);
     expect(rdfSerializationPreservesNamedGraphs('csv')).toBe(false);
+  });
+
+  test('legacy browser accept helper filters registry descriptors by category', () => {
+    expect(getAcceptExtensions('rdf')).toContain('.ttl');
+    expect(getAcceptExtensions('rdf')).toContain('.jsonld');
+    expect(getAcceptExtensions('rdf')).not.toContain('.csv');
+    expect(getAcceptExtensions('query')).toBe('.rq,.sparql');
+  });
+
+  test('guessRdfMimeTypeFromText handles paradigmatic RDF snippets and plain text fallback', () => {
+    expect(guessRdfMimeTypeFromText('{"@context":{"ex":"https://example.org/"}}')).toBe('application/ld+json');
+    expect(guessRdfMimeTypeFromText('<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"></rdf:RDF>')).toBe('application/rdf+xml');
+    expect(guessRdfMimeTypeFromText('@prefix ex: <https://example.org/> .')).toBe('text/turtle');
+    expect(guessRdfMimeTypeFromText('<https://example.org/s> <https://example.org/p> <https://example.org/o> .')).toBe('application/n-triples');
+    expect(guessRdfMimeTypeFromText('ordinary notes')).toBe('text/plain');
+  });
+
+  test('legacy download helper infers MIME from filename and respects explicit charset options', async () => {
+    const originalDocument = globalThis.document;
+    const originalUrl = globalThis.URL;
+    const documentRef = makeDocumentMock();
+    const urlRef = {
+      createObjectURL: jest.fn(() => 'blob:registry'),
+      revokeObjectURL: jest.fn()
+    };
+
+    globalThis.document = documentRef;
+    globalThis.URL = urlRef;
+    try {
+      downloadTextFile('graph.ttl', '@prefix ex: <https://example.org/> .');
+      expect(documentRef.anchors[0]).toMatchObject({
+        href: 'blob:registry',
+        download: 'graph.ttl',
+        clicked: true,
+        removed: true
+      });
+      expect(urlRef.revokeObjectURL).toHaveBeenCalledWith('blob:registry');
+      expect(urlRef.createObjectURL.mock.calls[0][0].type).toBe('text/turtle;charset=utf-8');
+
+      downloadTextFile('data.unknown', 'x', { mimeType: 'text/plain', charset: false });
+      expect(urlRef.createObjectURL.mock.calls[1][0].type).toBe('text/plain');
+    } finally {
+      globalThis.document = originalDocument;
+      globalThis.URL = originalUrl;
+    }
   });
 });

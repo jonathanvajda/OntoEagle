@@ -166,6 +166,15 @@ describe('namespace-registry package', () => {
     expect(jsonld.warnings).toEqual([
       'Ignored JSON-LD context term "term" because only string term values are supported.'
     ]);
+    expect(extractJsonLdContextPrefixes('{"@context":["https://schema.org/",{"ex":"https://example.org/"}]}')).toMatchObject({
+      ok: true,
+      prefixes: {},
+      warnings: ['Ignored JSON-LD array @context because only plain object contexts are supported.']
+    });
+    expect(extractJsonLdContextPrefixes('{bad json')).toMatchObject({
+      ok: false,
+      error: 'invalid jsonld'
+    });
 
     expect(extractRdfPrefixesFromText('@prefix ex: <https://example.org/> .', { mimeType: 'text/turtle' })).toMatchObject({
       ok: true,
@@ -226,6 +235,26 @@ describe('namespace-registry package', () => {
 
     expect(prependSparqlPrefixes('SELECT * WHERE { ?s ?p ?o }', { ex: 'https://example.org/' }, { baseIri: 'https://example.org/base/' }).value)
       .toBe('BASE <https://example.org/base/>\nPREFIX ex: <https://example.org/>\n\nSELECT * WHERE { ?s ?p ?o }');
+  });
+
+  test('SPARQL prefix helpers preserve duplicate/invalid-prefix warnings', () => {
+    const extracted = extractSparqlPrefixesFromText(`
+      PREFIX ex: <https://example.org/old/>
+      PREFIX ex: <https://example.org/new/>
+      PREFIX bad: <relative/path>
+      SELECT * WHERE { ?s ?p ?o }
+    `);
+    expect(extracted.prefixes).toEqual({ ex: 'https://example.org/new/' });
+    expect(extracted.warnings).toEqual([
+      'Duplicate SPARQL prefix "ex" found; using the last declaration.',
+      'Ignored prefix "bad" with invalid namespace IRI.'
+    ]);
+
+    expect(prependSparqlPrefixes('', { good: 'https://example.org/', bad: 'relative' })).toEqual({
+      ok: true,
+      value: 'PREFIX good: <https://example.org/>',
+      warnings: ['Ignored prefix "bad" with invalid namespace IRI.']
+    });
   });
 
   test('CURIE compaction uses longest prefix matches and structured errors', () => {
@@ -340,6 +369,20 @@ describe('namespace-registry package', () => {
       ok: true,
       value: 'https://example.org/ont#',
       source: 'ontologyIri'
+    });
+    expect(deriveNamespaceStemFromIri('not an iri')).toEqual({
+      ok: false,
+      error: 'invalid iri',
+      input: 'not an iri'
+    });
+    expect(listNamespaceStemsInStore(null)).toEqual({
+      ok: true,
+      value: []
+    });
+    expect(discoverBaseIriOrNamespaceStem({ baseIri: 'relative', store: null })).toEqual({
+      ok: false,
+      error: 'base iri not found',
+      input: ''
     });
   });
 });
