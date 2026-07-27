@@ -506,10 +506,10 @@ Given this portfolio, I would prioritize:
 1. MIME type/format/extension registry
 1. Namespace prefix registry
 1. Browser file/download utilities
-1. RDF parsing
-1. RDF export/serialization
 1. Tabular parsing
 1. Tabular export/serialization
+1. RDF parsing
+1. RDF export/serialization
 1. IndexedDB data storage conventions for project data
 1. IndexedDB data storage conventions for graph data
 1. IndexedDB data storage conventions for user/app settings
