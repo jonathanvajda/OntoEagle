@@ -221,6 +221,37 @@ describe('vendor adapter layer', () => {
     });
   });
 
+  test('serializes N3-backed formats when the runtime only exposes Writer', async () => {
+    const runtime = {
+      N3: {
+        Writer: createMockN3Runtime().Writer
+      }
+    };
+
+    const serialized = await serializeRdfDatasetWithAdapters([
+      quad('http://ex/s', 'http://ex/p', 'v')
+    ], {
+      format: 'application/n-triples',
+      runtime
+    });
+
+    expect(serialized.text).toBe('<http://ex/s> <http://ex/p> "v" .\n');
+  });
+
+  test('parses line-based RDF without requiring N3 Parser from a partial runtime', async () => {
+    const parsed = await parseRdfTextWithAdapters('<http://ex/s> <http://ex/p> "v" .', {
+      format: 'application/n-triples',
+      runtime: {
+        N3: {
+          Writer: createMockN3Runtime().Writer
+        }
+      }
+    });
+
+    expect(parsed.quads).toHaveLength(1);
+    expect(parsed.quads[0].object.value).toBe('v');
+  });
+
   test('parses and serializes JSON-LD through injected jsonld plus N3 runtimes', async () => {
     const runtime = {
       N3: createMockN3Runtime(),
@@ -274,6 +305,99 @@ describe('vendor adapter layer', () => {
     });
     expect(serialized.text).toBe('<rdf:RDF />');
     expect(serialized.mimeType).toBe('application/rdf+xml');
+  });
+
+  test('expands rdflib Collection terms into RDF list quads', async () => {
+    const runtime = {
+      $rdf: {
+        graph() {
+          return { statements: [] };
+        },
+        parse(_text, graph, _baseIri, _mime, callback) {
+          graph.statements.push({
+            subject: { termType: 'NamedNode', value: 'http://ex/s' },
+            predicate: { termType: 'NamedNode', value: 'http://ex/list' },
+            object: {
+              termType: 'Collection',
+              value: 'items',
+              elements: [
+                { termType: 'NamedNode', value: 'http://ex/one' },
+                { termType: 'NamedNode', value: 'http://ex/two' }
+              ]
+            }
+          });
+          callback(null);
+        },
+        serialize(_target, _graph, _baseIri, _mime, callback) {
+          callback(null, '<rdf:RDF />');
+        }
+      }
+    };
+
+    const parsed = await parseRdfTextWithAdapters('<rdf:RDF />', {
+      format: 'application/rdf+xml',
+      runtime
+    });
+
+    expect(parsed.quads).toHaveLength(5);
+    expect(parsed.quads).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        subject: expect.objectContaining({ value: 'items' }),
+        predicate: namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#first'),
+        object: namedNode('http://ex/one')
+      }),
+      expect.objectContaining({
+        predicate: namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'),
+        object: namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil')
+      })
+    ]));
+  });
+
+  test('accepts rdflib serializers that return RDF/XML text synchronously', async () => {
+    const runtime = {
+      $rdf: {
+        graph() {
+          return {
+            statements: [],
+            add(subject, predicate, object) {
+              this.statements.push({ subject, predicate, object });
+            }
+          };
+        },
+        parse(_text, graph, _baseIri, _mime, callback) {
+          graph.statements.push({
+            subject: { termType: 'NamedNode', value: 'http://ex/s' },
+            predicate: { termType: 'NamedNode', value: 'http://ex/p' },
+            object: { termType: 'Literal', value: 'v' }
+          });
+          callback(null);
+        },
+        serialize(_target, graph) {
+          expect(graph.statements).toHaveLength(1);
+          return '<rdf:RDF />';
+        },
+        sym(value) {
+          return { termType: 'NamedNode', value };
+        },
+        literal(value, language, datatype) {
+          return { termType: 'Literal', value, language: language || '', datatype };
+        },
+        blankNode(value) {
+          return { termType: 'BlankNode', value };
+        }
+      }
+    };
+
+    const parsed = await parseRdfTextWithAdapters('<rdf:RDF />', {
+      format: 'rdfxml',
+      runtime
+    });
+    const serialized = await serializeRdfDatasetWithAdapters(parsed.dataset, {
+      format: 'rdfxml',
+      runtime
+    });
+
+    expect(serialized.text).toBe('<rdf:RDF />');
   });
 });
 

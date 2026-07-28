@@ -1,5 +1,6 @@
 import {
   COMMON_NAMESPACE_REGISTRY,
+  COMMON_NAMESPACE_IRIS,
   applyPrefixesToRdflibStore,
   compactIriToCurie,
   createN3WriterOptionsWithPrefixes,
@@ -14,6 +15,7 @@ import {
   findLongestPrefixMatch,
   formatSparqlPrefixDeclarations,
   iriForNamespaceId,
+  namespaceIriMapFromRegistry,
   listNamespaceStemsInStore,
   mergeProjectPrefixes,
   namespacePrefixMapFromRegistry,
@@ -41,7 +43,8 @@ describe('namespace-registry package', () => {
       dcat: 'http://www.w3.org/ns/dcat#',
       geo: 'http://www.w3.org/2003/01/geo/wgs84_pos#',
       geojson: 'https://purl.org/geojson/vocab#',
-      vcard: 'http://www.w3.org/2006/vcard/ns#'
+      vcard: 'http://www.w3.org/2006/vcard/ns#',
+      xhtml: 'http://www.w3.org/1999/xhtml'
     });
     expect(namespaceToPrefixMap({ rdf: COMMON_NAMESPACE_REGISTRY.rdf.namespaceIri })).toEqual({
       'http://www.w3.org/1999/02/22-rdf-syntax-ns#': 'rdf'
@@ -50,6 +53,9 @@ describe('namespace-registry package', () => {
       ok: true,
       value: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
     });
+    expect(COMMON_NAMESPACE_IRIS.rdf.type).toBe('http://www.w3.org/1999/02/22-rdf-syntax-ns#type');
+    expect(COMMON_NAMESPACE_IRIS.owl.Class).toBe('http://www.w3.org/2002/07/owl#Class');
+    expect(namespaceIriMapFromRegistry().iao.definition).toBe('http://purl.obolibrary.org/obo/IAO_0000115');
   });
 
   test('COMMON_NAMESPACE_REGISTRY covers common OWL, SKOS, XSD, and DCTERMS IDs', () => {
@@ -103,6 +109,22 @@ describe('namespace-registry package', () => {
     expect(iriForNamespaceId('dc', 'contributor')).toEqual({
       ok: true,
       value: 'http://purl.org/dc/elements/1.1/contributor'
+    });
+    expect(iriForNamespaceId('iao', 'curationStatus')).toEqual({
+      ok: true,
+      value: 'http://purl.obolibrary.org/obo/IAO_0000114'
+    });
+    expect(iriForNamespaceId('iao', 'readyForRelease')).toEqual({
+      ok: true,
+      value: 'http://purl.obolibrary.org/obo/IAO_0000122'
+    });
+    expect(iriForNamespaceId('swrl', 'Imp')).toEqual({
+      ok: true,
+      value: 'http://www.w3.org/2003/11/swrl#Imp'
+    });
+    expect(iriForNamespaceId('cco', 'acronym')).toEqual({
+      ok: true,
+      value: 'http://www.ontologyrepository.com/CommonCoreOntologies/ont00001753'
     });
     expect(iriForNamespaceId('cco2', 'curatedIn')).toEqual({
       ok: true,

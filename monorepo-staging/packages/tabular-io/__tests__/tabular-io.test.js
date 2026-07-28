@@ -121,6 +121,34 @@ describe('query record exchange', () => {
     ]);
   });
 
+  test('round-trips saved query CSV fields containing commas, quotes, and newlines', () => {
+    const csv = serializeQueryRecordsToDelimitedText([{
+      queryId: 'q,1',
+      queryLabel: 'Quoted "query"',
+      queryLanguage: 'sparql',
+      queryText: 'SELECT * WHERE {\n  ?s ?p "literal, value" .\n}',
+      queryKind: 'type:Saved'
+    }], {
+      trailingNewline: false,
+      defaultQueryLanguage: 'sparql'
+    });
+
+    expect(csv).toContain('"q,1"');
+    expect(csv).toContain('"Quoted ""query"""');
+
+    const parsed = parseQueryRecordsFromDelimitedText(csv, { defaultQueryLanguage: 'sparql' });
+    expect(parsed.records).toEqual([
+      expect.objectContaining({
+        queryId: 'q,1',
+        queryLabel: 'Quoted "query"',
+        queryLanguage: 'sparql',
+        queryText: 'SELECT * WHERE {\n  ?s ?p "literal, value" .\n}',
+        queryKind: 'type:Saved'
+      })
+    ]);
+    expect(parsed.warnings).toEqual([]);
+  });
+
   test('warns and skips rows missing required query text', () => {
     const parsed = parseQueryRecordsFromDelimitedText('query_id,query_language,query_text\nq1,sql,\nq2,sql,select 1');
     expect(parsed.records).toHaveLength(1);
