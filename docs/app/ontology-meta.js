@@ -24,7 +24,7 @@ import {
   idbInit,
   idbPutDatasetMeta,
   idbPutDocuments
-} from './indexeddb.min.js';
+} from './shared/vendor/indexeddb.min.js';
 
 function namespaceIdIri(namespaceKey, idKey) {
   const result = iriForNamespaceId(namespaceKey, idKey);

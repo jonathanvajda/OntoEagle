@@ -12,8 +12,7 @@ module.exports = {
     'docs/app/**/*.js',
     'monorepo-staging/packages/**/*.js',
     '!docs/app/search-main.js',
-    '!docs/app/indexeddb.min.js',
-    '!docs/app/mermaid.min.js',
+    '!docs/app/shared/vendor/**',
     '!docs/app/types.js'
   ]
 };

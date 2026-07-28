@@ -1,6 +1,6 @@
 /* extracted-vocabulary-tabulator.js
  * Requires:
- *  - tabulator.min.js + tabulator.min.css loaded
+ *  - app/shared/vendor/tabulator.min.js + Tabulator CSS loaded
  *  - vocab-extract-core.js loaded (window.VOCAB_EXTRACT)
  *  - lexicon.js + POSTaggerGraph.js (for rebuild)
  */

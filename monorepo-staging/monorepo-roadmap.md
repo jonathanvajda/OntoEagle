@@ -532,6 +532,9 @@ Then continuing onto:
 1. Visualization of SPARQL in Cytoscape
 1. YAML export
 1. HTML export
+1. Standardized JS API to run headless
+1. Package distribution, minification, etc.
+1. Documentation for an agent to run headless apps
 
 # Promoting Code into Common library
 Since many of these code bases have common parentage or common principles (and developers), deduplication should usually be easier than ordinary legacy consolidation. The primary challenge is less “discover whether these implementations are related” and more:
