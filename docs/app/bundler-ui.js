@@ -33,6 +33,11 @@ import {
   createRdfQuadsFromJsonLdGraph,
   serializeRdfDataset
 } from './shared/rdf-io/index.js';
+import {
+  SUPPORTED_MIME_DESCRIPTORS,
+  getSupportedMimeTypeForFilename,
+  isMimeDescriptorCategory
+} from './shared/format-registry/index.js';
 
 // Minimal IDB wrappers (you can expand these in indexeddb.min.js later)
 import {
@@ -57,9 +62,9 @@ const EX_ITEM_NODE = {
 };
 
 const DOWNLOAD_MIME = Object.freeze({
-  jsonLd: 'application/ld+json',
-  robotSeed: 'text/plain',
-  turtle: 'text/turtle'
+  jsonLd: SUPPORTED_MIME_DESCRIPTORS.jsonLd.mimeType,
+  robotSeed: SUPPORTED_MIME_DESCRIPTORS.plainText.mimeType,
+  turtle: SUPPORTED_MIME_DESCRIPTORS.turtle.mimeType
 });
 const IRI_PATTERN = /^(https?:|urn:)/i;
 
@@ -151,7 +156,10 @@ async function buildCurrentSlim() {
 }
 
 function isCsvSeedFile(fileName) {
-  return /\.csv$/i.test(String(fileName || ''));
+  const detected = getSupportedMimeTypeForFilename(fileName);
+  return detected.ok
+    && isMimeDescriptorCategory(detected.value, 'tabular')
+    && detected.value.id === 'csv';
 }
 
 function extractSeedTextFromCsv(text) {

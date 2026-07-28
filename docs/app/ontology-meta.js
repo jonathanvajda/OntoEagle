@@ -7,7 +7,16 @@ import {
   valueToIris,
   valueToStrings
 } from './rdf_extract.js';
-import { parseRdfTextToJsonLd, readFileAsText } from './rdf_io.js';
+import { readFileAsText } from './shared/browser-file-io/index.js';
+import { getSupportedMimeTypeForFilename } from './shared/format-registry/index.js';
+import {
+  parseRdfTextWithAdapters,
+  rdfDatasetToJsonLdGraph
+} from './shared/rdf-io/index.js';
+import {
+  COMMON_NAMESPACE_REGISTRY,
+  iriForNamespaceId
+} from './shared/namespace-registry/index.js';
 import {
   idbGetAllDatasetMeta,
   idbGetDatasetMeta,
@@ -17,14 +26,58 @@ import {
   idbPutDocuments
 } from './indexeddb.min.js';
 
-const RDF = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
-const RDFS = 'http://www.w3.org/2000/01/rdf-schema#';
-const OWL = 'http://www.w3.org/2002/07/owl#';
-const SKOS = 'http://www.w3.org/2004/02/skos/core#';
-const DCTERMS = 'http://purl.org/dc/terms/';
-const DC = 'http://purl.org/dc/elements/1.1/';
-const CCO = 'https://www.commoncoreontologies.org/';
-const OBO = 'http://purl.obolibrary.org/obo/';
+function namespaceIdIri(namespaceKey, idKey) {
+  const result = iriForNamespaceId(namespaceKey, idKey);
+  if (!result.ok) {
+    throw new Error(`Missing namespace registry ID: ${namespaceKey}:${idKey}`);
+  }
+  return result.value;
+}
+
+function namespaceIri(namespaceKey) {
+  const namespace = COMMON_NAMESPACE_REGISTRY[namespaceKey]?.namespaceIri;
+  if (!namespace) {
+    throw new Error(`Missing namespace registry entry: ${namespaceKey}`);
+  }
+  return namespace;
+}
+
+const NAMESPACE = Object.freeze({
+  obo: namespaceIri('obo')
+});
+
+const IRI = Object.freeze({
+  rdfType: namespaceIdIri('rdf', 'type'),
+  rdfsLabel: namespaceIdIri('rdfs', 'label'),
+  rdfsComment: namespaceIdIri('rdfs', 'comment'),
+  rdfsIsDefinedBy: namespaceIdIri('rdfs', 'isDefinedBy'),
+  owlOntology: namespaceIdIri('owl', 'Ontology'),
+  owlVersionIri: namespaceIdIri('owl', 'versionIRI'),
+  owlVersionInfo: namespaceIdIri('owl', 'versionInfo'),
+  owlImports: namespaceIdIri('owl', 'imports'),
+  owlPriorVersion: namespaceIdIri('owl', 'priorVersion'),
+  owlBackwardCompatibleWith: namespaceIdIri('owl', 'backwardCompatibleWith'),
+  owlIncompatibleWith: namespaceIdIri('owl', 'incompatibleWith'),
+  skosDefinition: namespaceIdIri('skos', 'definition'),
+  dctermsTitle: namespaceIdIri('dcterms', 'title'),
+  dctermsDescription: namespaceIdIri('dcterms', 'description'),
+  dctermsLicense: namespaceIdIri('dcterms', 'license'),
+  dctermsRightsHolder: namespaceIdIri('dcterms', 'rightsHolder'),
+  dctermsRights: namespaceIdIri('dcterms', 'rights'),
+  dctermsCreator: namespaceIdIri('dcterms', 'creator'),
+  dctermsContributor: namespaceIdIri('dcterms', 'contributor'),
+  dctermsCreated: namespaceIdIri('dcterms', 'created'),
+  dctermsModified: namespaceIdIri('dcterms', 'modified'),
+  dctermsPublisher: namespaceIdIri('dcterms', 'publisher'),
+  dctermsBibliographicCitation: namespaceIdIri('dcterms', 'bibliographicCitation'),
+  dcTitle: namespaceIdIri('dc', 'title'),
+  dcDescription: namespaceIdIri('dc', 'description'),
+  dcLicense: namespaceIdIri('dc', 'license'),
+  dcRights: namespaceIdIri('dc', 'rights'),
+  dcCreator: namespaceIdIri('dc', 'creator'),
+  dcContributor: namespaceIdIri('dc', 'contributor'),
+  ccoCuratedIn: namespaceIdIri('cco2', 'curatedIn')
+});
 const DATASET_SCHEMA_VERSION = 2;
 const REGISTRY_STORAGE_KEY = 'ontoeagle:ontologyRegistryOverrides';
 const ONTOLOGY_SNAPSHOT_KEY = 'ontoeagle:ontologyMetadataSnapshot:v1';
@@ -41,25 +94,25 @@ export const ONTOLOGY_LEVELS = Object.freeze([
 ]);
 
 const P = Object.freeze({
-  type: [`${RDF}type`, 'rdf:type', '@type'],
-  label: [`${DCTERMS}title`, 'dcterms:title', `${DC}title`, 'dc:title', `${RDFS}label`, 'rdfs:label'],
-  description: [`${DCTERMS}description`, 'dcterms:description', `${DC}description`, 'dc:description', `${SKOS}definition`, 'skos:definition', `${RDFS}comment`, 'rdfs:comment'],
-  versionIri: [`${OWL}versionIRI`, 'owl:versionIRI'],
-  versionInfo: [`${OWL}versionInfo`, 'owl:versionInfo'],
-  imports: [`${OWL}imports`, 'owl:imports'],
-  license: [`${DCTERMS}license`, 'dcterms:license', `${DC}license`, 'dc:license'],
-  rightsHolder: [`${DCTERMS}rightsHolder`, 'dcterms:rightsHolder', `${DCTERMS}rights`, 'dcterms:rights', `${DC}rights`, 'dc:rights'],
-  creator: [`${DCTERMS}creator`, 'dcterms:creator', `${DC}creator`, 'dc:creator'],
-  contributor: [`${DCTERMS}contributor`, 'dcterms:contributor', `${DC}contributor`, 'dc:contributor'],
-  comment: [`${RDFS}comment`, 'rdfs:comment'],
-  created: [`${DCTERMS}created`, 'dcterms:created'],
-  modified: [`${DCTERMS}modified`, 'dcterms:modified'],
-  publisher: [`${DCTERMS}publisher`, 'dcterms:publisher'],
-  citation: [`${DCTERMS}bibliographicCitation`, 'dcterms:bibliographicCitation'],
-  priorVersion: [`${OWL}priorVersion`, 'owl:priorVersion'],
-  backwardCompatibleWith: [`${OWL}backwardCompatibleWith`, 'owl:backwardCompatibleWith'],
-  incompatibleWith: [`${OWL}incompatibleWith`, 'owl:incompatibleWith'],
-  curatedIn: [`${CCO}ont00001760`, `${RDFS}isDefinedBy`, 'rdfs:isDefinedBy']
+  type: [IRI.rdfType, 'rdf:type', '@type'],
+  label: [IRI.dctermsTitle, 'dcterms:title', IRI.dcTitle, 'dc:title', IRI.rdfsLabel, 'rdfs:label'],
+  description: [IRI.dctermsDescription, 'dcterms:description', IRI.dcDescription, 'dc:description', IRI.skosDefinition, 'skos:definition', IRI.rdfsComment, 'rdfs:comment'],
+  versionIri: [IRI.owlVersionIri, 'owl:versionIRI'],
+  versionInfo: [IRI.owlVersionInfo, 'owl:versionInfo'],
+  imports: [IRI.owlImports, 'owl:imports'],
+  license: [IRI.dctermsLicense, 'dcterms:license', IRI.dcLicense, 'dc:license'],
+  rightsHolder: [IRI.dctermsRightsHolder, 'dcterms:rightsHolder', IRI.dctermsRights, 'dcterms:rights', IRI.dcRights, 'dc:rights'],
+  creator: [IRI.dctermsCreator, 'dcterms:creator', IRI.dcCreator, 'dc:creator'],
+  contributor: [IRI.dctermsContributor, 'dcterms:contributor', IRI.dcContributor, 'dc:contributor'],
+  comment: [IRI.rdfsComment, 'rdfs:comment'],
+  created: [IRI.dctermsCreated, 'dcterms:created'],
+  modified: [IRI.dctermsModified, 'dcterms:modified'],
+  publisher: [IRI.dctermsPublisher, 'dcterms:publisher'],
+  citation: [IRI.dctermsBibliographicCitation, 'dcterms:bibliographicCitation'],
+  priorVersion: [IRI.owlPriorVersion, 'owl:priorVersion'],
+  backwardCompatibleWith: [IRI.owlBackwardCompatibleWith, 'owl:backwardCompatibleWith'],
+  incompatibleWith: [IRI.owlIncompatibleWith, 'owl:incompatibleWith'],
+  curatedIn: [IRI.ccoCuratedIn, IRI.rdfsIsDefinedBy, 'rdfs:isDefinedBy']
 });
 
 function getGraph(jsonld) {
@@ -100,8 +153,8 @@ function sortLanguagePreferred(values) {
 }
 
 function hasOntologyType(node) {
-  return valueToStrings(getAny(node, P.type)).includes(`${OWL}Ontology`)
-    || valueToIris(getAny(node, P.type)).includes(`${OWL}Ontology`);
+  return valueToStrings(getAny(node, P.type)).includes(IRI.owlOntology)
+    || valueToIris(getAny(node, P.type)).includes(IRI.owlOntology);
 }
 
 function firstString(node, keys) {
@@ -169,6 +222,28 @@ function annotateUserJsonLd(jsonld) {
     }
   }
   return jsonld;
+}
+
+async function parseOntologyRdfTextToJsonLd(text, fileName, options = {}) {
+  const detected = getSupportedMimeTypeForFilename(fileName);
+  if (!detected.ok || detected.value.category !== 'rdf') {
+    throw new Error(`Unsupported RDF file type: ${String(fileName || '') || '(unknown filename)'}`);
+  }
+
+  const parsed = await parseRdfTextWithAdapters(text, {
+    format: detected.value.mimeType,
+    baseIri: options.baseIRI || options.baseIri || null,
+    runtime: options.runtime || {
+      N3: globalThis.N3,
+      jsonld: globalThis.jsonld,
+      $rdf: globalThis.$rdf
+    }
+  });
+
+  return {
+    '@graph': rdfDatasetToJsonLdGraph(parsed.dataset)
+      .sort((a, b) => String(a['@id']).localeCompare(String(b['@id'])))
+  };
 }
 
 function loadStoredUserOntologyRecords() {
@@ -255,7 +330,7 @@ export async function importUserOntologyFile(file) {
   const fingerprint = await sha256Hex(text);
   const datasetId = stableDatasetId(file.name, fingerprint);
   const ontologyName = file.name.replace(/\.[^.]+$/, '');
-  const jsonld = annotateUserJsonLd(await parseRdfTextToJsonLd(text, file.name, {
+  const jsonld = annotateUserJsonLd(await parseOntologyRdfTextToJsonLd(text, file.name, {
     baseIRI: `urn:ontoeagle:upload:${encodeURIComponent(file.name)}`
   }));
   const docs = annotateDocs(extractDocumentsFromJsonLd(jsonld), {
@@ -588,7 +663,7 @@ function ontologyTermPrefixHints(ontologyIri) {
   else hints.push(`${iri}#`, `${iri}/`);
 
   const oboMatch = iri.match(/^https?:\/\/purl\.obolibrary\.org\/obo\/([a-z0-9_-]+)\.owl$/i);
-  if (oboMatch) hints.push(`http://purl.obolibrary.org/obo/${oboMatch[1].toUpperCase()}_`);
+  if (oboMatch) hints.push(`${NAMESPACE.obo}${oboMatch[1].toUpperCase()}_`);
 
   return [...new Set(hints)];
 }

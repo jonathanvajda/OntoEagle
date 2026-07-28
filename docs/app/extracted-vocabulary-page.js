@@ -2,6 +2,9 @@
  * DOM-only: builds editable table, filters, sorts, CSV export.
  * Depends on: window.VOCAB_EXTRACT (from vocab-extract-core.js)
  */
+import { downloadTextFile } from './shared/browser-file-io/index.js';
+import { SUPPORTED_MIME_DESCRIPTORS } from './shared/format-registry/index.js';
+
 (() => {
   "use strict";
 
@@ -237,15 +240,9 @@
     document.getElementById("btnExportCsv").addEventListener("click", () => {
       const filtered = applySort(applyFilters(state.rows));
       const csv = window.VOCAB_EXTRACT.exportRowsToCsv(filtered);
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `Extracted_Vocabulary_${new Date().toISOString().slice(0, 10)}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      downloadTextFile(`Extracted_Vocabulary_${new Date().toISOString().slice(0, 10)}.csv`, csv, {
+        mimeType: SUPPORTED_MIME_DESCRIPTORS.csv.mimeType
+      });
     });
 
     document.getElementById("btnRebuild").addEventListener("click", async () => {

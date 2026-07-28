@@ -101,7 +101,7 @@ function ensureModal() {
   modal.querySelector('[data-manager-action="export"]')?.addEventListener('click', async () => {
     const registry = mergeRegistryEntries(await loadDefaultRegistry(), loadRegistryOverrides());
     downloadTextFile('ontology-registry.json', exportRegistryJson(registry), {
-      mimeType: 'application/json'
+      mimeType: SUPPORTED_MIME_DESCRIPTORS.json.mimeType
     });
     setManagerStatus('Registry JSON exported.');
   });

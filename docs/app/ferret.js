@@ -14,6 +14,7 @@ import {
   createRdfQuadsFromJsonLdGraph,
   serializeRdfDataset
 } from './shared/rdf-io/index.js';
+import { SUPPORTED_MIME_DESCRIPTORS } from './shared/format-registry/index.js';
 
 // ======================================================
 // SECTION 1: GLOBAL STATE
@@ -913,7 +914,7 @@ function downloadJSONLD() {
   if (warnings.length) console.warn('CQ JSON-LD export warnings:', warnings);
   const { text: jsonLD } = serializeRdfDataset(quads, { format: 'jsonld' });
   downloadTextFile('CQDatabase.jsonld', jsonLD, {
-    mimeType: 'application/ld+json'
+    mimeType: SUPPORTED_MIME_DESCRIPTORS.jsonLd.mimeType
   });
 }
 
@@ -1052,7 +1053,7 @@ function downloadCSV() {
     trailingNewline: false
   });
   downloadTextFile(`CQ_Export_${new Date().toISOString().slice(0, 10)}.csv`, csvContent, {
-    mimeType: 'text/csv'
+    mimeType: SUPPORTED_MIME_DESCRIPTORS.csv.mimeType
   });
   console.log("CSV generation complete.");
 }

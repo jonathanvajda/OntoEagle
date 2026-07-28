@@ -100,6 +100,14 @@ describe('namespace-registry package', () => {
       ok: true,
       value: 'http://purl.org/dc/terms/modified'
     });
+    expect(iriForNamespaceId('dc', 'contributor')).toEqual({
+      ok: true,
+      value: 'http://purl.org/dc/elements/1.1/contributor'
+    });
+    expect(iriForNamespaceId('cco2', 'curatedIn')).toEqual({
+      ok: true,
+      value: 'https://www.commoncoreontologies.org/ont00001760'
+    });
     expect(iriForNamespaceId('iao', 'definition')).toEqual({
       ok: true,
       value: 'http://purl.obolibrary.org/obo/IAO_0000115'

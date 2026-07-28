@@ -121,6 +121,8 @@
   </style>
   -->
 
+  <link rel="modulepreload" href="./app/shared/browser-file-io/index.js" />
+  <link rel="modulepreload" href="./app/shared/format-registry/index.js" />
 </head>
 <body data-page-id="cq-ferret">
     <header id="siteHeader" class="sitehdr-root" role="banner" aria-label="Site header">
@@ -149,6 +151,6 @@
 
   <!-- New append-only modules -->
   <script src="./app/vocab-extract-core.js"></script>
-  <script src="./app/extracted-vocabulary-page.js"></script>
+  <script type="module" src="./app/extracted-vocabulary-page.js"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@
    - graph.jsonld: stale-while-revalidate
 */
 
-const SW_VERSION = '__BUILD_ID__-details-fields-v1';
+const SW_VERSION = '__BUILD_ID__-shared-rdf-io-v2';
 const CACHE_SHELL = `ontoeagle-shell-${SW_VERSION}`;
 const CACHE_DATA = `ontoeagle-data-${SW_VERSION}`;
 
@@ -29,7 +29,6 @@ const SHELL_ASSETS = [
   './app/search.js',
   './app/normalize.js',
   './app/namespaces.js',
-  './app/rdf_io.js',
   './app/slim-core.js',
   './app/rdf_extract.js',
   './app/indexeddb.min.js',
@@ -41,6 +40,36 @@ const SHELL_ASSETS = [
   './app/n3.min.js',
   './app/jsonld.min.js',
   './app/rdflib.min.js',
+  './app/shared/browser-file-io/create-accept-attribute.js',
+  './app/shared/browser-file-io/create-text-blob.js',
+  './app/shared/browser-file-io/download-blob.js',
+  './app/shared/browser-file-io/download-text-file.js',
+  './app/shared/browser-file-io/index.js',
+  './app/shared/browser-file-io/read-file-as-array-buffer.js',
+  './app/shared/browser-file-io/read-file-as-text.js',
+  './app/shared/format-registry/index.js',
+  './app/shared/format-registry/mime-registry.js',
+  './app/shared/format-registry/rdf-parser-formats.js',
+  './app/shared/namespace-registry/curie.js',
+  './app/shared/namespace-registry/index.js',
+  './app/shared/namespace-registry/namespace-registry.js',
+  './app/shared/namespace-registry/namespace-stems.js',
+  './app/shared/namespace-registry/prefix-map.js',
+  './app/shared/namespace-registry/rdf-prefixes.js',
+  './app/shared/namespace-registry/rdf-serialization-prefixes.js',
+  './app/shared/namespace-registry/sparql-prefixes.js',
+  './app/shared/rdf-io/index.js',
+  './app/shared/rdf-io/jsonld-adapter.js',
+  './app/shared/rdf-io/n3-adapter.js',
+  './app/shared/rdf-io/object-to-rdf.js',
+  './app/shared/rdf-io/rdf-model.js',
+  './app/shared/rdf-io/rdflib-adapter.js',
+  './app/shared/rdf-io/runtime.js',
+  './app/shared/rdf-io/serialize-rdf.js',
+  './app/shared/tabular-io/delimited-text.js',
+  './app/shared/tabular-io/index.js',
+  './app/shared/tabular-io/iri-mapping.js',
+  './app/shared/tabular-io/query-records.js',
   './images/add-to-cart.svg',
   './images/default-logo.png',
   './images/block-logo.png',

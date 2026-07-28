@@ -129,3 +129,37 @@ packages/rdf-io/
 - Add fixtures shared with OCM and Visual Lynx before migration waves.
 - Characterize N3 prefix preservation and RDF/XML prefix serialization against real vendor libraries.
 - Replace app-local parser/serializer branches incrementally, starting with simple import/export surfaces.
+
+## Deferred Promotion Candidates
+
+These functions came up during the first app rewiring wave. They should receive a second look before the RDF parsing/serialization cycle is closed, but they should not be folded into the current parser/serializer API until their boundaries are explicit.
+
+|Candidate|Observed locations|Proposed package-level shape|Decision note|
+|:---|:---|:---|:---|
+|RDF format detection from file names|OCM `detectRdfFormat`, Ontology Tabulator `detectRdfFormatFromFilename`, IRI Swapper `detectOntologyFormat`|`detectRdfFormatFromFileName(fileName, options)` returning `{ format, mimeType, extension, supported, warnings }`|Promote into `rdf-io` or `format-registry` after deciding whether RDF IO owns extension support policy.|
+|Supported RDF file-name check|OCM `isSupportedRdfFileName`|`isSupportedRdfFileName(fileName, options)`|Should share the same source table as format detection so `.owl`, `.rdf`, `.ttl`, `.trig`, `.jsonld`, `.nt`, and `.nq` stay consistent.|
+|Format-aware RDF prefix extraction|IRI Swapper `parseTurtlePrefixes`, `parseXmlnsPrefixes`, `parseJsonLdPrefixes`; Visual Lynx `extractRdfXmlPrefixes`|`extractRdfPrefixesFromText(text, { format })`|Likely belongs near namespace/format registry helpers, with RDF IO using it for parser result metadata.|
+|RDF/XML namespace repair|Visual Lynx `repairRdfXmlUnqualifiedElements`|`repairRdfXmlNamespaces(text, { baseIri })`|Useful but must be opt-in. It changes invalid RDF/XML into parseable RDF/XML and should return a warning such as `rdfxml-repair-applied`.|
+|RDF dataset summary|IRI Swapper `computeStatsFromQuads`|`summarizeRdfDataset(dataset)`|Pure utility. Return counts for quads, subjects, predicates, objects, named graphs, literals, IRIs, and blank nodes.|
+|Ontology import target derivation|TOM `deriveOntologyImportTarget` and TOM utility tests|`deriveOntologyImportTarget(quads)` in a future ontology-model/ontology-rdf package|Do not put in generic RDF IO unless the package grows an ontology-specific submodule. It interprets OWL ontology semantics, not RDF syntax.|
+
+## App Contract Test Gaps
+
+The current shared Jest suite covers the core adapter contract, dependency-free N-Triples/N-Quads, JSON-LD projection, object-to-RDF projection, and mocked N3/jsonld/rdflib adapters. It does not yet preserve every app-level behavior that was already tested in source apps.
+
+Before declaring `rdf-io` canonical, add a second Jest file such as `__tests__/rdf-io-app-contract.test.js` with parity cases from OCM and TOM:
+
+- Alias normalization: `ttl`, `json-ld`, `application/rdf+xml`, `nq`.
+- Filename detection: `.ttl`, `.trig`, `.jsonld`, `.rdf`, `.owl`, and unknown extension fallback.
+- Supported filename checks: RDF extensions accepted and `.txt` rejected.
+- N3-compatible round trips for Turtle, N-Triples, N-Quads, TriG, and N3.
+- JSON-LD parse and serialize round trip through mocked `jsonld.toRDF` and `jsonld.fromRDF`.
+- RDF/XML parse and serialize round trip through mocked rdflib.
+- rdflib `Collection` conversion into RDF list triples.
+- Malformed JSON-LD error behavior.
+- Unsupported file type rejection behavior for app-facing file names.
+- TOM ontology import target derivation cases, if that function is promoted into an ontology-specific package.
+
+## RDF/XML Runtime Caveat
+
+RDF/XML support requires an rdflib-compatible runtime. Apps that copy the piecemeal `rdf-io` modules but do not load `$rdf` should treat RDF/XML as unavailable or provide an explicit app-level fallback. During the first app wave, TOM had N3 and jsonld vendors available but no rdflib vendor in its docs tree, so RDF/XML should not be considered complete there until that runtime is added.

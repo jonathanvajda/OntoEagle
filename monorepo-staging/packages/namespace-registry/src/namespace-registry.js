@@ -331,7 +331,14 @@ export const COMMON_NAMESPACE_REGISTRY = Object.freeze({
   dc: defineEntry({
     prefix: 'dc',
     namespaceIri: 'http://purl.org/dc/elements/1.1/',
-    ids: { title: 'title', description: 'description', rights: 'rights' }
+    ids: {
+      title: 'title',
+      description: 'description',
+      rights: 'rights',
+      license: 'license',
+      creator: 'creator',
+      contributor: 'contributor'
+    }
   }),
   obo: defineEntry({
     prefix: 'obo',
@@ -383,7 +390,9 @@ export const COMMON_NAMESPACE_REGISTRY = Object.freeze({
   cco2: defineEntry({
     prefix: 'cco2',
     namespaceIri: 'https://www.commoncoreontologies.org/',
-    ids: {}
+    ids: {
+      curatedIn: 'ont00001760'
+    }
   }),
   foaf: defineEntry({
     prefix: 'foaf',
