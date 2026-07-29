@@ -55,3 +55,17 @@ A candidate is not canonical until the shared package is adopted by all intended
 
 - First deep comparison should focus on FMT-012 and FMT-014, with FMT-001 as a baseline and FMT-018 as a descriptor/unknown-behavior reference.
 
+## Completion Update 2026-07-29
+
+**Current package rating: 5 - Canonical for the active browser app code reviewed in this cycle.**
+
+Evidence:
+
+- The shared `format-registry` package now owns canonical MIME, extension, category, label, and format-key lookup behavior.
+- Active consumers have been rewired to shared helpers for extension extraction, input-kind detection, MIME selection, preferred download extensions, accept attributes, and filename-to-MIME detection.
+- Local active duplicates discovered during the cleanup sweep were deleted or replaced with direct imports from the shared package.
+- Legacy expected inputs from TOM, Axiolotl, OCM, Visual Lynx, Table Nova, and Ontology Tabulator are represented in package or app Jest coverage, including uppercase extensions, unknown extensions, multi-dot filenames, RDF/Turtle/JSON-LD/RDF-XML detection, CSV/TSV classification, Mermaid/D3 extension behavior, and SPARQL query/update/results formats.
+
+Qualification:
+
+- Deprecated artifacts and standalone experimental pages are not treated as canonical consumers until they are either removed or intentionally migrated.

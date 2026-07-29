@@ -1,4 +1,9 @@
-import { COMMON_PREFIXES, shortIri } from './namespaces.js';
+import {
+  formatIriForDisplay,
+  namespacePrefixMapFromRegistry
+} from './shared/namespace-registry/index.js';
+
+const COMMON_PREFIXES = namespacePrefixMapFromRegistry();
 
 export function parseSeedText(text) {
   return Array.from(new Set(
@@ -219,7 +224,7 @@ export function buildSlimJsonLd(docs, iris, options = {}) {
       '@type': doc?.type === 'Class' ? ['owl:Class'] : doc?.type ? [`owl:${doc.type}`] : []
     };
 
-    addIf(node, 'rdfs:label', doc?.label || shortIri(iri));
+    addIf(node, 'rdfs:label', doc?.label || formatIriForDisplay(iri, COMMON_PREFIXES));
     const scoAxioms = includedHierarchyAxioms(doc, 'rdfs:subClassOf', iris, scoMode, blankNodes, traversedBlankIds);
     const spoAxioms = includedHierarchyAxioms(doc, 'rdfs:subPropertyOf', iris, spoMode, blankNodes, traversedBlankIds);
     if (scoAxioms.length) node['rdfs:subClassOf'] = scoAxioms;

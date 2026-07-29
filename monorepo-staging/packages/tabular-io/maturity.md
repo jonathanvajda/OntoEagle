@@ -51,3 +51,19 @@ No tabular function is yet `4 - Package ready` because parser/serializer contrac
 - The strongest current parser evidence is Table Nova plus PapaParse usage in IRI Swapper.
 - The strongest current serializer evidence is OCM `rowsToCsv` plus TOM `generateCsvString`.
 - Mapping parsing should not be collapsed into generic tabular parsing; it is a domain adapter over generic tabular rows.
+
+## Completion Update 2026-07-29
+
+**Current package rating: 5 - Canonical for active CSV/TSV parsing and delimited-row serialization reviewed in this cycle.**
+
+Evidence:
+
+- The shared `tabular-io` package now owns delimiter-aware escaping, delimited-row serialization, CSV/TSV delimiter detection, delimited-line parsing, text-to-header/row parsing, and header-row option application.
+- Active consumers have been rewired to shared helpers for CSV/TSV export, tabular text parsing, header handling, and report serialization.
+- Local active duplicates discovered during cleanup were deleted or reduced to domain-specific row projection functions.
+- Package and app Jest coverage preserves old expected behavior for quote escaping, comma/tab/newline cells, trailing newlines, CRLF compatibility expectations, delimiter detection, quoted field parsing, header-row selection, no-header tables, empty input, and domain report output.
+
+Qualification:
+
+- XLS/XLSX handling remains a vendor adapter concern until the shared package explicitly owns a SheetJS runtime contract.
+- IRI mapping import/export remains a domain adapter over generic tabular rows and should not be folded into generic tabular parsing.

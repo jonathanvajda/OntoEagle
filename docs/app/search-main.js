@@ -20,9 +20,9 @@ import { searchDocuments } from './search.js';
 import { defaultSearchOptions } from './types.js';
 import { mintBundleIri, BUNDLE_LS_KEY, setShoppingCartCount, loadSlimBundleDoc, getShoppingCartCountFromStorage} from './bundler-core.js';
 import { importUserOntologyFile as importUserOntologyFileToIdb } from './ontology-meta.js';
-import { shortIri } from './namespaces.js';
 import {
   COMMON_NAMESPACE_IRIS,
+  formatIriForDisplay,
   namespacePrefixMapFromRegistry
 } from './shared/namespace-registry/index.js';
 import {
@@ -169,7 +169,7 @@ function annotateDocs(docs, meta) {
 
 function labelForIri(iri) {
   const doc = docsByIri.get(iri);
-  return doc?.label || shortIri(iri) || iri;
+  return doc?.label || formatIriForDisplay(iri, COMMON_PREFIXES) || iri;
 }
 
 function sortIrisByLabel(iris) {
@@ -564,7 +564,7 @@ function renderDetailList(label, values, options = {}) {
 
 function renderIriLabel(iri) {
   const label = labelForIri(iri);
-  const curie = shortIri(iri);
+  const curie = formatIriForDisplay(iri, COMMON_PREFIXES);
   const suffix = curie && curie !== label ? ` <code>${escapeHtml(curie)}</code>` : '';
   const labelHtml = isOntologyIri(iri)
     ? `<a href="${escapeHtml(ontologyViewerHref(iri))}">${escapeHtml(label)}</a>`

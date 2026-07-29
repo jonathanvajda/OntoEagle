@@ -1,7 +1,11 @@
 import {
   createIriMappingFromRows,
+  applyHeaderRowOptions,
+  detectCsvOrTsvDelimiter,
   escapeDelimitedCell,
+  parseDelimitedLine,
   parseDelimitedText,
+  parseDelimitedTextAsHeaderRows,
   parseQueryRecordsFromDelimitedText,
   serializeDelimitedRecords,
   serializeDelimitedRows,
@@ -9,6 +13,30 @@ import {
 } from '../src/index.js';
 
 describe('delimited text parsing', () => {
+  test('detectCsvOrTsvDelimiter prefers tabs when more tabs than commas', () => {
+    expect(detectCsvOrTsvDelimiter('a,b,c')).toBe(',');
+    expect(detectCsvOrTsvDelimiter('a\tb\tc')).toBe('\t');
+  });
+
+  test('parseDelimitedLine supports quotes and escaped quotes', () => {
+    expect(parseDelimitedLine('a,"b,c",d', ',')).toEqual(['a', 'b,c', 'd']);
+    expect(parseDelimitedLine('"a""b",c', ',')).toEqual(['a"b', 'c']);
+  });
+
+  test('parseDelimitedTextAsHeaderRows returns Table Nova header plus rows shape', () => {
+    const parsed = parseDelimitedTextAsHeaderRows('first,last\nAda,Lovelace\nAlan,Turing\n', ',');
+    expect(parsed.header).toEqual(['first', 'last']);
+    expect(parsed.rows).toEqual([['Ada', 'Lovelace'], ['Alan', 'Turing']]);
+  });
+
+  test('applyHeaderRowOptions can choose a later 1-based header row', () => {
+    const parsed = parseDelimitedTextAsHeaderRows('Report export\nGenerated today\nfirst,last\nAda,Lovelace\n', ',');
+    const out = applyHeaderRowOptions(parsed, true, 3);
+    expect(out.header).toEqual(['first', 'last']);
+    expect(out.rows).toEqual([['Ada', 'Lovelace']]);
+    expect(applyHeaderRowOptions(parsed, false, 2)).toBe(parsed);
+  });
+
   test('parses quoted commas, escaped quotes, and embedded newlines', () => {
     const parsed = parseDelimitedText('name,note\nAda,"hello, world"\nGrace,"line 1\nline ""2"""');
     expect(parsed.headers).toEqual(['name', 'note']);

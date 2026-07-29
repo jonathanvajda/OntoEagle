@@ -13,6 +13,7 @@ import {
   extractTurtlePrefixDeclarations,
   extractXmlNamespacePrefixes,
   findLongestPrefixMatch,
+  formatIriForDisplay,
   formatSparqlPrefixDeclarations,
   iriForNamespaceId,
   namespaceIriMapFromRegistry,
@@ -331,6 +332,9 @@ describe('namespace-registry package', () => {
       error: 'unknown namespace',
       input: 'https://unknown.example/Thing'
     });
+    expect(formatIriForDisplay('https://example.org/ontology/Thing', prefixes)).toBe('exont:Thing');
+    expect(formatIriForDisplay('https://unknown.example/path/Thing', prefixes)).toBe('Thing');
+    expect(formatIriForDisplay(null, prefixes)).toBe('');
   });
 
   test('CURIE expansion returns explicit results for valid and invalid tokens', () => {

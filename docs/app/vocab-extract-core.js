@@ -10,6 +10,7 @@
  * Exposes: window.VOCAB_EXTRACT
  */
 import { COMMON_NAMESPACE_IRIS } from './shared/namespace-registry/index.js';
+import { serializeDelimitedRows } from './shared/tabular-io/index.js';
 
 (() => {
   "use strict";
@@ -142,12 +143,6 @@ import { COMMON_NAMESPACE_IRIS } from './shared/namespace-registry/index.js';
     } catch {
       return false;
     }
-  }
-
-  function escapeCsv(val) {
-    const s = val == null ? "" : String(val);
-    if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-    return s;
   }
 
   function isCapitalizedToken(tok) {
@@ -481,20 +476,21 @@ import { COMMON_NAMESPACE_IRIS } from './shared/namespace-registry/index.js';
 
   function exportRowsToCsv(rows) {
     const headers = ["iri", "label", "element type", "definition", "is a", "is defined by"];
-    const lines = [headers.join(",")];
-
-    rows.forEach((r) => {
-      lines.push([
-        escapeCsv(r.iri),
-        escapeCsv(r.label),
-        escapeCsv(r.elementType),
-        escapeCsv(r.definition),
-        escapeCsv(r.isA),
-        escapeCsv(r.isDefinedBy),
-      ].join(","));
+    return serializeDelimitedRows([
+      headers,
+      ...rows.map((r) => [
+        r.iri,
+        r.label,
+        r.elementType,
+        r.definition,
+        r.isA,
+        r.isDefinedBy,
+      ]),
+    ], {
+      delimiter: ",",
+      newline: "\n",
+      trailingNewline: false,
     });
-
-    return lines.join("\n");
   }
 
   // ---------------------------

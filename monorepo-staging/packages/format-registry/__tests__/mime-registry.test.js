@@ -85,6 +85,18 @@ describe('format-registry MIME helpers', () => {
       ok: true,
       value: { id: 'sparqlQuery', mimeType: 'application/sparql-query', category: 'query' }
     });
+    expect(getSupportedMimeTypeForFilename('update.ru')).toMatchObject({
+      ok: true,
+      value: { id: 'sparqlUpdate', mimeType: 'application/sparql-update', category: 'query' }
+    });
+    expect(getSupportedMimeTypeForFilename('results.srj')).toMatchObject({
+      ok: true,
+      value: { id: 'sparqlResultsJson', mimeType: 'application/sparql-results+json', category: 'query' }
+    });
+    expect(getSupportedMimeTypeForFilename('results.srx')).toMatchObject({
+      ok: true,
+      value: { id: 'sparqlResultsXml', mimeType: 'application/sparql-results+xml', category: 'query' }
+    });
     expect(getSupportedMimeTypeForFilename('notes.json')).toMatchObject({
       ok: true,
       value: { id: 'json', mimeType: 'application/json', category: 'data' }
@@ -136,6 +148,8 @@ describe('format-registry MIME helpers', () => {
   test('preferred extension lookup is MIME-to-extension and remains separate from output extension lookup', () => {
     expect(getPreferredExtensionForMimeType('text/turtle')).toEqual({ ok: true, value: 'ttl' });
     expect(getPreferredExtensionForMimeType('jsonLd')).toEqual({ ok: true, value: 'jsonld' });
+    expect(getPreferredExtensionForMimeType('text/mermaid')).toEqual({ ok: true, value: 'mmd' });
+    expect(getPreferredExtensionForMimeType('application/d3+json')).toEqual({ ok: true, value: 'json' });
   });
 
   test('Mermaid and D3 JSON output descriptors are distinct from generic JSON detection', () => {
@@ -208,7 +222,7 @@ describe('format-registry MIME helpers', () => {
     expect(getAcceptExtensions('rdf')).toContain('.ttl');
     expect(getAcceptExtensions('rdf')).toContain('.jsonld');
     expect(getAcceptExtensions('rdf')).not.toContain('.csv');
-    expect(getAcceptExtensions('query')).toBe('.rq,.sparql');
+    expect(getAcceptExtensions('query')).toBe('.rq,.sparql,.ru,.srj,.srx');
   });
 
   test('guessRdfMimeTypeFromText handles paradigmatic RDF snippets and plain text fallback', () => {

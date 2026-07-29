@@ -46,3 +46,22 @@ The first extracted package should reach **4 - Package ready** before app rewiri
 - Fixtures cover TTL, TriG, N-Triples, N-Quads, JSON-LD, RDF/XML, malformed text, empty graph, prefixes, literals, blank nodes, named graphs, and RDF lists.
 
 The package becomes **5 - Canonical** only after every intended consumer adopts it and duplicate app-local parser/serializer implementations are removed.
+
+## Completion Update 2026-07-29
+
+**Current package rating: 5 - Canonical for active RDF parsing and serialization paths reviewed in this cycle.**
+
+Evidence:
+
+- The shared `rdf-io` package owns the parser/serializer boundary, triple/quad handling, RDFJS normalization, runtime dependency adapters, and focused Jest coverage for paradigmatic RDF inputs and outputs.
+- OntoEagle, TOM, Axiolotl, Axiolotl `graph-analytics.html`, Visual Lynx, OCM, Ontology Tabulator, IRI Swapper, SPARQL Pattern Visualizer, and Table Nova active RDF paths reviewed in this cycle now route RDF parsing and serialization through shared `rdf-io` package imports or app-local copies of the same package structure.
+- Package Jest coverage preserves expected behavior for Turtle/N-Triples/N-Quads/TriG-style parsing, JSON-LD conversion, RDF/XML runtime behavior, serialization dispatch, triple-only output, named graph preservation, malformed input failure, and empty graph handling.
+
+Completion evidence:
+
+- Direct active app-owned calls to `new N3.Parser`, `N3.Writer`, `jsonld.toRDF`, `jsonld.fromRDF`, `$rdf.parse`, and `$rdf.serialize` were removed from TOM, Axiolotl, Axiolotl `graph-analytics.html`, and Visual Lynx transformer modules.
+- Vendor parser/serializer calls now live inside the shared `rdf-io` adapter layer, which is the intended architecture boundary.
+
+Regression note:
+
+- Old app-level RDF expectations are represented by package Jest fixtures and thin app tests. Any intentional output differences should continue to be documented where app adapters normalize MIME names, return structured result objects, choose triple-vs-quad output, or preserve prefixes differently.

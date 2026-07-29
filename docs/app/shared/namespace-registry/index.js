@@ -18,6 +18,7 @@ export {
 export {
   findLongestPrefixMatch,
   compactIriToCurie,
+  formatIriForDisplay,
   expandCurieToIri
 } from './curie.js';
 

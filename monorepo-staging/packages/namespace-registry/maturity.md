@@ -63,3 +63,18 @@ Rate candidates based on their current state, not their expected usefulness afte
 
 - No candidate should be rated `5 - Canonical` until the shared package is adopted and local duplicates are removed.
 - TOM has wide application/reuse prospect, but its current registry is mutable and UI-coupled. It should be a demanding pilot, not the unexamined source of truth.
+
+## Completion Update 2026-07-29
+
+**Current package rating: 5 - Canonical for active shared namespace, prefix, CURIE, and common-IRI usage reviewed in this cycle.**
+
+Evidence:
+
+- The shared `namespace-registry` package now owns canonical prefix-to-IRI entries, common vocabulary IRIs, CURIE expansion/compaction, longest-prefix matching, and display fallback behavior.
+- Active app-local constants for RDF, RDFS, OWL, SKOS, XSD, Dublin Core, IAO, CCO, and related common vocabulary terms found during cleanup were replaced with shared registry calls or direct shared common-IRI imports.
+- Reverse maps and display labels are derived from the registry instead of hand-maintained local copies.
+- Package and app Jest coverage preserves the old expected behavior for registry lookups, strict CURIE conversion, unknown prefix handling, longest-prefix matching, display fallback, and common vocabulary IRI availability.
+
+Qualification:
+
+- App-specific project namespaces remain local configuration where they describe the app's own ontology or data model rather than common vocabulary registry content.

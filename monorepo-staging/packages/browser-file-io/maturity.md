@@ -61,3 +61,18 @@ Use this checklist before rating anything `5 - Canonical`.
 
 - No function should be rated `5 - Canonical` yet. The capability has a package-ready candidate, but the intended consumers have not adopted it and local duplicates still exist.
 - The package candidate promotes the stable parts of BFI-001, BFI-002, BFI-024, and BFI-025 without importing parser, serializer, UI, storage, or vendor spreadsheet behavior into the browser utility boundary.
+
+## Completion Update 2026-07-29
+
+**Current package rating: 5 - Canonical for active browser read/download utilities reviewed in this cycle.**
+
+Evidence:
+
+- The shared `browser-file-io` package now owns browser text reads, ArrayBuffer reads, object URL downloads, text downloads, JSON downloads, and accept-attribute construction.
+- Active consumers have been rewired to direct package imports rather than local wrappers or browser globals.
+- Local active duplicates discovered during cleanup were deleted, including old FileReader wrappers, download helpers, CSV-download wrappers where they only duplicated browser download behavior, and argument-order compatibility shims.
+- Package and app Jest coverage preserves the old expected behavior for successful text reads, successful ArrayBuffer reads, FileReader errors, setup errors, text download cleanup, JSON download formatting, and accept-attribute generation.
+
+Qualification:
+
+- Functions that combine file reading with parsing, IndexedDB writes, or UI state remain app workflows and are intentionally not part of this capability family.

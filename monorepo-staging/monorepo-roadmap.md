@@ -524,6 +524,8 @@ browser platform utilities
 ```
 
 Then continuing onto:
+1. Ontology-related utils (is valid URN, is valid IRI, is blank node, is ontology file, xsd datatype detection/updating, etc.; make UUID/GUID)
+1. Normalization utils (toCamelCase, toPascalCase, toSnakeCase, etc.; getting datetime, appending datetime to filename)
 1. SPARQL query pattern extraction
 1. Ontology metadata extraction
 1. SPARQL update pattern implementation
@@ -532,6 +534,7 @@ Then continuing onto:
 1. Visualization of SPARQL in Cytoscape
 1. YAML export
 1. HTML export
+1. Toast notifications, logging utils, status notifications, lightmode-darkmode
 1. Standardized JS API to run headless
 1. Package distribution, minification, etc.
 1. Documentation for an agent to run headless apps
