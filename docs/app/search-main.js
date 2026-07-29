@@ -22,7 +22,7 @@ import { mintBundleIri, BUNDLE_LS_KEY, setShoppingCartCount, loadSlimBundleDoc, 
 import { importUserOntologyFile as importUserOntologyFileToIdb } from './ontology-meta.js';
 import { shortIri } from './namespaces.js';
 import {
-  iriForNamespaceId,
+  COMMON_NAMESPACE_IRIS,
   namespacePrefixMapFromRegistry
 } from './shared/namespace-registry/index.js';
 import {
@@ -88,16 +88,17 @@ let docsByIri = new Map();   // Map<string, OntologyDocument>
 let options = structuredClone(defaultSearchOptions);
 let searchReady = false;
 const DATASET_SCHEMA_VERSION = 2;
-const XSD_ANY_URI_IRI = iriForNamespaceId('xsd', 'anyURI').value;
+const NS = COMMON_NAMESPACE_IRIS;
+const XSD_ANY_URI_IRI = NS.xsd.anyURI;
 const COMMON_PREFIXES = namespacePrefixMapFromRegistry();
 const SLIM_BUNDLE_CONTEXT = Object.freeze({
   rdf: COMMON_PREFIXES.rdf,
   rdfs: COMMON_PREFIXES.rdfs,
   skos: COMMON_PREFIXES.skos,
   owl: COMMON_PREFIXES.owl,
-  'rdfs:label': iriForNamespaceId('rdfs', 'label').value,
-  'rdfs:isDefinedBy': iriForNamespaceId('rdfs', 'isDefinedBy').value,
-  'skos:definition': iriForNamespaceId('skos', 'definition').value
+  'rdfs:label': NS.rdfs.label,
+  'rdfs:isDefinedBy': NS.rdfs.isDefinedBy,
+  'skos:definition': NS.skos.definition
 });
 const OWL_TYPE_IRIS = Object.freeze([
   'Class',
@@ -106,7 +107,7 @@ const OWL_TYPE_IRIS = Object.freeze([
   'AnnotationProperty',
   'NamedIndividual',
   'Ontology'
-].map((id) => iriForNamespaceId('owl', id).value));
+].map((id) => NS.owl[id]));
 
 /* -----------------------------
  * Utilities
@@ -478,10 +479,10 @@ function createSlimBundleItemNode(doc) {
     subject: 'iri',
     type: 'type',
     properties: {
-      label: 'http://www.w3.org/2000/01/rdf-schema#label',
-      definition: 'http://www.w3.org/2004/02/skos/core#definition',
+      label: NS.rdfs.label,
+      definition: NS.skos.definition,
       curatedIn: {
-        predicate: 'http://www.w3.org/2000/01/rdf-schema#isDefinedBy',
+        predicate: NS.rdfs.isDefinedBy,
         termType: 'iri'
       }
     }

@@ -11,43 +11,35 @@
  */
 
 import {
+  COMMON_NAMESPACE_IRIS,
   deriveNamespaceStemFromIri,
-  namespacePrefixMapFromRegistry
 } from './shared/namespace-registry/index.js';
 
-const COMMON_PREFIXES = namespacePrefixMapFromRegistry();
-const OWL = COMMON_PREFIXES.owl;
-const RDF = COMMON_PREFIXES.rdf;
-const RDFS = COMMON_PREFIXES.rdfs;
-const SKOS = COMMON_PREFIXES.skos;
-const CCEO = 'http://www.ontologyrepository.com/CommonCoreOntologies/';
-const CCO2 = 'https://www.commoncoreontologies.org/';
-const DCTERMS = COMMON_PREFIXES.dcterms;
-const OBO = 'http://purl.obolibrary.org/obo/';
+const NS = COMMON_NAMESPACE_IRIS;
 export const ADDED_BY_USER_IRI = 'https://jonathanvajda.github.io/OntoEagle/added_by_user';
 
 /** Common predicate keys (full IRIs + compact forms) */
 const P = Object.freeze({
-  type: [`${RDF}type`, 'rdf:type', '@type'],
-  label: [`${RDFS}label`, 'rdfs:label', 'label'],
-  prefLabel: [`${SKOS}prefLabel`, 'skos:prefLabel', 'prefLabel'],
-  altLabel: [`${SKOS}altLabel`, 'skos:altLabel', 'altLabel'],
-  definition: [`${SKOS}definition`, 'skos:definition', 'definition', `${OBO}IAO_0000115`, 'obo:IAO_0000115', 'IAO_0000115', `${CCEO}definition`],
-  citation: [`${DCTERMS}bibliographicCitation`, 'dcterms:bibliographicCitation'],
-  definitionSource: [`${CCEO}definition_source`, `${CCO2}ont00001754`, `${OBO}IAO_0000119`, 'cceo:definition_source', 'cco2:ont00001754', 'obo:IAO_0000119', 'IAO_0000119'],
-  example: [`${SKOS}example`, `${OBO}IAO_0000112`, `${CCEO}example_of_usage`, 'skos:example', 'example', 'obo:IAO_0000112', 'IAO_0000112', 'cceo:example_of_usage'],
-  note: [`${SKOS}scopeNote`, `${OBO}IAO_0000600`, `${CCEO}elucidation`, 'skos:scopeNote', 'scopeNote', 'obo:IAO_0000600', 'IAO_0000600', 'cceo:elucidation'],
-  comment: [`${RDFS}comment`, 'rdfs:comment', 'comment'],
-  curatorNote: [`${OBO}IAO_0000232`, 'obo:IAO_0000232', 'IAO_0000232'],
-  curated_in: [`${CCEO}is_curated_in_ontology`, `${RDFS}isDefinedBy`, `${CCO2}ont00001760`],
-  subClassOf: [`${RDFS}subClassOf`, 'rdfs:subClassOf'],
-  subPropertyOf: [`${RDFS}subPropertyOf`, 'rdfs:subPropertyOf'],
-  disjointWith: [`${OWL}disjointWith`, 'owl:disjointWith'],
-  equivalentClass: [`${OWL}equivalentClass`, 'owl:equivalentClass'],
-  domain: [`${RDFS}domain`, 'rdfs:domain'],
-  range: [`${RDFS}range`, 'rdfs:range'],
-  broader: [`${SKOS}broader`, 'skos:broader'],
-  narrower: [`${SKOS}narrower`, 'skos:narrower'],
+  type: [NS.rdf.type, 'rdf:type', '@type'],
+  label: [NS.rdfs.label, 'rdfs:label', 'label'],
+  prefLabel: [NS.skos.prefLabel, 'skos:prefLabel', 'prefLabel'],
+  altLabel: [NS.skos.altLabel, 'skos:altLabel', 'altLabel'],
+  definition: [NS.skos.definition, 'skos:definition', 'definition', NS.iao.definition, 'obo:IAO_0000115', 'IAO_0000115', NS.cceo.definition],
+  citation: [NS.dcterms.bibliographicCitation, 'dcterms:bibliographicCitation'],
+  definitionSource: [NS.cceo.definitionSource, NS.cco2.definitionSource, NS.iao.definitionSource, 'cceo:definition_source', 'cco2:ont00001754', 'obo:IAO_0000119', 'IAO_0000119'],
+  example: [NS.skos.example, NS.iao.exampleOfUsage, NS.cceo.exampleOfUsage, 'skos:example', 'example', 'obo:IAO_0000112', 'IAO_0000112', 'cceo:example_of_usage'],
+  note: [NS.skos.scopeNote, NS.iao.elucidation, NS.cceo.elucidation, 'skos:scopeNote', 'scopeNote', 'obo:IAO_0000600', 'IAO_0000600', 'cceo:elucidation'],
+  comment: [NS.rdfs.comment, 'rdfs:comment', 'comment'],
+  curatorNote: [NS.iao.curatorNote, 'obo:IAO_0000232', 'IAO_0000232'],
+  curated_in: [NS.cceo.curatedIn, NS.rdfs.isDefinedBy, NS.cco2.curatedIn],
+  subClassOf: [NS.rdfs.subClassOf, 'rdfs:subClassOf'],
+  subPropertyOf: [NS.rdfs.subPropertyOf, 'rdfs:subPropertyOf'],
+  disjointWith: [NS.owl.disjointWith, 'owl:disjointWith'],
+  equivalentClass: [NS.owl.equivalentClass, 'owl:equivalentClass'],
+  domain: [NS.rdfs.domain, 'rdfs:domain'],
+  range: [NS.rdfs.range, 'rdfs:range'],
+  broader: [NS.skos.broader, 'skos:broader'],
+  narrower: [NS.skos.narrower, 'skos:narrower'],
   addedByUser: [ADDED_BY_USER_IRI, 'added_by_user'],
 });
 
@@ -169,7 +161,7 @@ export function inferElementType(typeValue) {
   const types = valueToTypeIris(typeValue);
 
   // types might be CURIE-like or full IRIs.
-  const has = (t) => types.includes(t) || types.includes(`owl:${t}`) || types.includes(`${OWL}${t}`);
+  const has = (t) => types.includes(t) || types.includes(`owl:${t}`) || types.includes(NS.owl[t]);
 
   if (has('Ontology')) return 'Ontology';
   if (has('Class')) return 'Class';
@@ -281,7 +273,7 @@ export function extractDocumentsFromJsonLd(jsonld) {
       namespace: computeNamespace(iri),
       definition,
       typeIris: typeIris.length ? typeIris : undefined,
-      additionalTypes: typeIris.length ? typeIris.filter((t) => ![`owl:${type}`, `${OWL}${type}`].includes(t)) : undefined,
+      additionalTypes: typeIris.length ? typeIris.filter((t) => ![`owl:${type}`, NS.owl[type]].includes(t)) : undefined,
       citations: citations.length ? citations : undefined,
       definitionSources: definitionSources.length ? definitionSources : undefined,
       examples: examples.length ? examples : undefined,

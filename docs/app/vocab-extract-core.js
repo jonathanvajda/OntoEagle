@@ -9,8 +9,12 @@
  *
  * Exposes: window.VOCAB_EXTRACT
  */
+import { COMMON_NAMESPACE_IRIS } from './shared/namespace-registry/index.js';
+
 (() => {
   "use strict";
+
+  const NS = COMMON_NAMESPACE_IRIS;
 
   // ---------------------------
   // Configuration (overrideable)
@@ -22,26 +26,26 @@
 
     // Match your existing GDC defaults (keeps compatibility with what you're already generating).
     // (These are the IDs we’ll use for vocabulary nodes.)
-    GDC_BASE_IRI: "http://purl.obolibrary.org/obo/BFO_0000031",
-    GDC_TYPE_IRI: "http://purl.obolibrary.org/obo/BFO_0000031",
-    ABOUT_LINK_IRI: "http://purl.obolibrary.org/obo/BFO_0000176", // used as “about / derived from” link
+    GDC_BASE_IRI: NS.bfo.genericallyDependentContinuant,
+    GDC_TYPE_IRI: NS.bfo.genericallyDependentContinuant,
+    ABOUT_LINK_IRI: NS.bfo.continuantPartOf, // used as “about / derived from” link
 
     // Skip persons (same IRI as your CQ tool uses for Person nodes)
-    PERSON_IRI: "https://www.commoncoreontologies.org/ont00001262",
+    PERSON_IRI: NS.cco2.person,
 
     // Read text from these properties across the graph
     TEXT_PROPERTIES: [
-      "https://www.commoncoreontologies.org/ont00001761", // generic text field in your graph
-      "http://www.w3.org/2000/01/rdf-schema#label",
-      "http://purl.org/dc/terms/description",
-      "http://www.w3.org/2000/01/rdf-schema#comment"
+      NS.cco2.textValue, // generic text field in your graph
+      NS.rdfs.label,
+      NS.dcterms.description,
+      NS.rdfs.comment
     ],
 
     // RDF-ish props for the editable table
-    RDFS_LABEL: "http://www.w3.org/2000/01/rdf-schema#label",
-    RDFS_IS_DEFINED_BY: "http://www.w3.org/2000/01/rdf-schema#isDefinedBy",
-    SKOS_DEFINITION: "http://www.w3.org/2004/02/skos/core#definition",
-    XSD_STRING: "http://www.w3.org/2001/XMLSchema#string",
+    RDFS_LABEL: NS.rdfs.label,
+    RDFS_IS_DEFINED_BY: NS.rdfs.isDefinedBy,
+    SKOS_DEFINITION: NS.skos.definition,
+    XSD_STRING: NS.xsd.string,
 
     // Custom props for “element type” + “is a” columns (kept separate from @type)
     VOCAB_ELEMENT_TYPE: "https://jonathanvajda.com/ontology/vocabElementType",

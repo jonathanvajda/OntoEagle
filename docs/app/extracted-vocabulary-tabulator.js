@@ -4,16 +4,17 @@
  *  - vocab-extract-core.js loaded (window.VOCAB_EXTRACT)
  *  - lexicon.js + POSTaggerGraph.js (for rebuild)
  */
+import { COMMON_NAMESPACE_IRIS } from './shared/namespace-registry/index.js';
 
 (() => {
   "use strict";
 
   const OWL_TYPES = [
-    { label: "Class", iri: "http://www.w3.org/2002/07/owl#Class" },
-    { label: "NamedIndividual", iri: "http://www.w3.org/2002/07/owl#NamedIndividual" },
-    { label: "ObjectProperty", iri: "http://www.w3.org/2002/07/owl#ObjectProperty" },
-    { label: "DatatypeProperty", iri: "http://www.w3.org/2002/07/owl#DatatypeProperty" },
-    { label: "AnnotationProperty", iri: "http://www.w3.org/2002/07/owl#AnnotationProperty" },
+    { label: "Class", iri: COMMON_NAMESPACE_IRIS.owl.Class },
+    { label: "NamedIndividual", iri: COMMON_NAMESPACE_IRIS.owl.NamedIndividual },
+    { label: "ObjectProperty", iri: COMMON_NAMESPACE_IRIS.owl.ObjectProperty },
+    { label: "DatatypeProperty", iri: COMMON_NAMESPACE_IRIS.owl.DatatypeProperty },
+    { label: "AnnotationProperty", iri: COMMON_NAMESPACE_IRIS.owl.AnnotationProperty },
   ];
 
   const DEFAULT_TYPE_LABEL = "Class";
@@ -67,7 +68,7 @@
   }
 
   function buildTable(rows) {
-    if (typeof Tabulator === "undefined") {
+    if (!window.Tabulator) {
       throw new Error("Tabulator is not loaded (missing tabulator.min.js).");
     }
 
@@ -77,7 +78,7 @@
       state.table = null;
     }
 
-    state.table = new Tabulator("#vocabGrid", {
+    state.table = new window.Tabulator("#vocabGrid", {
       data: rows,
       reactiveData: true,
       layout: "fitColumns",

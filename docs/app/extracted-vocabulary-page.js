@@ -4,17 +4,18 @@
  */
 import { downloadTextFile } from './shared/browser-file-io/index.js';
 import { SUPPORTED_MIME_DESCRIPTORS } from './shared/format-registry/index.js';
+import { COMMON_NAMESPACE_IRIS } from './shared/namespace-registry/index.js';
 
 (() => {
   "use strict";
 
   const OWL_TYPES = [
     { label: "", iri: "" },
-    { label: "owl:Class", iri: "http://www.w3.org/2002/07/owl#Class" },
-    { label: "owl:NamedIndividual", iri: "http://www.w3.org/2002/07/owl#NamedIndividual" },
-    { label: "owl:ObjectProperty", iri: "http://www.w3.org/2002/07/owl#ObjectProperty" },
-    { label: "owl:DatatypeProperty", iri: "http://www.w3.org/2002/07/owl#DatatypeProperty" },
-    { label: "owl:AnnotationProperty", iri: "http://www.w3.org/2002/07/owl#AnnotationProperty" },
+    { label: "owl:Class", iri: COMMON_NAMESPACE_IRIS.owl.Class },
+    { label: "owl:NamedIndividual", iri: COMMON_NAMESPACE_IRIS.owl.NamedIndividual },
+    { label: "owl:ObjectProperty", iri: COMMON_NAMESPACE_IRIS.owl.ObjectProperty },
+    { label: "owl:DatatypeProperty", iri: COMMON_NAMESPACE_IRIS.owl.DatatypeProperty },
+    { label: "owl:AnnotationProperty", iri: COMMON_NAMESPACE_IRIS.owl.AnnotationProperty },
   ];
 
   let state = {

@@ -8,6 +8,8 @@ export {
 
 export {
   COMMON_NAMESPACE_REGISTRY,
+  COMMON_NAMESPACE_IRIS,
+  namespaceIriMapFromRegistry,
   namespacePrefixMapFromRegistry,
   namespaceToPrefixMap,
   iriForNamespaceId

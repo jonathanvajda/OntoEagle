@@ -296,11 +296,11 @@ function typeToTurtleTerm(value) {
 
 export function serializeSlimTurtle(jsonld) {
   const lines = [
-    '@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .',
-    '@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .',
-    '@prefix owl: <http://www.w3.org/2002/07/owl#> .',
-    '@prefix skos: <http://www.w3.org/2004/02/skos/core#> .',
-    '@prefix dcterms: <http://purl.org/dc/terms/> .',
+    `@prefix rdf: <${COMMON_PREFIXES.rdf}> .`,
+    `@prefix rdfs: <${COMMON_PREFIXES.rdfs}> .`,
+    `@prefix owl: <${COMMON_PREFIXES.owl}> .`,
+    `@prefix skos: <${COMMON_PREFIXES.skos}> .`,
+    `@prefix dcterms: <${COMMON_PREFIXES.dcterms}> .`,
     ''
   ];
 

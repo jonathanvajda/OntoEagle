@@ -1,7 +1,7 @@
 // docs/app/bundler-core.js
 import { inferElementType } from './rdf_extract.js';
 import {
-  iriForNamespaceId,
+  COMMON_NAMESPACE_IRIS,
   namespacePrefixMapFromRegistry
 } from './shared/namespace-registry/index.js';
 
@@ -14,8 +14,7 @@ import {
 export const BUNDLE_LS_KEY = 'onto.bundles.jsonld';
 
 const COMMON_PREFIXES = namespacePrefixMapFromRegistry();
-const RDF_TYPE_IRI = iriForNamespaceId('rdf', 'type').value;
-const RDFS_IS_DEFINED_BY_IRI = iriForNamespaceId('rdfs', 'isDefinedBy').value;
+const NS = COMMON_NAMESPACE_IRIS;
 
 export const CONTEXT = Object.freeze({
   rdf: COMMON_PREFIXES.rdf,
@@ -249,18 +248,18 @@ export function shortId(iri) {
 /* ---------- “loose” JSON-LD value helpers for UI ---------- */
 
 export const RDFS_IS_DEFINED_BY_KEYS = Object.freeze([
-  'https://www.commoncoreontologies.org/ont00001760',
+  NS.cco2.curatedIn,
   'cco:ont00001760',
-  'http://www.ontologyrepository.com/CommonCoreOntologies/is_curated_in_ontology',
+  NS.cceo.curatedIn,
   'cco:is_curated_in_ontology',
   'rdfs:isDefinedBy',
-  RDFS_IS_DEFINED_BY_IRI
+  NS.rdfs.isDefinedBy
 ]);
 
 export const RDF_TYPE_KEYS = Object.freeze([
   '@type',
   'rdf:type',
-  RDF_TYPE_IRI
+  NS.rdf.type
 ]);
 
 export function getAnyKey(node, keys) {

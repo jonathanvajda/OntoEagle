@@ -126,9 +126,25 @@ describe('namespace-registry package', () => {
       ok: true,
       value: 'http://www.ontologyrepository.com/CommonCoreOntologies/ont00001753'
     });
+    expect(iriForNamespaceId('cceo', 'curatedIn')).toEqual({
+      ok: true,
+      value: 'http://www.ontologyrepository.com/CommonCoreOntologies/is_curated_in_ontology'
+    });
+    expect(iriForNamespaceId('cco2', 'textValue')).toEqual({
+      ok: true,
+      value: 'https://www.commoncoreontologies.org/ont00001761'
+    });
+    expect(iriForNamespaceId('cceo', 'hasBooleanValue')).toEqual({
+      ok: true,
+      value: 'http://www.ontologyrepository.com/CommonCoreOntologies/has_boolean_value'
+    });
     expect(iriForNamespaceId('cco2', 'curatedIn')).toEqual({
       ok: true,
       value: 'https://www.commoncoreontologies.org/ont00001760'
+    });
+    expect(iriForNamespaceId('bfo', 'hasContinuantPart')).toEqual({
+      ok: true,
+      value: 'http://purl.obolibrary.org/obo/BFO_0000178'
     });
     expect(iriForNamespaceId('iao', 'definition')).toEqual({
       ok: true,

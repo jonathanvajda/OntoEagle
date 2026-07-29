@@ -13,6 +13,17 @@
  * }>} NamespaceRegistryEntry
  */
 
+const deepFreeze = (value) => {
+  if (!value || typeof value !== 'object' || Object.isFrozen(value)) {
+    return value;
+  }
+  Object.freeze(value);
+  for (const childValue of Object.values(value)) {
+    deepFreeze(childValue);
+  }
+  return value;
+};
+
 const defineEntry = (entry) => Object.freeze({
   ...entry,
   ids: Object.freeze(entry.ids || {})
@@ -86,6 +97,7 @@ export const COMMON_NAMESPACE_REGISTRY = Object.freeze({
       Axiom: 'Axiom',
       Class: 'Class',
       DataRange: 'DataRange',
+      Datatype: 'Datatype',
       DatatypeProperty: 'DatatypeProperty',
       DeprecatedClass: 'DeprecatedClass',
       DeprecatedProperty: 'DeprecatedProperty',
@@ -205,6 +217,11 @@ export const COMMON_NAMESPACE_REGISTRY = Object.freeze({
       unsignedByte: 'unsignedByte',
       positiveInteger: 'positiveInteger'
     }
+  }),
+  xhtml: defineEntry({
+    prefix: 'xhtml',
+    namespaceIri: 'http://www.w3.org/1999/xhtml',
+    ids: {}
   }),
   skos: defineEntry({
     prefix: 'skos',
@@ -348,7 +365,13 @@ export const COMMON_NAMESPACE_REGISTRY = Object.freeze({
   bfo: defineEntry({
     prefix: 'bfo',
     namespaceIri: 'http://purl.obolibrary.org/obo/BFO_',
-    ids: {}
+    ids: {
+      genericallyDependentContinuant: '0000031',
+      role: '0000023',
+      continuantPartOf: '0000176',
+      hasContinuantPart: '0000178',
+      bearerOf: '0000196'
+    }
   }),
   iao: defineEntry({
     prefix: 'iao',
@@ -360,25 +383,88 @@ export const COMMON_NAMESPACE_REGISTRY = Object.freeze({
       editorNote: '0000116',
       termEditor: '0000117',
       alternativeTerm: '0000118',
+      metadataComplete: '0000120',
+      metadataIncomplete: '0000123',
+      uncurated: '0000124',
+      pendingFinalVetting: '0000125',
+      readyForRelease: '0000122',
+      curationStatus: '0000114',
       curatorNote: '0000232',
-      elucidation: '0000600'
+      elucidation: '0000600',
+      obsolescenceReason: '0000231',
+      requiresDiscussion: '0000428',
+      termReplacedBy: '0100001'
+    }
+  }),
+  oboInOwl: defineEntry({
+    prefix: 'oboInOwl',
+    namespaceIri: 'http://www.geneontology.org/formats/oboInOwl#',
+    ids: {
+      hasDbXref: 'hasDbXref',
+      hasExactSynonym: 'hasExactSynonym',
+      hasNarrowSynonym: 'hasNarrowSynonym',
+      hasBroadSynonym: 'hasBroadSynonym',
+      hasRelatedSynonym: 'hasRelatedSynonym',
+      hasOBONamespace: 'hasOBONamespace',
+      id: 'id'
+    }
+  }),
+  swrl: defineEntry({
+    prefix: 'swrl',
+    namespaceIri: 'http://www.w3.org/2003/11/swrl#',
+    ids: {
+      Imp: 'Imp'
     }
   }),
   cco: defineEntry({
     prefix: 'cco',
     namespaceIri: 'http://www.ontologyrepository.com/CommonCoreOntologies/',
-    ids: {}
+    ids: {
+      acronym: 'ont00001753',
+      curatedIn: 'ont00001760',
+      definition: 'definition',
+      definitionSource: 'definition_source',
+      exampleOfUsage: 'example_of_usage',
+      elucidation: 'elucidation',
+      hasTextValue: 'has_text_value',
+      hasIntegerValue: 'has_integer_value',
+      hasDecimalValue: 'has_decimal_value',
+      hasDateValue: 'has_date_value',
+      hasDatetimeValue: 'has_datetime_value',
+      hasBooleanValue: 'has_boolean_value',
+      legacyCuratedIn: 'is_curated_in_ontology'
+    }
   }),
   cceo: defineEntry({
     prefix: 'cceo',
     namespaceIri: 'http://www.ontologyrepository.com/CommonCoreOntologies/',
-    ids: {}
+    ids: {
+      acronym: 'ont00001753',
+      definition: 'definition',
+      definitionSource: 'definition_source',
+      exampleOfUsage: 'example_of_usage',
+      elucidation: 'elucidation',
+      hasTextValue: 'has_text_value',
+      hasIntegerValue: 'has_integer_value',
+      hasDecimalValue: 'has_decimal_value',
+      hasDateValue: 'has_date_value',
+      hasDatetimeValue: 'has_datetime_value',
+      hasBooleanValue: 'has_boolean_value',
+      curatedIn: 'is_curated_in_ontology'
+    }
   }),
   cco2: defineEntry({
     prefix: 'cco2',
     namespaceIri: 'https://www.commoncoreontologies.org/',
     ids: {
-      curatedIn: 'ont00001760'
+      database: 'ont00000756',
+      person: 'ont00001262',
+      acronym: 'ont00001753',
+      definitionSource: 'ont00001754',
+      curatedIn: 'ont00001760',
+      textValue: 'ont00001761',
+      emailAddressRelation: 'ont00001801',
+      EmailAddress: 'CommonCoreOntologies/EmailAddress'
     }
   }),
   foaf: defineEntry({
@@ -412,6 +498,33 @@ export const COMMON_NAMESPACE_REGISTRY = Object.freeze({
     ids: {}
   })
 });
+
+/**
+ * Builds full IRI maps from registry IDs while preserving the registry shape.
+ *
+ * @param {Readonly<Record<string, NamespaceRegistryEntry>>} [registry]
+ * Registry to read from.
+ * @returns {Readonly<Record<string, Readonly<Record<string, string>>>>}
+ * Frozen object keyed by registry key, then by the entry's stable ID keys.
+ */
+export function namespaceIriMapFromRegistry(registry = COMMON_NAMESPACE_REGISTRY) {
+  return deepFreeze(Object.fromEntries(
+    Object.entries(registry || {}).map(([registryKey, entry]) => [
+      registryKey,
+      Object.fromEntries(
+        Object.entries(entry.ids || {}).map(([idKey, localName]) => [
+          idKey,
+          `${entry.namespaceIri}${localName}`
+        ])
+      )
+    ])
+  ));
+}
+
+/**
+ * Generated full IRIs for the common namespace registry.
+ */
+export const COMMON_NAMESPACE_IRIS = namespaceIriMapFromRegistry();
 
 /**
  * Converts a namespace registry into the package's plain prefix-map shape.
