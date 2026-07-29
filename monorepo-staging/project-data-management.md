@@ -74,7 +74,7 @@ IndexedDB requirements:
 
 - Store project data in IndexedDB through a single app storage adapter.
 - Do not read or write IndexedDB directly from business logic.
-- Use native IndexedDB APIs or a committed browser-ready adapter such as `./public/app/scripts/vendor/idb.min.js`.
+- Use native IndexedDB APIs or a committed browser-ready adapter such as `./public/app/shared/vendor/idb.min.js`.
 - Store enough metadata to support project listing, versioning, modification dates, validation status, and recovery after browser reload.
 - Write operations must be explicit, transactional where practical, and resilient to quota or serialization errors.
 - Large data should be chunked or stored in records that avoid unnecessary memory pressure.

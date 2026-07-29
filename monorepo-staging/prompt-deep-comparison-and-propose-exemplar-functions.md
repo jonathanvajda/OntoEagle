@@ -1,0 +1,3 @@
+let's do a deep comparison regarding the naming convention, inputs (domain), outputs (range), error-handling, logging, etc. of each function candidate, see if we can make a singular function for each of these above capabilities -- a mature, flexible, excellent function, rather than a Frankstein function.
+Propose the JS functions that would mature enough to satisify all the constraints across these projects, and describe how each app would need to be changed conditional on that JS being adopted as a promoted function. Let's make the relevant Jest, ensure that it has sufficient comments in JSDocs for these. Make the file structure according to the spec for the relevant functions.
+Feel free to make a new markdown so that it doesn't change the inventory markdown.
