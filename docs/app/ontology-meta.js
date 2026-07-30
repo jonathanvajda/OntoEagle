@@ -24,7 +24,7 @@ import {
   idbInit,
   idbPutDatasetMeta,
   idbPutDocuments
-} from './shared/vendor/indexeddb.min.js';
+} from './ontoeagle-indexeddb-store.js';
 
 function namespaceIdIri(namespaceKey, idKey) {
   const result = iriForNamespaceId(namespaceKey, idKey);

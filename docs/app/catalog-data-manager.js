@@ -16,7 +16,7 @@ import {
   idbDeleteDataset,
   idbGetAllDatasetMeta,
   idbSetDatasetEnabled
-} from './indexeddb.min.js';
+} from './ontoeagle-indexeddb-store.js';
 
 const modalId = 'ontCatalogDataManagerModal';
 const fileInputId = 'ontCatalogDataManagerFile';

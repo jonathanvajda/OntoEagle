@@ -16,6 +16,7 @@ import {
   normalizeProjectRecord,
   normalizeQuadRow,
   normalizeRunRecord,
+  inspectIndexedDbDatabase,
   openIndexedDbStore,
   resolveIdbRequest,
   waitForIdbTransaction
@@ -48,6 +49,7 @@ function createMockIndexedDB() {
   const stores = new Map();
   const db = {
     objectStoreNames: makeNameList([]),
+    close() {},
     createObjectStore(name, options) {
       createdStores.push({ name, options });
       const store = {
@@ -76,6 +78,9 @@ function createMockIndexedDB() {
         request.onsuccess?.();
       });
       return request;
+    },
+    databases() {
+      return Promise.resolve([{ name: 'ProjectData' }]);
     },
     deleteDatabase() {
       return createAsyncRequest({ result: undefined });
@@ -405,6 +410,46 @@ describe('IndexedDB adapter helpers', () => {
     expect(db).toBeTruthy();
     expect(indexedDBRef.createdStores).toEqual([{ name: 'runs', options: { keyPath: 'runId' } }]);
     expect(indexedDBRef.createdIndexes).toEqual([{ indexName: 'projectId', keyPath: 'projectId', indexOptions: undefined }]);
+  });
+
+  test('inspectIndexedDbDatabase reports unavailable IndexedDB without throwing', async () => {
+    await expect(inspectIndexedDbDatabase('ProjectData', { indexedDBRef: null })).resolves.toEqual({
+      available: false,
+      exists: null,
+      stores: []
+    });
+  });
+
+  test('inspectIndexedDbDatabase reports absent databases and existing stores', async () => {
+    let openCalls = 0;
+    const missingIndexedDBRef = {
+      open() {
+        openCalls += 1;
+      },
+      databases: () => Promise.resolve([{ name: 'OtherData' }])
+    };
+    await expect(inspectIndexedDbDatabase('ProjectData', { indexedDBRef: missingIndexedDBRef })).resolves.toEqual({
+      available: true,
+      exists: false,
+      stores: []
+    });
+    expect(openCalls).toBe(0);
+
+    const indexedDBRef = createMockIndexedDB();
+    await openIndexedDbStore({
+      name: 'ProjectData',
+      version: 1,
+      stores: [
+        { name: 'settings' },
+        { name: 'datasets' }
+      ]
+    }, { indexedDBRef });
+
+    await expect(inspectIndexedDbDatabase('ProjectData', { indexedDBRef })).resolves.toEqual({
+      available: true,
+      exists: true,
+      stores: ['settings', 'datasets']
+    });
   });
 
   test('deleteIndexedDbDatabase rejects blocked deletes clearly', async () => {

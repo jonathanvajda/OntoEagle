@@ -11,6 +11,11 @@
  */
 import { COMMON_NAMESPACE_IRIS } from './shared/namespace-registry/index.js';
 import { serializeDelimitedRows } from './shared/tabular-io/index.js';
+import {
+  deleteCompetencyQuestionNodesByIds,
+  readCompetencyQuestionNodes,
+  storeCompetencyQuestionNodes
+} from './cq-ferret-indexeddb-store.js';
 
 (() => {
   "use strict";
@@ -60,77 +65,6 @@ import { serializeDelimitedRows } from './shared/tabular-io/index.js';
     // “Name-like” connectors we can keep inside a phrase
     allowedConnectors: new Set(["and", "or", "&", "of", "for"]),
   };
-
-  // ---------------------------
-  // IndexedDB helpers
-  // ---------------------------
-  function openDb({ dbName = CFG.dbName, dbVersion = CFG.dbVersion, storeName = CFG.storeName } = {}) {
-    return new Promise((resolve, reject) => {
-      const req = indexedDB.open(dbName, dbVersion);
-      req.onupgradeneeded = (e) => {
-        const db = e.target.result;
-        if (!db.objectStoreNames.contains(storeName)) {
-          db.createObjectStore(storeName, { keyPath: "id" });
-        }
-      };
-      req.onsuccess = (e) => resolve(e.target.result);
-      req.onerror = (e) => reject(e.target.error);
-    });
-  }
-
-  function txDone(tx) {
-    return new Promise((resolve, reject) => {
-      tx.oncomplete = () => resolve();
-      tx.onerror = (e) => reject(e.target.error);
-      tx.onabort = (e) => reject(e.target.error || new Error("Transaction aborted"));
-    });
-  }
-
-  async function readAllNodes({ dbName = CFG.dbName, storeName = CFG.storeName } = {}) {
-    const db = await openDb({ dbName, storeName });
-    const tx = db.transaction(storeName, "readonly");
-    const store = tx.objectStore(storeName);
-
-    const all = await new Promise((resolve, reject) => {
-      const r = store.getAll();
-      r.onsuccess = () => resolve(r.result || []);
-      r.onerror = (e) => reject(e.target.error);
-    });
-
-    // Normalize to JSON-LD-ish objects (ensure @id)
-    const nodes = all.map((rec) => {
-      const id = rec["@id"] || rec.id;
-      return { ...rec, "@id": id };
-    });
-
-    await txDone(tx);
-    db.close();
-    return nodes;
-  }
-
-  async function upsertNodes(nodes, { dbName = CFG.dbName, storeName = CFG.storeName } = {}) {
-    const db = await openDb({ dbName, storeName });
-    const tx = db.transaction(storeName, "readwrite");
-    const store = tx.objectStore(storeName);
-
-    nodes.forEach((n) => {
-      const id = n["@id"] || n.id;
-      store.put({ ...n, "@id": id, id });
-    });
-
-    await txDone(tx);
-    db.close();
-  }
-
-  async function deleteKeys(keys, { dbName = CFG.dbName, storeName = CFG.storeName } = {}) {
-    if (!keys.length) return;
-    const db = await openDb({ dbName, storeName });
-    const tx = db.transaction(storeName, "readwrite");
-    const store = tx.objectStore(storeName);
-    keys.forEach((k) => store.delete(k));
-    await txDone(tx);
-    db.close();
-  }
 
   // ---------------------------
   // Small utilities
@@ -410,7 +344,7 @@ import { serializeDelimitedRows } from './shared/tabular-io/index.js';
   } = {}) {
     if (!tagger) throw new Error("rebuildVocabularyInDb requires a POSTagger instance.");
 
-    const allNodes = await readAllNodes({ dbName, storeName });
+    const allNodes = await readCompetencyQuestionNodes();
 
     // Build vocab from NON-vocab nodes to avoid self-feeding.
     const nonVocab = allNodes.filter((n) => !looksLikeVocabularyNode(n));
@@ -423,8 +357,8 @@ import { serializeDelimitedRows } from './shared/tabular-io/index.js';
       .map((n) => (n["@id"] || n.id))
       .filter(Boolean);
 
-    await deleteKeys(keysToDelete, { dbName, storeName });
-    await upsertNodes(vocabNodes, { dbName, storeName });
+    await deleteCompetencyQuestionNodesByIds(keysToDelete);
+    await storeCompetencyQuestionNodes(vocabNodes);
 
     return { vocabCount: vocabNodes.length };
   }
@@ -434,7 +368,7 @@ import { serializeDelimitedRows } from './shared/tabular-io/index.js';
     storeName = CFG.storeName,
     autoRebuild = true,
   } = {}) {
-    const allNodes = await readAllNodes({ dbName, storeName });
+    const allNodes = await readCompetencyQuestionNodes();
 
     let vocabNodes = allNodes.filter((n) => looksLikeVocabularyNode(n));
 
@@ -442,7 +376,7 @@ import { serializeDelimitedRows } from './shared/tabular-io/index.js';
     if (autoRebuild) {
       const tagger = new POSTagger(window.POSTAGGER_LEXICON);
       await rebuildVocabularyInDb({ dbName, storeName, tagger });
-      const refreshed = await readAllNodes({ dbName, storeName });
+      const refreshed = await readCompetencyQuestionNodes();
       vocabNodes = refreshed.filter((n) => looksLikeVocabularyNode(n));
     }
 
@@ -470,7 +404,7 @@ import { serializeDelimitedRows } from './shared/tabular-io/index.js';
     const base = nodesById?.get(row.iri) || { "@id": row.iri, "@type": [CFG.GDC_TYPE_IRI] };
     const updated = applyRowToNode(row, base, dbName);
 
-    await upsertNodes([updated], { dbName, storeName });
+    await storeCompetencyQuestionNodes([updated]);
     if (nodesById) nodesById.set(row.iri, updated);
   }
 
@@ -498,8 +432,6 @@ import { serializeDelimitedRows } from './shared/tabular-io/index.js';
   // ---------------------------
   window.VOCAB_EXTRACT = {
     CFG,
-    openDb,
-    readAllNodes,
     loadVocabularyRows,
     rebuildVocabularyInDb,
     saveRow,

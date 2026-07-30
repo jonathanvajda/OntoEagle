@@ -4,7 +4,7 @@
    - graph.jsonld: stale-while-revalidate
 */
 
-const SW_VERSION = '__BUILD_ID__-shared-rdf-io-v2';
+const SW_VERSION = '__BUILD_ID__-indexeddb-data-management-v1';
 const CACHE_SHELL = `ontoeagle-shell-${SW_VERSION}`;
 const CACHE_DATA = `ontoeagle-data-${SW_VERSION}`;
 
@@ -18,10 +18,12 @@ const SHELL_ASSETS = [
   './styles/app-base.css',
   './styles/search-app.css',
   './styles/ontology-pages.css',
+  './styles/site-header.css',
   './styles/tabulator.min.css',
   './styles/bundler.css',
   './app/ontology-catalog.js',
   './app/ontology-viewer.js',
+  './app/site-header.js',
   './app/ontology-meta.js',
   './app/ontology-icons.js',
   './app/catalog-data-manager.js',
@@ -31,12 +33,13 @@ const SHELL_ASSETS = [
   './app/namespaces.js',
   './app/slim-core.js',
   './app/rdf_extract.js',
-  './app/indexeddb.min.js',
+  './app/ontoeagle-indexeddb-store.js',
+  './app/cq-ferret-indexeddb-store.js',
   './app/types.js',
   './app/bundler-core.js',
   './app/bundler-ui.js',
   './app/shared/vendor/tabulator.min.js',
-  './app/mermaid.min.js',
+  './app/shared/vendor/mermaid.min.js',
   './app/shared/vendor/n3.min.js',
   './app/shared/vendor/jsonld.min.js',
   './app/shared/vendor/rdflib.min.js',
@@ -50,6 +53,12 @@ const SHELL_ASSETS = [
   './app/shared/format-registry/index.js',
   './app/shared/format-registry/mime-registry.js',
   './app/shared/format-registry/rdf-parser-formats.js',
+  './app/shared/indexeddb-data-management/id-generation.js',
+  './app/shared/indexeddb-data-management/index.js',
+  './app/shared/indexeddb-data-management/indexeddb-adapter.js',
+  './app/shared/indexeddb-data-management/record-store.js',
+  './app/shared/indexeddb-data-management/records.js',
+  './app/shared/indexeddb-data-management/storage-error.js',
   './app/shared/namespace-registry/curie.js',
   './app/shared/namespace-registry/index.js',
   './app/shared/namespace-registry/namespace-registry.js',

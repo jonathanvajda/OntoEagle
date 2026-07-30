@@ -1,4 +1,6 @@
 // ./app/site-header.js
+import { inspectIndexedDbDatabase } from './shared/indexeddb-data-management/index.js';
+
 (() => {
   "use strict";
 
@@ -348,30 +350,23 @@
 
   async function inspectDbStatus() {
     const config = dbStatusConfig();
-    if (!config.dbName || !("indexedDB" in window)) return;
+    if (!config.dbName) return;
 
     try {
-      if (!indexedDB.databases) {
+      const status = await inspectIndexedDbDatabase(config.dbName);
+      if (!status.available || status.exists === null) {
         updateDbStatus("idle", "DB idle");
         return;
       }
 
-      const databases = await indexedDB.databases();
-      const exists = databases.some((db) => db.name === config.dbName);
-      if (!exists) {
+      if (!status.exists) {
         updateDbStatus("idle", "DB not created");
         return;
       }
 
       updateDbStatus("reading", "DB checking");
-      const request = indexedDB.open(config.dbName);
-      request.onerror = () => updateDbStatus("error", "DB unavailable");
-      request.onsuccess = () => {
-        const db = request.result;
-        const missing = config.stores.filter((store) => !db.objectStoreNames.contains(store));
-        db.close();
-        updateDbStatus(missing.length ? "error" : "ready", missing.length ? "DB store missing" : "DB ready");
-      };
+      const missing = config.stores.filter((store) => !status.stores.includes(store));
+      updateDbStatus(missing.length ? "error" : "ready", missing.length ? "DB store missing" : "DB ready");
     } catch (_err) {
       updateDbStatus("error", "DB unavailable");
     }

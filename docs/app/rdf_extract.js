@@ -171,8 +171,8 @@ export function inferElementType(typeValue) {
   if (has('NamedIndividual')) return 'NamedIndividual';
 
   // Sometimes RDFLib JSON-LD uses full IRIs only; this still catches them.
-  if (types.some(t => t === `${OWL}Ontology`)) return 'Ontology';
-  if (types.some(t => t === `${OWL}Class`)) return 'Class';
+  if (types.some(t => t === NS.owl.Ontology)) return 'Ontology';
+  if (types.some(t => t === NS.owl.Class)) return 'Class';
 
   return 'Other';
 }

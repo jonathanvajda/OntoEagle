@@ -31,7 +31,6 @@ import {
 } from './shared/rdf-io/index.js';
   
 
-// Minimal IDB wrappers (you can expand these in indexeddb.min.js later)
 import {
   idbInit,
   idbGetActiveSettings,
@@ -43,7 +42,7 @@ import {
   idbPutDocuments,
   idbSetDatasetEnabled,
   idbDeleteDataset
-} from './indexeddb.min.js';
+} from './ontoeagle-indexeddb-store.js';
 
 /* -----------------------------
  * DOM refs

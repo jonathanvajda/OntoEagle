@@ -15,6 +15,10 @@ import {
   serializeRdfDataset
 } from './shared/rdf-io/index.js';
 import { SUPPORTED_MIME_DESCRIPTORS } from './shared/format-registry/index.js';
+import {
+  deleteCompetencyQuestionById,
+  readCompetencyQuestionNodes
+} from './cq-ferret-indexeddb-store.js';
 
 // ======================================================
 // SECTION 1: GLOBAL STATE
@@ -101,31 +105,8 @@ function getDatabaseQueryTextAndSyntax(node) {
   };
 }
 
-// ======================================================
-// SECTION 2: CORE DATABASE LOGIC
-// ======================================================
-function initIndexedDB() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open("CQDatabase", 1);
-    request.onupgradeneeded = (event) => {
-      if (!event.target.result.objectStoreNames.contains("CQStore")) {
-        event.target.result.createObjectStore("CQStore", { keyPath: "id" });
-      }
-    };
-    request.onsuccess = (event) => resolve(event.target.result);
-    request.onerror = (event) => reject(event.target.error);
-  });
-}
-
 async function readFromIndexedDB() {
-  const db = await initIndexedDB();
-  const transaction = db.transaction("CQStore", "readonly");
-  const store = transaction.objectStore("CQStore");
-  return new Promise((resolve, reject) => {
-    const request = store.getAll();
-    request.onsuccess = () => resolve(request.result.map(node => ({ ...node, "@id": node.id })));
-    request.onerror = (event) => reject(event.target.error);
-  });
+  return readCompetencyQuestionNodes();
 }
 
 // ======================================================
@@ -867,22 +848,14 @@ async function autoSaveCQ() {
 
 async function deleteCQ(cqId) {
   debouncedAutoSave.cancel();
-  const db = await initIndexedDB();
-  const transaction = db.transaction("CQStore", "readwrite");
-  const store = transaction.objectStore("CQStore");
   const uniqueId = cqId.split('_').pop();
-  const request = store.getAllKeys();
-  request.onsuccess = () => {
-    request.result.filter(key => key.includes(`_${uniqueId}`)).forEach(key => store.delete(key));
-  };
-  transaction.oncomplete = () => {
-    allNodesCache = allNodesCache.filter(node => !node['@id'].includes(`_${uniqueId}`));
-    removeCQFromSidebar(cqId);
-    alert("CQ deleted successfully.");
-    if (currentCQId === cqId) {
-      document.getElementById("new-cq-button").click();
-    }
-  };
+  await deleteCompetencyQuestionById(cqId);
+  allNodesCache = allNodesCache.filter(node => !String(node['@id'] || '').includes(`_${uniqueId}`));
+  removeCQFromSidebar(cqId);
+  alert("CQ deleted successfully.");
+  if (currentCQId === cqId) {
+    document.getElementById("new-cq-button").click();
+  }
 }
 
 function downloadJSONLD() {

@@ -39,7 +39,6 @@ import {
   isMimeDescriptorCategory
 } from './shared/format-registry/index.js';
 
-// Minimal IDB wrappers (you can expand these in indexeddb.min.js later)
 import {
   idbInit,
   idbGetActiveSettings,
@@ -49,7 +48,7 @@ import {
   idbGetAllDocuments,
   idbGetEnabledDocuments,
   idbPutDocuments
-} from './indexeddb.min.js';
+} from './ontoeagle-indexeddb-store.js';
 
 /* Example item */
 const EX_ITEM_IRI = 'http://purl.obolibrary.org/obo/ICO_0000120';
