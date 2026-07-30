@@ -2,19 +2,25 @@
 // Copyright (C) 2026 Jonathan Vajda
 
 import {
+  createDatasetStore,
   createIndexedDbRecordAdapter,
+  createProjectPortfolioStores,
+  DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID,
+  ensureProjectPortfolioProject,
   openIndexedDbStore,
+  openProjectPortfolioDatabase,
   resolveIdbRequest,
   runObjectStoreTransaction
 } from './shared/indexeddb-data-management/index.js';
 
 const DB_NAME = 'OntoEagleDB';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const SETTINGS_STORE = 'settings';
 const DATASETS_STORE = 'datasets';
 const DOCUMENTS_STORE = 'documents';
 const INDEX_STORE = 'index';
 const ACTIVE_SETTINGS_KEY = 'active';
+export const ONTOEAGLE_ACTIVE_PROJECT_ID = DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID;
 
 const ONTOEAGLE_DB_SCHEMA = Object.freeze({
   name: DB_NAME,
@@ -28,6 +34,8 @@ const ONTOEAGLE_DB_SCHEMA = Object.freeze({
 });
 
 let dbPromise = null;
+let portfolioDbPromise = null;
+let migrationPromise = null;
 
 /**
  * Opens the OntoEagle application database.
@@ -37,13 +45,41 @@ let dbPromise = null;
  *
  * @returns {Promise<IDBDatabase>} Open IndexedDB database.
  */
-export async function idbInit() {
+export async function openOntoEagleProjectDatabase() {
   if (!dbPromise) dbPromise = openIndexedDbStore(ONTOEAGLE_DB_SCHEMA);
-  return dbPromise;
+  const db = await dbPromise;
+  if (!migrationPromise) migrationPromise = migrateOntoEagleProjectDatabase();
+  await migrationPromise;
+  return db;
 }
 
 async function adapterFor(storeName) {
-  return createIndexedDbRecordAdapter(await idbInit(), storeName);
+  return createIndexedDbRecordAdapter(await openOntoEagleProjectDatabase(), storeName);
+}
+
+async function rawAdapterFor(storeName, options = {}) {
+  return createIndexedDbRecordAdapter(await dbPromise, storeName, options);
+}
+
+async function datasetStore() {
+  return createDatasetStore(await adapterFor(DATASETS_STORE));
+}
+
+async function projectPortfolioStores() {
+  if (!portfolioDbPromise) portfolioDbPromise = openProjectPortfolioDatabase();
+  const stores = createProjectPortfolioStores(await portfolioDbPromise, {
+    projectId: ONTOEAGLE_ACTIVE_PROJECT_ID
+  });
+  await ensureProjectPortfolioProject(stores, {
+    projectId: ONTOEAGLE_ACTIVE_PROJECT_ID,
+    label: 'Default Cross-App Workspace',
+    tags: ['cross-app', 'ontology-workbench'],
+    metadata: {
+      apps: ['OntoEagle'],
+      purpose: 'Shared project for artifacts contributed across ontology tools'
+    }
+  });
+  return stores;
 }
 
 function docKey(datasetId, iri) {
@@ -51,13 +87,65 @@ function docKey(datasetId, iri) {
 }
 
 function normalizeDatasetMeta(datasetId, meta = {}) {
-  const now = Date.now();
+  const now = new Date().toISOString();
+  const metadata = meta.metadata && typeof meta.metadata === 'object'
+    ? { ...meta.metadata }
+    : { ...meta };
   return {
     datasetId,
-    ...meta,
+    projectId: meta.projectId || ONTOEAGLE_ACTIVE_PROJECT_ID,
+    source: meta.source || (datasetId === 'builtin' ? 'builtin' : 'user'),
+    label: meta.label || meta.ontologyName || meta.fileName || datasetId,
+    fileName: meta.fileName || '',
+    fingerprint: meta.fingerprint || '',
+    documentCount: Number.isFinite(meta.documentCount) ? meta.documentCount : 0,
+    ontologyCount: Number.isFinite(meta.ontologyCount) ? meta.ontologyCount : 0,
+    schemaVersion: Number.isInteger(meta.schemaVersion) ? meta.schemaVersion : 1,
     enabled: meta.enabled !== false,
-    updatedAt: meta.updatedAt || now
+    createdAt: meta.createdAt || now,
+    updatedAt: meta.updatedAt || now,
+    metadata
   };
+}
+
+function restoreDatasetMeta(record) {
+  if (!record) return null;
+  return {
+    ...(record.metadata && typeof record.metadata === 'object' ? record.metadata : {}),
+    ...record,
+    ontologyName: record.metadata?.ontologyName || record.ontologyName || record.label,
+    enabled: record.enabled !== false
+  };
+}
+
+async function ensureDefaultProject() {
+  await projectPortfolioStores();
+}
+
+async function migrateLegacyActiveSettings() {
+  const settingsAdapter = await rawAdapterFor(SETTINGS_STORE);
+  const { settings } = await projectPortfolioStores();
+  const migrated = await settings.getSetting(ACTIVE_SETTINGS_KEY, null);
+  if (migrated) return;
+
+  const raw = await settingsAdapter.get(ACTIVE_SETTINGS_KEY);
+  if (raw) await settings.setSetting(ACTIVE_SETTINGS_KEY, raw);
+}
+
+async function migrateLegacyDatasetRecords() {
+  const adapter = await rawAdapterFor(DATASETS_STORE);
+  const records = await adapter.list();
+  for (const record of records) {
+    if (!record || record.projectId === ONTOEAGLE_ACTIVE_PROJECT_ID) continue;
+    const migrated = normalizeDatasetMeta(record.datasetId, record);
+    await adapter.put(migrated.datasetId, migrated);
+  }
+}
+
+async function migrateOntoEagleProjectDatabase() {
+  await ensureDefaultProject();
+  await migrateLegacyActiveSettings();
+  await migrateLegacyDatasetRecords();
 }
 
 /**
@@ -65,8 +153,9 @@ function normalizeDatasetMeta(datasetId, meta = {}) {
  *
  * @returns {Promise<object|null>} Saved settings or null.
  */
-export async function idbGetActiveSettings() {
-  return (await adapterFor(SETTINGS_STORE)).get(ACTIVE_SETTINGS_KEY);
+export async function getActiveSearchSettings() {
+  const { settings } = await projectPortfolioStores();
+  return settings.getSetting(ACTIVE_SETTINGS_KEY, null);
 }
 
 /**
@@ -75,8 +164,9 @@ export async function idbGetActiveSettings() {
  * @param {object} settingsObj Search settings object.
  * @returns {Promise<object>} Stored settings.
  */
-export async function idbPutActiveSettings(settingsObj) {
-  await (await adapterFor(SETTINGS_STORE)).put(ACTIVE_SETTINGS_KEY, settingsObj);
+export async function setActiveSearchSettings(settingsObj) {
+  const { settings } = await projectPortfolioStores();
+  await settings.setSetting(ACTIVE_SETTINGS_KEY, settingsObj);
   return settingsObj;
 }
 
@@ -86,8 +176,9 @@ export async function idbPutActiveSettings(settingsObj) {
  * @param {string} datasetId Dataset id.
  * @returns {Promise<object|null>} Dataset metadata.
  */
-export async function idbGetDatasetMeta(datasetId) {
-  return (await adapterFor(DATASETS_STORE)).get(datasetId);
+export async function getOntologyDatasetMeta(datasetId) {
+  const record = await (await datasetStore()).listDatasetRecords(ONTOEAGLE_ACTIVE_PROJECT_ID);
+  return restoreDatasetMeta(record.find((meta) => meta.datasetId === datasetId) || null);
 }
 
 /**
@@ -97,10 +188,9 @@ export async function idbGetDatasetMeta(datasetId) {
  * @param {object} meta Metadata patch.
  * @returns {Promise<object>} Stored metadata.
  */
-export async function idbPutDatasetMeta(datasetId, meta) {
-  const record = normalizeDatasetMeta(datasetId, meta);
-  await (await adapterFor(DATASETS_STORE)).put(datasetId, record);
-  return record;
+export async function storeOntologyDatasetMeta(datasetId, meta) {
+  const record = await (await datasetStore()).storeDatasetRecord(normalizeDatasetMeta(datasetId, meta));
+  return restoreDatasetMeta(record);
 }
 
 /**
@@ -108,8 +198,9 @@ export async function idbPutDatasetMeta(datasetId, meta) {
  *
  * @returns {Promise<object[]>} Dataset metadata records.
  */
-export async function idbGetAllDatasetMeta() {
-  return (await adapterFor(DATASETS_STORE)).list();
+export async function listOntologyDatasetMeta() {
+  const records = await (await datasetStore()).listDatasetRecords(ONTOEAGLE_ACTIVE_PROJECT_ID);
+  return records.map(restoreDatasetMeta);
 }
 
 /**
@@ -118,8 +209,8 @@ export async function idbGetAllDatasetMeta() {
  * @param {string} datasetId Dataset id.
  * @returns {Promise<boolean>} True when the delete request completes.
  */
-export async function idbDeleteDatasetMeta(datasetId) {
-  return (await adapterFor(DATASETS_STORE)).delete(datasetId);
+export async function deleteOntologyDatasetMeta(datasetId) {
+  return (await datasetStore()).deleteDataset(datasetId);
 }
 
 /**
@@ -129,7 +220,7 @@ export async function idbDeleteDatasetMeta(datasetId) {
  * @param {object[]} docs Extracted ontology documents.
  * @returns {Promise<number>} Number of stored documents.
  */
-export async function idbPutDocuments(datasetId, docs) {
+export async function storeOntologyDatasetDocuments(datasetId, docs) {
   const adapter = await adapterFor(DOCUMENTS_STORE);
   const sourceDocs = Array.isArray(docs) ? docs : [];
   let count = 0;
@@ -138,6 +229,19 @@ export async function idbPutDocuments(datasetId, docs) {
     await adapter.put(docKey(datasetId, doc.iri), { datasetId, ...doc });
     count += 1;
   }
+  const { artifacts } = await projectPortfolioStores();
+  await artifacts.storeProjectArtifact({
+    artifactId: `artifact:ontoeagle:${datasetId}:documents`,
+    projectId: ONTOEAGLE_ACTIVE_PROJECT_ID,
+    artifactKind: 'ontology-documents',
+    role: datasetId === 'builtin' ? 'loaded' : 'source',
+    label: `${datasetId} ontology documents`,
+    summary: { documentCount: count }
+  }, {
+    datasetId,
+    documentCount: count,
+    storedInObjectStore: DOCUMENTS_STORE
+  });
   return count;
 }
 
@@ -147,7 +251,7 @@ export async function idbPutDocuments(datasetId, docs) {
  * @param {string} datasetId Dataset id.
  * @returns {Promise<object[]>} Dataset documents.
  */
-export async function idbGetAllDocuments(datasetId) {
+export async function listOntologyDatasetDocuments(datasetId) {
   const docs = await (await adapterFor(DOCUMENTS_STORE)).list();
   return docs.filter((doc) => doc && typeof doc.iri === 'string' && doc.datasetId === datasetId);
 }
@@ -157,7 +261,7 @@ export async function idbGetAllDocuments(datasetId) {
  *
  * @returns {Promise<void>}
  */
-export async function idbClearDocuments() {
+export async function clearOntologyDatasetDocuments() {
   await (await adapterFor(DOCUMENTS_STORE)).clear();
 }
 
@@ -167,8 +271,8 @@ export async function idbClearDocuments() {
  * @param {string} datasetId Dataset id.
  * @returns {Promise<number>} Number of deleted documents.
  */
-export async function idbDeleteDatasetDocuments(datasetId) {
-  const db = await idbInit();
+export async function deleteOntologyDatasetDocuments(datasetId) {
+  const db = await openOntoEagleProjectDatabase();
   const prefix = `${datasetId}::`;
   return runObjectStoreTransaction(db, DOCUMENTS_STORE, 'readwrite', async (store) => {
     const keys = await resolveIdbRequest(store.getAllKeys());
@@ -188,8 +292,8 @@ export async function idbDeleteDatasetDocuments(datasetId) {
  *
  * @returns {Promise<object[]>} Enabled ontology documents.
  */
-export async function idbGetEnabledDocuments() {
-  const metas = await idbGetAllDatasetMeta();
+export async function listEnabledOntologyDocuments() {
+  const metas = await listOntologyDatasetMeta();
   const enabledIds = new Set(metas.filter((meta) => meta && meta.enabled !== false).map((meta) => meta.datasetId));
   const docs = await (await adapterFor(DOCUMENTS_STORE)).list();
   return docs.filter((doc) => doc && typeof doc.iri === 'string' && enabledIds.has(doc.datasetId));
@@ -202,10 +306,9 @@ export async function idbGetEnabledDocuments() {
  * @param {boolean} enabled Whether the dataset is enabled.
  * @returns {Promise<object|null>} Updated metadata or null.
  */
-export async function idbSetDatasetEnabled(datasetId, enabled) {
-  const meta = await idbGetDatasetMeta(datasetId);
-  if (!meta) return null;
-  return idbPutDatasetMeta(datasetId, { ...meta, enabled: !!enabled, updatedAt: Date.now() });
+export async function setOntologyDatasetEnabled(datasetId, enabled) {
+  const record = await (await datasetStore()).setDatasetEnabled(datasetId, enabled);
+  return restoreDatasetMeta(record);
 }
 
 /**
@@ -214,10 +317,12 @@ export async function idbSetDatasetEnabled(datasetId, enabled) {
  * @param {string} datasetId Dataset id.
  * @returns {Promise<boolean>} True when complete.
  */
-export async function idbDeleteDataset(datasetId) {
-  await idbDeleteDatasetDocuments(datasetId);
-  await idbDeleteDatasetMeta(datasetId);
+export async function deleteOntologyDataset(datasetId) {
+  await deleteOntologyDatasetDocuments(datasetId);
+  await deleteOntologyDatasetMeta(datasetId);
   await (await adapterFor(INDEX_STORE)).delete(datasetId);
+  const { artifacts } = await projectPortfolioStores();
+  await artifacts.deleteProjectArtifact(`artifact:ontoeagle:${datasetId}:documents`);
   return true;
 }
 
@@ -227,7 +332,7 @@ export async function idbDeleteDataset(datasetId) {
  * @param {string} datasetId Dataset id.
  * @returns {Promise<object|null>} Cached index.
  */
-export async function idbGetIndex(datasetId) {
+export async function getOntologySearchIndex(datasetId) {
   return (await adapterFor(INDEX_STORE)).get(datasetId);
 }
 
@@ -238,8 +343,23 @@ export async function idbGetIndex(datasetId) {
  * @param {object} indexObj Index object.
  * @returns {Promise<object>} Stored index object.
  */
-export async function idbPutIndex(datasetId, indexObj) {
+export async function storeOntologySearchIndex(datasetId, indexObj) {
   await (await adapterFor(INDEX_STORE)).put(datasetId, indexObj);
+  const { artifacts } = await projectPortfolioStores();
+  await artifacts.storeProjectArtifact({
+    artifactId: `artifact:ontoeagle:${datasetId}:search-index`,
+    projectId: ONTOEAGLE_ACTIVE_PROJECT_ID,
+    artifactKind: 'search-index',
+    role: 'transformed',
+    label: `${datasetId} search index`,
+    provenance: { derivedFrom: [`artifact:ontoeagle:${datasetId}:documents`] },
+    summary: {
+      keys: indexObj && typeof indexObj === 'object' ? Object.keys(indexObj).length : 0
+    }
+  }, {
+    datasetId,
+    storedInObjectStore: INDEX_STORE
+  });
   return indexObj;
 }
 
@@ -248,6 +368,20 @@ export async function idbPutIndex(datasetId, indexObj) {
  *
  * @returns {Promise<void>}
  */
-export async function idbClearIndex() {
+export async function clearOntologySearchIndex() {
   await (await adapterFor(INDEX_STORE)).clear();
+}
+
+/**
+ * Records an OntoEagle operation in the project-oriented run history.
+ *
+ * @param {object} record Run-like record.
+ * @returns {Promise<object>} Stored run record.
+ */
+export async function storeOntoEagleRunRecord(record) {
+  const { runs } = await projectPortfolioStores();
+  return runs.storeRunRecord({
+    projectId: ONTOEAGLE_ACTIVE_PROJECT_ID,
+    ...record
+  });
 }

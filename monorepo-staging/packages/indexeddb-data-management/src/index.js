@@ -36,3 +36,13 @@ export {
   createRunRecordStore,
   createQuadRowStore
 } from './record-store.js';
+
+export {
+  DEFAULT_PROJECT_PORTFOLIO_DB_NAME,
+  DEFAULT_PROJECT_PORTFOLIO_DB_VERSION,
+  DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID,
+  createProjectPortfolioSchema,
+  openProjectPortfolioDatabase,
+  createProjectPortfolioStores,
+  ensureProjectPortfolioProject
+} from './project-portfolio-store.js';

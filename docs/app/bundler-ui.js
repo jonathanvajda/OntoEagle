@@ -40,14 +40,13 @@ import {
 } from './shared/format-registry/index.js';
 
 import {
-  idbInit,
-  idbGetActiveSettings,
-  idbPutActiveSettings,
-  idbGetDatasetMeta,
-  idbPutDatasetMeta,
-  idbGetAllDocuments,
-  idbGetEnabledDocuments,
-  idbPutDocuments
+  openOntoEagleProjectDatabase,
+  getOntologyDatasetMeta,
+  storeOntologyDatasetMeta,
+  listOntologyDatasetDocuments,
+  listEnabledOntologyDocuments,
+  storeOntologyDatasetDocuments,
+  storeOntoEagleRunRecord
 } from './ontoeagle-indexeddb-store.js';
 
 /* Example item */
@@ -131,8 +130,8 @@ function setSlimStatus(message) {
 }
 
 async function ensureEnabledDocsLoaded() {
-  await idbInit();
-  const docs = await idbGetEnabledDocuments();
+  await openOntoEagleProjectDatabase();
+  const docs = await listEnabledOntologyDocuments();
   docsByIri = mapByIri(docs);
   return docs;
 }
@@ -463,7 +462,7 @@ async function fetchGraph() {
  * @returns {Promise<boolean>} true if loaded from cache
  */
 async function tryLoadFromIdb() {
-  const cachedDocs = await idbGetAllDocuments('builtin');
+  const cachedDocs = await listOntologyDatasetDocuments('builtin');
   if (cachedDocs && cachedDocs.length) {
     docsByIri = mapByIri(cachedDocs);
     return true;
@@ -483,9 +482,19 @@ async function buildFromGraphAndPersist(graphText, fingerprint) {
   docsByIri = mapByIri(docs);
  // INDEX FEATURE: index = buildIndex(docs); // your indexer.js should export this
 
-  await idbPutDocuments('builtin', docs);
- // INDEX FEATURE:   await idbPutIndex('builtin', index);
-  await idbPutDatasetMeta('builtin', { fingerprint, enabled: true, schemaVersion: DATASET_SCHEMA_VERSION, updatedAt: Date.now() });
+  await storeOntologyDatasetDocuments('builtin', docs);
+ // INDEX FEATURE:   await storeOntologySearchIndex('builtin', index);
+  await storeOntologyDatasetMeta('builtin', { fingerprint, enabled: true, schemaVersion: DATASET_SCHEMA_VERSION, updatedAt: Date.now() });
+  await storeOntoEagleRunRecord({
+    runKind: 'ontology-dataset-load',
+    label: 'Loaded built-in OntoEagle graph',
+    outputArtifactIds: ['artifact:ontoeagle:builtin:documents'],
+    payload: {
+      datasetId: 'builtin',
+      documentCount: docs.length,
+      fingerprint
+    }
+  });
 }
 
 async function render() {
@@ -658,7 +667,7 @@ async function render() {
 
 
   await registerServiceWorker();
-  await idbInit();
+  await openOntoEagleProjectDatabase();
 
   // Prefer IDB cache; fall back to graph fetch if needed or outdated
   setStatus('Loading cached index…');
@@ -666,7 +675,7 @@ async function render() {
 
   setStatus('Checking dataset…');
   const { text, fingerprint } = await fetchGraph();
-  const meta = await idbGetDatasetMeta('builtin');
+  const meta = await getOntologyDatasetMeta('builtin');
 
   const fingerprintChanged = !meta || meta.fingerprint !== fingerprint || meta.schemaVersion !== DATASET_SCHEMA_VERSION;
 

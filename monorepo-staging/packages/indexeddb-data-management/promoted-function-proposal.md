@@ -18,7 +18,7 @@
 |Logging|Several apps log from storage functions; Axiolotl dispatches DOM events from storage.|No logging in core package. Callers can wrap with logging or event callbacks.|
 |Side effects|Storage, DOM, localStorage, parsing, serialization, and UI refresh are frequently mixed.|Pure helpers are side-effect free. IndexedDB helpers perform only storage effects. Store factories depend on injected adapters.|
 |RDF graph model|Axiolotl uses triples/quads with empty-string default graph; other apps often store RDF as strings or documents.|Canonical quad row uses `graph: null` for default graph. Named graphs remain explicit strings.|
-|Project model|Mermaid has explicit projects and diagrams; TOM has one implicit ontology project; others store run history.|Canonical model supports project portfolios and project-scoped artifacts, datasets, runs, and quad rows.|
+|Project model|Mermaid has explicit projects and diagrams; TOM has one implicit ontology project; others store run history.|Canonical model supports cross-app project portfolios and project-scoped artifacts, datasets, runs, and quad rows. App-local caches can remain app-local, but user project records must use the shared portfolio boundary.|
 |Deletion model|Axiolotl has granular deletion; Mermaid has project/diagram deletion; IRI/Table Nova have run deletion.|Expose exact record deletion and filtered clearing. Destructive app confirmation remains in the app layer.|
 |Vendor dependencies|Axiolotl uses `idb`; others use native IndexedDB wrappers; Mermaid uses native IDB/FSA.|Core package has no vendor dependency. Native IndexedDB adapters are small and injectable.|
 |Testability|Mermaid has the strongest storage tests; most ontology apps lack IDB tests.|Use adapter injection and memory adapter for deterministic Jest; separately test native IDB wrappers with mocks.|
@@ -64,6 +64,10 @@ These replace repeated low-level `requestToPromise`, `transactionToPromise`, `tx
 ```js
 createMemoryRecordAdapter(entries)
 createIndexedDbRecordAdapter(db, storeName, options)
+createProjectPortfolioSchema(options)
+openProjectPortfolioDatabase(options)
+createProjectPortfolioStores(db, options)
+ensureProjectPortfolioProject(stores, record)
 createProjectStore(adapter, options)
 createArtifactStore(adapter, options)
 createDatasetStore(adapter, options)
@@ -74,11 +78,13 @@ createQuadRowStore(adapter)
 
 These are intentionally adapter-driven. Apps can back them with IndexedDB object stores now and later with File System Access or OPFS backends.
 
+`openProjectPortfolioDatabase` is the shared cross-app portfolio entrypoint. Apps should use it for `projects`, `artifacts`, `runs`, and project-scoped settings so one user project can contain an OntoEagle ontology catalog artifact, TOM workspace artifact, Axiolotl graph/query artifact, Mermaid diagram artifact, and downstream reports. App-specific caches such as OntoEagle's extracted document cache may stay in app-local databases when they are derived or implementation-specific.
+
 ## Why This Is Not a Frankenstein Function
 
 The package does not create one generic `saveAnything()` function. It separates stable concepts:
 
-- Projects organize durable user work.
+- Projects organize durable user work across apps.
 - Artifacts represent source, loaded, staged, transformed, query, diagram, report, mapping, and export data.
 - Datasets represent enabled/disabled loaded data sources.
 - Runs represent previous operations and resumable history.

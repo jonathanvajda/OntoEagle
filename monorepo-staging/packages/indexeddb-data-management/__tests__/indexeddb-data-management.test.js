@@ -4,6 +4,8 @@ import {
   createIndexedDbRecordAdapter,
   createDatasetStore,
   createMemoryRecordAdapter,
+  createProjectPortfolioSchema,
+  createProjectPortfolioStores,
   createProjectStore,
   createQuadRowStore,
   createRunRecordStore,
@@ -11,6 +13,9 @@ import {
   createStableRecordId,
   createTimestampRecordId,
   deleteIndexedDbDatabase,
+  DEFAULT_PROJECT_PORTFOLIO_DB_NAME,
+  DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID,
+  ensureProjectPortfolioProject,
   normalizeArtifactRecord,
   normalizeDatasetRecord,
   normalizeProjectRecord,
@@ -89,17 +94,24 @@ function createMockIndexedDB() {
 }
 
 function createMockObjectStoreDb() {
-  const records = new Map();
+  const stores = new Map();
+  const recordsFor = (storeName) => {
+    if (!stores.has(storeName)) stores.set(storeName, new Map());
+    return stores.get(storeName);
+  };
   const makeRequest = (result, tx) => {
     const request = { result, error: null, onsuccess: null, onerror: null };
     queueMicrotask(() => {
       request.onsuccess?.();
-      setTimeout(() => tx.oncomplete?.(), 0);
+      if (!tx.completionQueued) {
+        tx.completionQueued = true;
+        setTimeout(() => tx.oncomplete?.(), 0);
+      }
     });
     return request;
   };
   return {
-    records,
+    stores,
     transaction(storeNames, mode) {
       const tx = {
         storeNames,
@@ -108,13 +120,14 @@ function createMockObjectStoreDb() {
         onerror: null,
         onabort: null,
         error: null,
-        objectStore() {
+        objectStore(storeName) {
+          const records = recordsFor(storeName);
           return {
             get(key) {
               return makeRequest(records.get(key) || null, tx);
             },
             put(value, key) {
-              const resolvedKey = key || value.runId || value.id;
+              const resolvedKey = key || value.artifactId || value.runId || value.projectId || value.id;
               records.set(resolvedKey, value);
               return makeRequest(resolvedKey, tx);
             },
@@ -366,6 +379,52 @@ describe('store factories over injected adapters', () => {
       runKind: 'diagnostic'
     });
     await expect(store.listRunRecords({ projectId: 'project:one' })).resolves.toHaveLength(1);
+  });
+});
+
+describe('cross-app project portfolio stores', () => {
+  test('createProjectPortfolioSchema uses the shared portfolio database and stores', () => {
+    expect(createProjectPortfolioSchema()).toEqual({
+      name: DEFAULT_PROJECT_PORTFOLIO_DB_NAME,
+      version: 1,
+      stores: [
+        { name: 'projects', options: { keyPath: 'projectId' } },
+        { name: 'artifacts', options: { keyPath: 'artifactId' } },
+        { name: 'runs', options: { keyPath: 'runId' } },
+        { name: 'settings' }
+      ]
+    });
+  });
+
+  test('portfolio stores let different apps contribute artifacts to one project', async () => {
+    const db = createMockObjectStoreDb();
+    const stores = createProjectPortfolioStores(db);
+    await ensureProjectPortfolioProject(stores, {
+      label: 'Shared ontology project'
+    });
+
+    await stores.artifacts.storeProjectArtifact({
+      artifactId: 'artifact:ontoeagle:catalog',
+      projectId: DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID,
+      artifactKind: 'ontology-documents',
+      role: 'loaded',
+      label: 'OntoEagle catalog'
+    });
+    await stores.artifacts.storeProjectArtifact({
+      artifactId: 'artifact:axiolotl:query',
+      projectId: DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID,
+      artifactKind: 'sparql-query',
+      role: 'staged',
+      label: 'Axiolotl query'
+    });
+
+    await expect(stores.projects.getProject(DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID))
+      .resolves.toMatchObject({ label: 'Shared ontology project' });
+    await expect(stores.artifacts.listProjectArtifacts(DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID, { includePayload: false }))
+      .resolves.toEqual(expect.arrayContaining([
+        expect.objectContaining({ artifactId: 'artifact:axiolotl:query' }),
+        expect.objectContaining({ artifactId: 'artifact:ontoeagle:catalog' })
+      ]));
   });
 });
 

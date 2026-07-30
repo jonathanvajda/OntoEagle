@@ -3,14 +3,19 @@
 
 import {
   createIndexedDbRecordAdapter,
+  createProjectPortfolioStores,
+  DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID,
+  ensureProjectPortfolioProject,
   openIndexedDbStore,
+  openProjectPortfolioDatabase,
   resolveIdbRequest,
   runObjectStoreTransaction
 } from './shared/indexeddb-data-management/index.js';
 
 const CQ_DB_NAME = 'CQDatabase';
-const CQ_DB_VERSION = 1;
+const CQ_DB_VERSION = 2;
 const CQ_STORE = 'CQStore';
+export const CQ_FERRET_ACTIVE_PROJECT_ID = DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID;
 
 const CQ_DB_SCHEMA = Object.freeze({
   name: CQ_DB_NAME,
@@ -21,6 +26,8 @@ const CQ_DB_SCHEMA = Object.freeze({
 });
 
 let cqDbPromise = null;
+let portfolioDbPromise = null;
+let cqMigrationPromise = null;
 
 /**
  * Opens CQ Ferret's IndexedDB database.
@@ -29,11 +36,35 @@ let cqDbPromise = null;
  */
 export async function initIndexedDB() {
   if (!cqDbPromise) cqDbPromise = openIndexedDbStore(CQ_DB_SCHEMA);
-  return cqDbPromise;
+  const db = await cqDbPromise;
+  if (!cqMigrationPromise) cqMigrationPromise = ensureCompetencyQuestionProject();
+  await cqMigrationPromise;
+  return db;
 }
 
 async function cqAdapter() {
   return createIndexedDbRecordAdapter(await initIndexedDB(), CQ_STORE, { keyPath: 'id' });
+}
+
+async function projectPortfolioStores() {
+  if (!portfolioDbPromise) portfolioDbPromise = openProjectPortfolioDatabase();
+  const stores = createProjectPortfolioStores(await portfolioDbPromise, {
+    projectId: CQ_FERRET_ACTIVE_PROJECT_ID
+  });
+  await ensureProjectPortfolioProject(stores, {
+    projectId: CQ_FERRET_ACTIVE_PROJECT_ID,
+    label: 'Default Cross-App Workspace',
+    tags: ['cross-app', 'ontology-workbench'],
+    metadata: {
+      apps: ['OntoEagle CQ Ferret'],
+      purpose: 'Shared project for artifacts contributed across ontology tools'
+    }
+  });
+  return stores;
+}
+
+async function ensureCompetencyQuestionProject() {
+  await projectPortfolioStores();
 }
 
 function nodeId(node) {
@@ -70,6 +101,10 @@ export async function storeCompetencyQuestionNodes(nodes) {
     await adapter.put(node.id, node);
     count += 1;
   }
+  await recordCompetencyQuestionProjectSnapshot(nodes, {
+    runKind: 'competency-question-node-upsert',
+    label: `Stored ${count} CQ graph node${count === 1 ? '' : 's'}`
+  });
   return count;
 }
 
@@ -111,6 +146,54 @@ export async function deleteCompetencyQuestionNodesByIds(ids) {
     count += 1;
   }
   return count;
+}
+
+/**
+ * Stores the current CQ graph as a project artifact and records the operation.
+ *
+ * This project-oriented record is intentionally outside the vendor
+ * `POSTaggerGraph.js` write path. The vendor still writes `CQStore`; this
+ * function records the resulting app state through the promoted project/run
+ * model.
+ *
+ * @param {object[]} nodes Current JSON-LD graph nodes.
+ * @param {object} [options]
+ * @param {string} [options.runKind='competency-question-save'] Run kind.
+ * @param {string} [options.label] Human-readable run label.
+ * @returns {Promise<{artifact: object, run: object}>} Stored artifact metadata and run record.
+ */
+export async function recordCompetencyQuestionProjectSnapshot(nodes, {
+  runKind = 'competency-question-save',
+  label = 'Saved CQ Ferret workspace'
+} = {}) {
+  await initIndexedDB();
+  const sourceNodes = Array.isArray(nodes) ? nodes : [];
+  const artifactId = 'artifact:cq-ferret:workspace-jsonld';
+  const { artifacts, runs } = await projectPortfolioStores();
+  const artifact = await artifacts.storeProjectArtifact({
+    artifactId,
+    projectId: CQ_FERRET_ACTIVE_PROJECT_ID,
+    artifactKind: 'jsonld-graph',
+    role: 'staged',
+    label: 'CQ Ferret workspace JSON-LD',
+    mediaType: 'application/ld+json',
+    extension: 'jsonld',
+    summary: { nodeCount: sourceNodes.length },
+    source: {
+      databaseName: CQ_DB_NAME,
+      objectStoreName: CQ_STORE
+    }
+  }, {
+    '@graph': sourceNodes
+  });
+  const run = await runs.storeRunRecord({
+    projectId: CQ_FERRET_ACTIVE_PROJECT_ID,
+    runKind,
+    label,
+    outputArtifactIds: [artifactId],
+    payload: { nodeCount: sourceNodes.length }
+  });
+  return { artifact, run };
 }
 
 /**

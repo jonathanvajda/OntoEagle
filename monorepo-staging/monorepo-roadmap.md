@@ -570,6 +570,13 @@ Local duplicates deleted
 ```
 A function is not truly “shared” when it is copied into packages/. It becomes shared only when every intended consumer uses the package and the duplicate implementations are gone.
 
+### Necessary steps to close out a capability-family
+Document that each capability-family cleanup should include:
+1. removal of old local duplicate functions,
+1. representative regression tests in the promoted package,
+1. `npm run check` passing in every migrated repo,
+1. no `no-undef` failures after rewiring.
+
 ### Use this order of importance:
 1. correct and complete behavior,
 1. clear separation from UI and globals,

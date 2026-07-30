@@ -18,12 +18,13 @@ import {
   iriForNamespaceId
 } from './shared/namespace-registry/index.js';
 import {
-  idbGetAllDatasetMeta,
-  idbGetDatasetMeta,
-  idbGetEnabledDocuments,
-  idbInit,
-  idbPutDatasetMeta,
-  idbPutDocuments
+  listOntologyDatasetMeta,
+  getOntologyDatasetMeta,
+  listEnabledOntologyDocuments,
+  openOntoEagleProjectDatabase,
+  storeOntologyDatasetMeta,
+  storeOntologyDatasetDocuments,
+  storeOntoEagleRunRecord
 } from './ontoeagle-indexeddb-store.js';
 
 function namespaceIdIri(namespaceKey, idKey) {
@@ -295,10 +296,10 @@ export async function fetchGraphJsonLd() {
 }
 
 export async function ensureBuiltinDataset() {
-  await idbInit();
-  const cachedDocs = await idbGetEnabledDocuments();
+  await openOntoEagleProjectDatabase();
+  const cachedDocs = await listEnabledOntologyDocuments();
   const { text, jsonld, fingerprint } = await fetchGraphJsonLd();
-  const meta = await idbGetDatasetMeta('builtin');
+  const meta = await getOntologyDatasetMeta('builtin');
   const stale = !meta || meta.fingerprint !== fingerprint || meta.schemaVersion !== DATASET_SCHEMA_VERSION;
 
   if (!cachedDocs.length || stale) {
@@ -308,8 +309,8 @@ export async function ensureBuiltinDataset() {
       ontologyName: 'OntoEagle built-in graph',
       fileName: 'graph.jsonld'
     });
-    await idbPutDocuments('builtin', docs);
-    await idbPutDatasetMeta('builtin', {
+    await storeOntologyDatasetDocuments('builtin', docs);
+    await storeOntologyDatasetMeta('builtin', {
       fingerprint,
       enabled: true,
       source: 'builtin',
@@ -318,6 +319,16 @@ export async function ensureBuiltinDataset() {
       documentCount: docs.length,
       schemaVersion: DATASET_SCHEMA_VERSION,
       updatedAt: Date.now()
+    });
+    await storeOntoEagleRunRecord({
+      runKind: 'ontology-dataset-load',
+      label: 'Loaded built-in OntoEagle graph',
+      outputArtifactIds: ['artifact:ontoeagle:builtin:documents'],
+      payload: {
+        datasetId: 'builtin',
+        documentCount: docs.length,
+        fingerprint
+      }
     });
   }
 
@@ -347,8 +358,8 @@ export async function importUserOntologyFile(file) {
     fileName: file.name
   }));
 
-  await idbPutDocuments(datasetId, docs);
-  await idbPutDatasetMeta(datasetId, {
+  await storeOntologyDatasetDocuments(datasetId, docs);
+  await storeOntologyDatasetMeta(datasetId, {
     fingerprint,
     enabled: true,
     source: 'user',
@@ -358,6 +369,18 @@ export async function importUserOntologyFile(file) {
     ontologyCount: ontologyRecords.length,
     schemaVersion: DATASET_SCHEMA_VERSION,
     updatedAt: Date.now()
+  });
+  await storeOntoEagleRunRecord({
+    runKind: 'ontology-dataset-import',
+    label: `Imported ${file.name}`,
+    outputArtifactIds: [`artifact:ontoeagle:${datasetId}:documents`],
+    payload: {
+      datasetId,
+      fileName: file.name,
+      documentCount: docs.length,
+      ontologyCount: ontologyRecords.length,
+      fingerprint
+    }
   });
   upsertStoredUserOntologyRecords(datasetId, ontologyRecords);
   clearOntologyMetadataSnapshot();
@@ -562,16 +585,16 @@ export function buildMermaidImportSyntax(rootIri, ontologyIndex) {
 }
 
 export async function loadOntologyWorkspace(options = {}) {
-  await idbInit();
+  await openOntoEagleProjectDatabase();
   const includeDocs = options.includeDocs !== false;
   const includeUserOntologies = options.includeUserOntologies === true;
-  let docs = includeDocs ? await idbGetEnabledDocuments() : [];
+  let docs = includeDocs ? await listEnabledOntologyDocuments() : [];
   const snapshot = options.preferSnapshot ? loadOntologySnapshot() : null;
   let ontologyIndex = snapshot;
 
   if (includeDocs && !docs.length) {
     await ensureBuiltinDataset();
-    docs = await idbGetEnabledDocuments();
+    docs = await listEnabledOntologyDocuments();
   }
 
   if (!ontologyIndex) {
@@ -591,9 +614,9 @@ export async function loadOntologyWorkspace(options = {}) {
       }
     }
 
-    const metas = await idbGetAllDatasetMeta();
+    const metas = await listOntologyDatasetMeta();
     if (metas.some((meta) => meta?.source === 'user' && meta.enabled !== false)) {
-      const enabledDocs = includeDocs ? docs : await idbGetEnabledDocuments();
+      const enabledDocs = includeDocs ? docs : await listEnabledOntologyDocuments();
       for (const doc of enabledDocs) {
         if (doc.addedByUser && doc.type === 'Ontology' && !existingIris.has(doc.iri)) {
           const record = {

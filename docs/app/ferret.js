@@ -17,6 +17,7 @@ import {
 import { SUPPORTED_MIME_DESCRIPTORS } from './shared/format-registry/index.js';
 import {
   deleteCompetencyQuestionById,
+  recordCompetencyQuestionProjectSnapshot,
   readCompetencyQuestionNodes
 } from './cq-ferret-indexeddb-store.js';
 
@@ -820,6 +821,10 @@ async function saveJSONLD() {
     } else {
       updateCQInSidebar(cqNode);
     }
+    await recordCompetencyQuestionProjectSnapshot(allNodesCache, {
+      runKind: isUpdate ? 'competency-question-update' : 'competency-question-create',
+      label: isUpdate ? 'Updated competency question' : 'Created competency question'
+    });
     const cqList = document.getElementById("cq-list");
     Array.from(cqList.children)
       .sort((a, b) => a.textContent.localeCompare(b.textContent))
@@ -841,6 +846,10 @@ async function autoSaveCQ() {
     allNodesCache = await readFromIndexedDB();
     const updatedDsqNode = allNodesCache.find(n => n['@id'] === currentCQId);
     if (updatedDsqNode) updateCQInSidebar(updatedDsqNode);
+    await recordCompetencyQuestionProjectSnapshot(allNodesCache, {
+      runKind: 'competency-question-autosave',
+      label: 'Autosaved competency question'
+    });
   } else {
     statusEl.textContent = `Save failed: ${result.reason}`;
   }
@@ -851,6 +860,10 @@ async function deleteCQ(cqId) {
   const uniqueId = cqId.split('_').pop();
   await deleteCompetencyQuestionById(cqId);
   allNodesCache = allNodesCache.filter(node => !String(node['@id'] || '').includes(`_${uniqueId}`));
+  await recordCompetencyQuestionProjectSnapshot(allNodesCache, {
+    runKind: 'competency-question-delete',
+    label: 'Deleted competency question'
+  });
   removeCQFromSidebar(cqId);
   alert("CQ deleted successfully.");
   if (currentCQId === cqId) {
@@ -1175,7 +1188,11 @@ async function handleCSVUpload(event) {
       const result = await gdcManager.updateAndSave(newGraph, allNodesCache);
       if (result.success) {
         alert(`Successfully processed ${Object.keys(cqGroups).length} CQs from the CSV! The application will now reload with the new data.`);
-        initialLoad(); // Reload the application state from the updated database
+        await initialLoad(); // Reload the application state from the updated database
+        await recordCompetencyQuestionProjectSnapshot(allNodesCache, {
+          runKind: 'competency-question-csv-import',
+          label: `Imported ${Object.keys(cqGroups).length} competency question CSV group${Object.keys(cqGroups).length === 1 ? '' : 's'}`
+        });
       } else {
         throw new Error(result.reason);
       }

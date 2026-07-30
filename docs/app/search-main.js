@@ -32,16 +32,16 @@ import {
   
 
 import {
-  idbInit,
-  idbGetActiveSettings,
-  idbPutActiveSettings,
-  idbGetDatasetMeta,
-  idbGetAllDatasetMeta,
-  idbPutDatasetMeta,
-  idbGetEnabledDocuments,
-  idbPutDocuments,
-  idbSetDatasetEnabled,
-  idbDeleteDataset
+  openOntoEagleProjectDatabase,
+  getActiveSearchSettings,
+  setActiveSearchSettings,
+  getOntologyDatasetMeta,
+  listOntologyDatasetMeta,
+  storeOntologyDatasetMeta,
+  listEnabledOntologyDocuments,
+  storeOntologyDatasetDocuments,
+  setOntologyDatasetEnabled,
+  deleteOntologyDataset
 } from './ontoeagle-indexeddb-store.js';
 
 /* -----------------------------
@@ -813,7 +813,7 @@ async function fetchGraph() {
  * @returns {Promise<boolean>} true if loaded from cache
  */
 async function tryLoadFromIdb() {
-  const cachedDocs = await idbGetEnabledDocuments();
+  const cachedDocs = await listEnabledOntologyDocuments();
   if (cachedDocs && cachedDocs.length) {
     docsByIri = mapByIri(cachedDocs);
     return true;
@@ -835,8 +835,8 @@ async function buildFromGraphAndPersist(graphText, fingerprint) {
     fileName: 'graph.jsonld'
   });
 
-  await idbPutDocuments('builtin', docs);
-  await idbPutDatasetMeta('builtin', {
+  await storeOntologyDatasetDocuments('builtin', docs);
+  await storeOntologyDatasetMeta('builtin', {
     fingerprint,
     enabled: true,
     source: 'builtin',
@@ -846,16 +846,16 @@ async function buildFromGraphAndPersist(graphText, fingerprint) {
     schemaVersion: DATASET_SCHEMA_VERSION,
     updatedAt: Date.now()
   });
-  docsByIri = mapByIri(await idbGetEnabledDocuments());
+  docsByIri = mapByIri(await listEnabledOntologyDocuments());
 }
 
 async function refreshDocsFromEnabledDatasets() {
-  docsByIri = mapByIri(await idbGetEnabledDocuments());
+  docsByIri = mapByIri(await listEnabledOntologyDocuments());
 }
 
 async function renderUserOntologyManager() {
   if (!ontUserOntologyList) return;
-  const metas = (await idbGetAllDatasetMeta())
+  const metas = (await listOntologyDatasetMeta())
     .filter((m) => m && m.source === 'user')
     .sort((a, b) => String(a.ontologyName || a.fileName || '').localeCompare(String(b.ontologyName || b.fileName || '')));
 
@@ -883,7 +883,7 @@ async function renderUserOntologyManager() {
 
     const toggle = row.querySelector('input');
     toggle?.addEventListener('change', async () => {
-      await idbSetDatasetEnabled(meta.datasetId, toggle.checked);
+      await setOntologyDatasetEnabled(meta.datasetId, toggle.checked);
       setDbStatus('reading', 'DB refreshing');
       await refreshDocsFromEnabledDatasets();
       setDbStatus('ready', 'DB ready');
@@ -892,7 +892,7 @@ async function renderUserOntologyManager() {
 
     const remove = row.querySelector('button');
     remove?.addEventListener('click', async () => {
-      await idbDeleteDataset(meta.datasetId);
+      await deleteOntologyDataset(meta.datasetId);
       setDbStatus('reading', 'DB refreshing');
       await refreshDocsFromEnabledDatasets();
       await renderUserOntologyManager();
@@ -958,10 +958,10 @@ async function ontoEagleInit() {
 
   await registerServiceWorker();
   setDbStatus('initializing', 'DB opening');
-  await idbInit();
+  await openOntoEagleProjectDatabase();
 
   // Load settings
-  const saved = await idbGetActiveSettings();
+  const saved = await getActiveSearchSettings();
   options = saved || structuredClone(defaultSearchOptions);
   applyOptionsToUI(options);
 
@@ -972,7 +972,7 @@ async function ontoEagleInit() {
 
   setStatus('Checking dataset…');
   const { text, fingerprint } = await fetchGraph();
-  const meta = await idbGetDatasetMeta('builtin');
+  const meta = await getOntologyDatasetMeta('builtin');
 
   const fingerprintChanged = !meta || meta.fingerprint !== fingerprint || meta.schemaVersion !== DATASET_SCHEMA_VERSION;
 
@@ -1003,14 +1003,14 @@ async function ontoEagleInit() {
 
   btnSaveSettings?.addEventListener('click', async () => {
     const o = readOptionsFromUI();
-    await idbPutActiveSettings(o);
+    await setActiveSearchSettings(o);
     setStatus('Settings saved.');
   });
 
   btnResetSettings?.addEventListener('click', async () => {
     options = structuredClone(defaultSearchOptions);
     applyOptionsToUI(options);
-    await idbPutActiveSettings(options);
+    await setActiveSearchSettings(options);
     setStatus('Settings reset.');
   });
 

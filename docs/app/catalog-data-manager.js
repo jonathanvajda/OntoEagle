@@ -13,9 +13,9 @@ import {
 } from './shared/browser-file-io/index.js';
 import { SUPPORTED_MIME_DESCRIPTORS } from './shared/format-registry/index.js';
 import {
-  idbDeleteDataset,
-  idbGetAllDatasetMeta,
-  idbSetDatasetEnabled
+  deleteOntologyDataset,
+  listOntologyDatasetMeta,
+  setOntologyDatasetEnabled
 } from './ontoeagle-indexeddb-store.js';
 
 const modalId = 'ontCatalogDataManagerModal';
@@ -142,7 +142,7 @@ function ensureModal() {
 async function renderUserDatasets() {
   const list = document.getElementById(listId);
   if (!list) return;
-  const metas = (await idbGetAllDatasetMeta())
+  const metas = (await listOntologyDatasetMeta())
     .filter((meta) => meta?.source === 'user')
     .sort((a, b) => String(a.ontologyName || a.fileName || '').localeCompare(String(b.ontologyName || b.fileName || '')));
 
@@ -171,7 +171,7 @@ async function renderUserDatasets() {
   list.querySelectorAll('[data-dataset-toggle]').forEach((toggle) => {
     toggle.addEventListener('change', async () => {
       setDbStatus('writing', 'DB writing');
-      await idbSetDatasetEnabled(toggle.getAttribute('data-dataset-toggle'), toggle.checked);
+      await setOntologyDatasetEnabled(toggle.getAttribute('data-dataset-toggle'), toggle.checked);
       clearOntologyMetadataSnapshot();
       setManagerStatus(toggle.checked ? 'User ontology enabled.' : 'User ontology disabled.');
       setDbStatus('ready', 'DB ready');
@@ -183,7 +183,7 @@ async function renderUserDatasets() {
     button.addEventListener('click', async () => {
       const datasetId = button.getAttribute('data-dataset-remove');
       setDbStatus('writing', 'DB writing');
-      await idbDeleteDataset(datasetId);
+      await deleteOntologyDataset(datasetId);
       removeStoredUserOntologyRecordsForDataset(datasetId);
       await renderUserDatasets();
       setManagerStatus('User ontology removed.');
