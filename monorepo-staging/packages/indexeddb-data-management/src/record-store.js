@@ -1,4 +1,4 @@
-import { normalizeArtifactRecord, normalizeDatasetRecord, normalizeProjectRecord, normalizeQuadRow, normalizeRunRecord, normalizeWorkspaceInclusionRecord } from './records.js';
+import { normalizeArtifactRecord, normalizeDatasetRecord, normalizeGraphRecord, normalizeProjectRecord, normalizeQuadRow, normalizeRunRecord, normalizeWorkspaceInclusionRecord } from './records.js';
 import { resolveIdbRequest, runObjectStoreTransaction } from './indexeddb-adapter.js';
 import { StorageError } from './storage-error.js';
 
@@ -331,6 +331,55 @@ export function createWorkspaceInclusionStore(adapter, { now } = {}) {
 }
 
 /**
+ * Create a graph metadata store for materialized RDF graphs.
+ *
+ * @param {object} adapter Minimal async adapter with get/put/delete/list.
+ * @param {object} [options]
+ * @param {() => string} [options.now] Clock function for missing timestamps.
+ * @returns {object} Graph metadata store API.
+ */
+export function createGraphStore(adapter, { now } = {}) {
+  requireAdapter(adapter);
+  return {
+    async storeGraphRecord(record) {
+      const normalized = normalizeGraphRecord(record, { now });
+      await adapter.put(normalized.graphId, normalized);
+      return normalized;
+    },
+    async getGraphRecord(graphId) {
+      const record = await adapter.get(graphId);
+      return record ? normalizeGraphRecord(record, { now }) : null;
+    },
+    async listGraphRecords(projectId, filter = {}) {
+      const records = (await adapter.list()).map((record) => normalizeGraphRecord(record, { now }));
+      return filterByProject(records, projectId)
+        .filter((record) => filter.graphIri === undefined ? true : record.graphIri === filter.graphIri)
+        .filter((record) => filter.artifactId ? record.artifactId === filter.artifactId : true)
+        .filter((record) => filter.role ? record.role === filter.role : true)
+        .filter((record) => filter.materializationStatus ? record.materialization.status === filter.materializationStatus : true)
+        .sort(compareDescendingBy('updatedAt'));
+    },
+    async updateGraphMaterialization(graphId, patch = {}) {
+      const existing = await adapter.get(graphId);
+      if (!existing) throw new StorageError(`Graph not found: ${graphId}`, { code: 'GRAPH_NOT_FOUND' });
+      const updated = normalizeGraphRecord({
+        ...existing,
+        materialization: {
+          ...(existing.materialization || {}),
+          ...patch
+        },
+        updatedAt: now?.() || new Date().toISOString()
+      }, { now });
+      await adapter.put(graphId, updated);
+      return updated;
+    },
+    async deleteGraphRecord(graphId) {
+      return adapter.delete(graphId);
+    }
+  };
+}
+
+/**
  * Create a quad-row store with default-graph normalization.
  *
  * @param {object} adapter Minimal async adapter with get/put/delete/list.
@@ -338,7 +387,19 @@ export function createWorkspaceInclusionStore(adapter, { now } = {}) {
  */
 export function createQuadRowStore(adapter) {
   requireAdapter(adapter);
-  const keyFor = (row) => [row.subject, row.predicate, row.object, row.objectLang, row.objectDatatype, row.graph || ''].join('\u001f');
+  const keyFor = (row) => [
+    row.projectId || '',
+    row.graphId || '',
+    row.subjectType,
+    row.subject,
+    row.predicateType,
+    row.predicate,
+    row.objectType,
+    row.object,
+    row.objectLang,
+    row.objectDatatype,
+    row.graph || ''
+  ].join('\u001f');
   const api = {
     async upsertQuadRows(rows) {
       const normalizedRows = rows.map(normalizeQuadRow);
@@ -348,12 +409,16 @@ export function createQuadRowStore(adapter) {
     async listQuadRows(filter = {}) {
       return (await adapter.list())
         .map(normalizeQuadRow)
+        .filter((row) => filter.projectId === undefined ? true : row.projectId === filter.projectId)
+        .filter((row) => filter.graphId === undefined ? true : row.graphId === filter.graphId)
+        .filter((row) => filter.artifactId === undefined ? true : row.artifactId === filter.artifactId)
         .filter((row) => filter.graph === undefined ? true : row.graph === filter.graph)
+        .filter((row) => filter.graphIri === undefined ? true : row.graphIri === filter.graphIri)
         .filter((row) => filter.subject === undefined ? true : row.subject === filter.subject)
         .filter((row) => filter.predicate === undefined ? true : row.predicate === filter.predicate);
     },
-    async listNamedGraphs() {
-      const graphs = (await adapter.list()).map(normalizeQuadRow).map((row) => row.graph).filter(Boolean);
+    async listNamedGraphs(filter = {}) {
+      const graphs = (await api.listQuadRows(filter)).map((row) => row.graph).filter(Boolean);
       return [...new Set(graphs)].sort();
     },
     async countQuadRows(filter = {}) {

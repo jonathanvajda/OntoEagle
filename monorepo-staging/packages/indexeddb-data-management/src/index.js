@@ -13,6 +13,7 @@ export {
   normalizeProjectRecord,
   normalizeArtifactRecord,
   normalizeDatasetRecord,
+  normalizeGraphRecord,
   normalizeRunRecord,
   normalizeWorkspaceInclusionRecord,
   normalizeQuadRow
@@ -36,6 +37,7 @@ export {
   createSettingsStore,
   createRunRecordStore,
   createWorkspaceInclusionStore,
+  createGraphStore,
   createQuadRowStore
 } from './record-store.js';
 
@@ -48,6 +50,14 @@ export {
   createProjectPortfolioStores,
   ensureProjectPortfolioProject
 } from './project-portfolio-store.js';
+
+export {
+  PROJECT_ARCHIVE_MANIFEST_FILE,
+  PROJECT_MANIFEST_KIND,
+  PROJECT_MANIFEST_SCHEMA_VERSION,
+  createProjectExportManifest,
+  normalizeProjectImportManifest
+} from './project-manifest.js';
 
 export {
   storeProjectArtifactData,

@@ -3,10 +3,12 @@ import {
   createArtifactStore,
   createIndexedDbRecordAdapter,
   createDatasetStore,
+  createGraphStore,
   createMemoryRecordAdapter,
   createProjectPortfolioSchema,
   createProjectPortfolioStores,
   createProjectArchiveBlob,
+  createProjectExportManifest,
   createArtifactDownloadBlob,
   createArtifactDownloadFileName,
   createProjectStore,
@@ -24,7 +26,9 @@ import {
   ensureProjectPortfolioProject,
   normalizeArtifactRecord,
   normalizeDatasetRecord,
+  normalizeGraphRecord,
   normalizeProjectRecord,
+  normalizeProjectImportManifest,
   normalizeQuadRow,
   normalizeRunRecord,
   normalizeWorkspaceInclusionRecord,
@@ -137,7 +141,16 @@ function createMockObjectStoreDb() {
               return makeRequest(records.get(key) || null, tx);
             },
             put(value, key) {
-              const resolvedKey = key || value.artifactId || value.runId || value.inclusionId || value.projectId || value.id;
+              const resolvedKey = key || value.artifactId || value.runId || value.inclusionId || (value.graphId && !value.subject ? value.graphId : '') || value.projectId || value.id || [
+                value.projectId || '',
+                value.graphId || '',
+                value.subject || '',
+                value.predicate || '',
+                value.object || '',
+                value.objectLang || '',
+                value.objectDatatype || '',
+                value.graph || ''
+              ].join('\u001f');
               records.set(resolvedKey, value);
               return makeRequest(resolvedKey, tx);
             },
@@ -260,14 +273,46 @@ describe('record normalizers', () => {
     });
   });
 
+  test('normalizeGraphRecord tracks graph metadata separately from quad rows', () => {
+    expect(normalizeGraphRecord({
+      projectId: 'project:one',
+      graphIri: '',
+      artifactId: 'artifact:source',
+      role: 'source',
+      label: 'Default source graph',
+      materialization: {
+        strategy: 'materialized-on-import',
+        status: 'ready',
+        quadCount: 2,
+        indexedAt: FIXED_NOW()
+      }
+    }, { now: FIXED_NOW })).toMatchObject({
+      projectId: 'project:one',
+      graphIri: null,
+      artifactId: 'artifact:source',
+      role: 'source',
+      label: 'Default source graph',
+      materialization: {
+        strategy: 'materialized-on-import',
+        status: 'ready',
+        quadCount: 2,
+        indexedAt: FIXED_NOW()
+      }
+    });
+  });
+
   test('normalizeQuadRow treats triples as default-graph quads', () => {
     expect(normalizeQuadRow({
+      projectId: 'project:one',
+      graphId: 'graph:default',
       subject: 'http://example.test/s',
       predicate: 'http://example.test/p',
       object: 'value',
       objectType: 'Literal',
       objectLang: 'en'
-    })).toEqual({
+    })).toMatchObject({
+      projectId: 'project:one',
+      graphId: 'graph:default',
       subject: 'http://example.test/s',
       subjectType: 'NamedNode',
       predicate: 'http://example.test/p',
@@ -277,6 +322,7 @@ describe('record normalizers', () => {
       objectLang: 'en',
       objectDatatype: '',
       graph: null,
+      graphIri: null,
       graphType: 'DefaultGraph'
     });
   });
@@ -407,26 +453,94 @@ describe('store factories over injected adapters', () => {
     await expect(store.listWorkspaceInclusions('project:one', { enabledOnly: true })).resolves.toHaveLength(0);
   });
 
+  test('graph store manages materialized graph metadata by project', async () => {
+    const store = createGraphStore(createMemoryRecordAdapter(), { now: FIXED_NOW });
+    const source = await store.storeGraphRecord({
+      graphId: 'graph:source',
+      projectId: 'project:one',
+      graphIri: 'urn:graph:source',
+      artifactId: 'artifact:source',
+      role: 'source',
+      label: 'Source graph',
+      materialization: { status: 'ready', quadCount: 10 }
+    });
+    await store.storeGraphRecord({
+      graphId: 'graph:inferred',
+      projectId: 'project:one',
+      graphIri: 'urn:graph:inferred',
+      role: 'inferred-overlay',
+      label: 'Inference overlay',
+      materialization: { status: 'pending' }
+    });
+
+    await expect(store.listGraphRecords('project:one', { role: 'source' })).resolves.toEqual([
+      expect.objectContaining({ graphId: 'graph:source', artifactId: 'artifact:source' })
+    ]);
+    await expect(store.updateGraphMaterialization(source.graphId, {
+      status: 'ready',
+      quadCount: 12,
+      indexedAt: FIXED_NOW()
+    })).resolves.toMatchObject({
+      materialization: {
+        status: 'ready',
+        quadCount: 12,
+        indexedAt: FIXED_NOW()
+      }
+    });
+  });
+
   test('quad store handles default graph, named graphs, filters, and exact deletion', async () => {
     const store = createQuadRowStore(createMemoryRecordAdapter());
     const defaultRow = {
+      projectId: 'project:one',
+      graphId: 'graph:default',
       subject: 's1',
       predicate: 'p',
       object: 'o',
       graph: ''
     };
     const namedRow = {
+      projectId: 'project:one',
+      graphId: 'graph:named',
       subject: 's2',
       predicate: 'p',
       object: 'o',
       graph: 'http://example.test/graph'
     };
+    const otherProjectRow = {
+      projectId: 'project:two',
+      graphId: 'graph:other',
+      subject: 's3',
+      predicate: 'p',
+      object: 'o',
+      graph: 'http://example.test/graph'
+    };
 
-    await expect(store.upsertQuadRows([defaultRow, namedRow])).resolves.toBe(2);
-    await expect(store.listNamedGraphs()).resolves.toEqual(['http://example.test/graph']);
-    await expect(store.countQuadRows({ graph: null })).resolves.toBe(1);
+    await expect(store.upsertQuadRows([defaultRow, namedRow, otherProjectRow])).resolves.toBe(3);
+    await expect(store.listNamedGraphs({ projectId: 'project:one' })).resolves.toEqual(['http://example.test/graph']);
+    await expect(store.countQuadRows({ projectId: 'project:one', graph: null })).resolves.toBe(1);
+    await expect(store.countQuadRows({ graphId: 'graph:named' })).resolves.toBe(1);
     await expect(store.deleteQuadRows([defaultRow])).resolves.toBe(1);
-    await expect(store.countQuadRows()).resolves.toBe(1);
+    await expect(store.countQuadRows({ projectId: 'project:one' })).resolves.toBe(1);
+  });
+
+  test('quad store accepts legacy Axiolotl rows with empty-string default graph', async () => {
+    const store = createQuadRowStore(createMemoryRecordAdapter());
+    await store.upsertQuadRows([{
+      subject: 'http://example.test/s',
+      predicate: 'http://example.test/p',
+      object: 'literal',
+      objectType: 'Literal',
+      graph: ''
+    }]);
+
+    await expect(store.listQuadRows({ graph: null })).resolves.toEqual([
+      expect.objectContaining({
+        graph: null,
+        graphIri: null,
+        objectType: 'Literal'
+      })
+    ]);
   });
 
   test('IndexedDB record adapter can back the shared store factories', async () => {
@@ -454,12 +568,14 @@ describe('cross-app project portfolio stores', () => {
   test('createProjectPortfolioSchema uses the shared portfolio database and stores', () => {
     expect(createProjectPortfolioSchema()).toEqual({
       name: DEFAULT_PROJECT_PORTFOLIO_DB_NAME,
-      version: 2,
+      version: 3,
       stores: [
         { name: 'projects', options: { keyPath: 'projectId' } },
         { name: 'artifacts', options: { keyPath: 'artifactId' } },
         { name: 'runs', options: { keyPath: 'runId' } },
         { name: 'workspaceInclusions', options: { keyPath: 'inclusionId' } },
+        expect.objectContaining({ name: 'graphs', options: { keyPath: 'graphId' } }),
+        expect.objectContaining({ name: 'quadRows' }),
         { name: 'settings' }
       ]
     });
@@ -486,6 +602,23 @@ describe('cross-app project portfolio stores', () => {
       role: 'imported-reference',
       graphIri: 'urn:graph:reference:ontoeagle-catalog'
     });
+    await stores.graphs.storeGraphRecord({
+      graphId: 'graph:ontoeagle:catalog',
+      projectId: DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID,
+      graphIri: 'urn:graph:reference:ontoeagle-catalog',
+      artifactId: 'artifact:ontoeagle:catalog',
+      role: 'reference',
+      label: 'OntoEagle catalog graph',
+      materialization: { status: 'ready', quadCount: 1 }
+    });
+    await stores.quadRows.upsertQuadRows([{
+      projectId: DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID,
+      graphId: 'graph:ontoeagle:catalog',
+      subject: 's',
+      predicate: 'p',
+      object: 'o',
+      graph: 'urn:graph:reference:ontoeagle-catalog'
+    }]);
     await stores.artifacts.storeProjectArtifact({
       artifactId: 'artifact:axiolotl:query',
       projectId: DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID,
@@ -505,10 +638,82 @@ describe('cross-app project portfolio stores', () => {
       .resolves.toEqual([
         expect.objectContaining({ targetId: 'artifact:ontoeagle:catalog' })
       ]);
+    await expect(stores.graphs.listGraphRecords(DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID))
+      .resolves.toEqual([expect.objectContaining({ graphId: 'graph:ontoeagle:catalog' })]);
+    await expect(stores.quadRows.countQuadRows({ graphId: 'graph:ontoeagle:catalog' }))
+      .resolves.toBe(1);
   });
 });
 
 describe('project artifact and archive export helpers', () => {
+  test('createProjectExportManifest describes records and archive files without payload duplication', () => {
+    const manifest = createProjectExportManifest({
+      project: { projectId: 'project:one', label: 'One' },
+      artifacts: [{
+        artifactId: 'artifact:ontology',
+        projectId: 'project:one',
+        artifactKind: 'ontology-rdf',
+        role: 'source',
+        label: 'source.ttl',
+        payload: '@prefix ex: <https://example.org/> .'
+      }],
+      runs: [{ runId: 'run:import', projectId: 'project:one', runKind: 'import', payload: { internal: true } }],
+      workspaceInclusions: [{ inclusionId: 'inclusion:one', projectId: 'project:one', targetType: 'artifact', targetId: 'artifact:ontology' }],
+      settings: [{ scope: 'project:one', key: 'activeArtifactId', value: 'artifact:ontology' }]
+    }, {
+      now: FIXED_NOW,
+      appId: 'test-app',
+      archiveFiles: [{
+        path: 'artifacts/source.ttl',
+        artifactId: 'artifact:ontology',
+        mediaType: 'text/turtle',
+        extension: 'ttl'
+      }]
+    });
+
+    expect(manifest).toMatchObject({
+      manifestKind: 'ontoeagle-project-archive',
+      manifestVersion: 1,
+      exportedAt: FIXED_NOW(),
+      generator: { appId: 'test-app' },
+      project: { projectId: 'project:one' },
+      contents: {
+        artifacts: [expect.objectContaining({
+          artifactId: 'artifact:ontology',
+          archivePath: 'artifacts/source.ttl'
+        })],
+        runs: [expect.objectContaining({ runId: 'run:import' })],
+        workspaceInclusions: [expect.objectContaining({ inclusionId: 'inclusion:one' })],
+        settings: [expect.objectContaining({ key: 'activeArtifactId' })]
+      },
+      files: [expect.objectContaining({ path: 'artifacts/source.ttl' })]
+    });
+    expect(manifest.contents.artifacts[0]).not.toHaveProperty('payload');
+    expect(manifest.contents.runs[0]).not.toHaveProperty('payload');
+  });
+
+  test('normalizeProjectImportManifest validates project archive manifest shape', () => {
+    const manifest = createProjectExportManifest({
+      project: { projectId: 'project:one', label: 'One' },
+      artifacts: []
+    }, { now: FIXED_NOW });
+
+    expect(normalizeProjectImportManifest(manifest)).toMatchObject({
+      manifestKind: 'ontoeagle-project-archive',
+      manifestVersion: 1,
+      project: { projectId: 'project:one' },
+      contents: {
+        artifacts: [],
+        runs: [],
+        workspaceInclusions: [],
+        settings: []
+      },
+      files: []
+    });
+    expect(() => normalizeProjectImportManifest({ manifestKind: 'wrong', manifestVersion: 1 }))
+      .toThrow('unsupported kind');
+  });
+
   test('resolveArtifactDownloadFormat assigns common artifact extensions and MIME types', () => {
     expect(resolveArtifactDownloadFormat({ artifactKind: 'mermaid-diagram' })).toEqual({
       extension: 'mmd',
@@ -563,7 +768,14 @@ describe('project artifact and archive export helpers', () => {
     expect(zipDescription.files).toEqual([
       expect.objectContaining({ name: 'project.json' }),
       expect.objectContaining({ name: 'artifacts/Flow.mmd', content: 'graph TD; A-->B' }),
-      expect.objectContaining({ name: 'artifacts/Graph.jsonld', content: '{\n  "@graph": []\n}' })
+      expect.objectContaining({ name: 'artifacts/Graph.jsonld', content: '{\n  "@graph": []\n}' }),
+      expect.objectContaining({ name: 'project-manifest.json' })
+    ]);
+    const manifestFile = zipDescription.files.find((file) => file.name === 'project-manifest.json');
+    const manifest = JSON.parse(manifestFile.content);
+    expect(manifest.files).toEqual([
+      expect.objectContaining({ path: 'artifacts/Flow.mmd', artifactKind: 'mermaid-diagram' }),
+      expect.objectContaining({ path: 'artifacts/Graph.jsonld', artifactKind: 'jsonld-graph' })
     ]);
   });
 

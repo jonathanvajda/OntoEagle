@@ -194,6 +194,50 @@ export function normalizeWorkspaceInclusionRecord(record, { now } = {}) {
   };
 }
 
+/**
+ * Normalize metadata for a materialized RDF graph in a project workspace.
+ *
+ * Graph records describe the graph as a unit: where it came from, whether it is
+ * source/reference/generated/inferred data, and whether quad rows have been
+ * materialized. The actual RDF statements live in QuadRow records.
+ *
+ * @param {object} record Graph-like input record.
+ * @param {object} [options]
+ * @param {() => string} [options.now] Clock function for missing timestamps.
+ * @returns {object} Normalized GraphRecord.
+ */
+export function normalizeGraphRecord(record, { now } = {}) {
+  requireObject(record, 'graph record');
+  const projectId = requireString(record.projectId, 'graph.projectId');
+  const graphIri = normalizeGraphValue(record.graphIri ?? record.graph ?? null);
+  const role = requireString(record.role || 'loaded', 'graph.role');
+  const label = requireString(record.label || graphIri || 'Default graph', 'graph.label');
+  const graphId = String(record.graphId || createStableRecordId('graph', [projectId, graphIri || 'default', role, label])).trim();
+  const createdAt = record.createdAt || nowIso(now);
+  const materialization = record.materialization && typeof record.materialization === 'object' ? record.materialization : {};
+  return {
+    graphId,
+    projectId,
+    graphIri,
+    artifactId: record.artifactId || null,
+    role,
+    label,
+    createdAt,
+    updatedAt: record.updatedAt || createdAt,
+    source: record.source && typeof record.source === 'object' ? { ...record.source } : {},
+    materialization: {
+      strategy: materialization.strategy || 'materialized-on-run',
+      status: materialization.status || 'pending',
+      quadCount: Number.isFinite(materialization.quadCount) ? materialization.quadCount : 0,
+      indexedAt: materialization.indexedAt || null
+    },
+    provenance: record.provenance && typeof record.provenance === 'object'
+      ? { ...record.provenance, derivedFrom: normalizeStringArray(record.provenance.derivedFrom, 'graph.provenance.derivedFrom') }
+      : { derivedFrom: [] },
+    metadata: normalizeMetadata(record.metadata)
+  };
+}
+
 function normalizeTermValue(value, name) {
   if (value && typeof value === 'object' && typeof value.value === 'string') return value.value;
   return requireString(value, name);
@@ -224,8 +268,14 @@ export function normalizeQuadRow(row) {
   };
   const graph = row.graph && typeof row.graph === 'object' ? row.graph : { value: row.graph, termType: row.graphType };
 
-  const graphValue = graph.value === '' || graph.value == null ? DEFAULT_GRAPH : String(graph.value);
+  const graphValue = normalizeGraphValue(graph.value);
+  const projectId = row.projectId ? requireString(row.projectId, 'quad.projectId') : null;
+  const graphId = row.graphId ? requireString(row.graphId, 'quad.graphId') : null;
   return {
+    quadId: row.quadId || '',
+    projectId,
+    graphId,
+    artifactId: row.artifactId || null,
     subject: normalizeTermValue(subject, 'quad.subject'),
     subjectType: normalizeTermType(subject.termType, 'NamedNode', 'quad.subjectType'),
     predicate: normalizeTermValue(predicate, 'quad.predicate'),
@@ -235,6 +285,11 @@ export function normalizeQuadRow(row) {
     objectLang: object.language || '',
     objectDatatype: object.datatype && object.datatype.value ? object.datatype.value : '',
     graph: graphValue,
+    graphIri: graphValue,
     graphType: graphValue === DEFAULT_GRAPH ? 'DefaultGraph' : normalizeTermType(graph.termType, 'NamedNode', 'quad.graphType')
   };
+}
+
+function normalizeGraphValue(value) {
+  return value === '' || value == null ? DEFAULT_GRAPH : String(value).trim();
 }

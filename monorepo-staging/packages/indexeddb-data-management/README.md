@@ -18,6 +18,7 @@ import {
   normalizeProjectRecord,
   normalizeArtifactRecord,
   normalizeDatasetRecord,
+  normalizeGraphRecord,
   normalizeRunRecord,
   normalizeWorkspaceInclusionRecord,
   normalizeQuadRow,
@@ -29,6 +30,11 @@ import {
   openProjectPortfolioDatabase,
   createProjectPortfolioStores,
   ensureProjectPortfolioProject,
+  PROJECT_ARCHIVE_MANIFEST_FILE,
+  PROJECT_MANIFEST_KIND,
+  PROJECT_MANIFEST_SCHEMA_VERSION,
+  createProjectExportManifest,
+  normalizeProjectImportManifest,
   storeProjectArtifactData,
   storeProjectRunData,
   resolveArtifactDownloadFormat,
@@ -45,6 +51,7 @@ import {
   createSettingsStore,
   createRunRecordStore,
   createWorkspaceInclusionStore,
+  createGraphStore,
   createQuadRowStore
 } from '@ontoeagle/indexeddb-data-management';
 ```
@@ -52,8 +59,10 @@ import {
 ## Boundary Decisions
 
 - Store RDF as quads. Triple-only workflows use `graph: null`.
+- Track materialized graph metadata in `graphs`; store actual RDF statements in `quadRows`.
 - Store user work as project-scoped artifacts, datasets, and runs.
 - Use workspace inclusions to decide which reference datasets or project artifacts participate in an active workspace graph.
+- Export project ZIP archives with `project-manifest.json` as the canonical import/export manifest.
 - Download individual artifacts with kind-aware file extensions and download whole projects as ZIP archives through injected browser download and JSZip dependencies.
 - Keep parsers in `rdf-io` and `tabular-io`.
 - Keep file read/download behavior in `browser-file-io`.

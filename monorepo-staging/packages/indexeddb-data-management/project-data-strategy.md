@@ -427,6 +427,75 @@ This supports multiple graph views:
 
 Collision handling should happen at named-graph and inclusion boundaries. The package should avoid flattening all reference and user data into one anonymous graph too early.
 
+## Canonical Graph Store Schema
+
+Decision: use Axiolotl's proven row-oriented RDF persistence model as the operational foundation, but add graph metadata and project scoping before promoting it across apps.
+
+Recommended stores:
+
+```text
+graphs
+quadRows
+```
+
+`graphs` stores metadata about a default or named graph:
+
+```js
+{
+  graphId: 'graph:project-x:source',
+  projectId: 'project:x',
+  graphIri: null,                 // null default graph, or named graph IRI
+  artifactId: 'artifact:source',
+  role: 'source',                 // source | reference | loaded | generated | inferred-overlay
+  label: 'User source graph',
+  materialization: {
+    strategy: 'materialized-on-import',
+    status: 'ready',
+    quadCount: 1000,
+    indexedAt: '2026-07-30T00:00:00.000Z'
+  },
+  provenance: {
+    derivedFrom: ['artifact:source']
+  },
+  metadata: {}
+}
+```
+
+`quadRows` stores the RDF statements:
+
+```js
+{
+  projectId: 'project:x',
+  graphId: 'graph:project-x:source',
+  artifactId: 'artifact:source',
+  subject: 'http://example.org/s',
+  subjectType: 'NamedNode',
+  predicate: 'http://example.org/p',
+  predicateType: 'NamedNode',
+  object: 'value',
+  objectType: 'Literal',
+  objectLang: '',
+  objectDatatype: 'http://www.w3.org/2001/XMLSchema#string',
+  graph: null,
+  graphIri: null,
+  graphType: 'DefaultGraph'
+}
+```
+
+Compatibility rule:
+
+```text
+Axiolotl-style rows with graph: '' are accepted at import/storage boundaries and normalize to graph: null.
+```
+
+This keeps the existing Comunica path viable:
+
+```text
+IndexedDB quadRows -> RDF/JS quads -> N3.Store -> Comunica rdfjsSource
+```
+
+It avoids building a custom lazy IndexedDB-backed Comunica source during this capability cycle. That can be reconsidered later if graph volume makes full in-memory RDF/JS loading the bottleneck.
+
 ## Artifact Lifecycle Buckets
 
 A project artifact is any durable unit of user-relevant work, whether original, loaded, staged, transformed, generated, or exported.
@@ -702,6 +771,8 @@ The controlled vocabulary should be broad enough for the next migrations, but no
 Recommended `artifactKind` values:
 
 ```text
+ontology-rdf
+ontology-table
 rdf-file
 rdf-dataset
 quad-rows
@@ -717,13 +788,26 @@ mermaid-diagram
 shacl-shapes
 r2rml-mapping
 diagnostic-report
+measurement-report
 ontology-slim
 ontology-catalog
+iri-bundle
 reference-dataset
 project-snapshot
 app-settings
 export-bundle
 ```
+
+Use `artifactKind` for the durable data shape or domain-significant data class:
+
+- `ontology-rdf`: ontology source or output serialized as RDF, such as Turtle, JSON-LD, RDF/XML, TriG, or N-Quads.
+- `ontology-table`: TOM-style normalized spreadsheet/table intended to describe an ontology, not merely arbitrary tabular data.
+- `rdf-file`: generic RDF file when ontology semantics are unknown or not relevant.
+- `rdf-dataset` / `quad-rows`: loaded RDF graph data, including default-graph triples, named-graph quads, instance data, and inferred/materialized overlays.
+- `tabular-file` / `tabular-records`: generic tabular source or parsed tabular records.
+- `mermaid-diagram`, `sparql-query`, `sql-query`, `nosql-query`, and report/mapping kinds: durable side artifacts that can be project-wide without taking ownership of the primary RDF/ontology work.
+
+Avoid one artifact kind per app. App ownership should be recorded in `source.appId`, `metadata.appId`, or run provenance. Purpose should be recorded in `role`, `runKind`, and optional semantic metadata.
 
 Recommended `role` values:
 
@@ -735,6 +819,7 @@ staged
 transformed
 generated
 forked-reference
+inferred-overlay
 query
 report
 setting
@@ -759,6 +844,20 @@ generation
 materialization
 migration
 ```
+
+App-oriented examples:
+
+- TOM: `ontology-table` with `role: staged/source`, or `ontology-rdf` with `role: export/generated`.
+- Axiolotl: `rdf-dataset` or `quad-rows`; ontology, instance data, and inferred overlays are distinguished by `role`, graph IRI, provenance, and metadata rather than separate app-specific kinds.
+- OntoEagle: mostly `ontology-rdf`, `ontology-catalog`, and `ontology-documents`; knowledge-graph instance data can remain `rdf-dataset`.
+- CQ Ferret: RDF/JSON-LD domain/problem-area artifacts, plus optional `tabular-file`, `mermaid-diagram`, and query artifacts.
+- Bundler: `ontology-slim`, `iri-bundle`, or `rdf-dataset` depending whether the artifact is the ROBOT seed text, generated ontology slim, or loaded graph data.
+- OCD: `diagnostic-report` and `measurement-report` generated from `ontology-rdf` or `rdf-dataset` inputs.
+- Table Nova: `tabular-file` or `tabular-records` inputs, `rdf-dataset` or `ontology-rdf` outputs when it generates a naive ontology from schema.
+- IRI Swapper: `iri-mapping-table` plus `rdf-file`/`ontology-rdf` or query input; transformed output keeps the same broad kind with `role: transformed`.
+- Ontology Tabulator: `ontology-rdf` input, `ontology-table` or `tabular-records` output.
+- Linked Data Transformer / Visual Lynx: RDF inputs with generated RDF, Mermaid, D3 JSON, or visual artifacts.
+- Mermaid: `mermaid-diagram` is a first-class project artifact.
 
 Recommended `source.origin` values:
 

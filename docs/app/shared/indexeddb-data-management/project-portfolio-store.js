@@ -1,15 +1,17 @@
 import {
   createArtifactStore,
+  createGraphStore,
   createIndexedDbRecordAdapter,
   createProjectStore,
   createRunRecordStore,
   createSettingsStore,
-  createWorkspaceInclusionStore
+  createWorkspaceInclusionStore,
+  createQuadRowStore
 } from './record-store.js';
 import { openIndexedDbStore } from './indexeddb-adapter.js';
 
 export const DEFAULT_PROJECT_PORTFOLIO_DB_NAME = 'OntologyWorkbenchProjects';
-export const DEFAULT_PROJECT_PORTFOLIO_DB_VERSION = 2;
+export const DEFAULT_PROJECT_PORTFOLIO_DB_VERSION = 3;
 export const DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID = 'project:default-workspace';
 
 const PROJECTS_STORE = 'projects';
@@ -17,6 +19,8 @@ const ARTIFACTS_STORE = 'artifacts';
 const RUNS_STORE = 'runs';
 const SETTINGS_STORE = 'settings';
 const INCLUSIONS_STORE = 'workspaceInclusions';
+const GRAPHS_STORE = 'graphs';
+const QUAD_ROWS_STORE = 'quadRows';
 
 /**
  * Creates the shared project-portfolio IndexedDB schema used across apps.
@@ -43,6 +47,28 @@ export function createProjectPortfolioSchema({
       { name: ARTIFACTS_STORE, options: { keyPath: 'artifactId' } },
       { name: RUNS_STORE, options: { keyPath: 'runId' } },
       { name: INCLUSIONS_STORE, options: { keyPath: 'inclusionId' } },
+      {
+        name: GRAPHS_STORE,
+        options: { keyPath: 'graphId' },
+        indexes: [
+          { name: 'projectId', keyPath: 'projectId' },
+          { name: 'graphIri', keyPath: 'graphIri' },
+          { name: 'artifactId', keyPath: 'artifactId' },
+          { name: 'role', keyPath: 'role' }
+        ]
+      },
+      {
+        name: QUAD_ROWS_STORE,
+        indexes: [
+          { name: 'projectId', keyPath: 'projectId' },
+          { name: 'graphId', keyPath: 'graphId' },
+          { name: 'graphIri', keyPath: 'graphIri' },
+          { name: 'artifactId', keyPath: 'artifactId' },
+          { name: 'subject', keyPath: 'subject' },
+          { name: 'predicate', keyPath: 'predicate' },
+          { name: 'object', keyPath: 'object' }
+        ]
+      },
       { name: SETTINGS_STORE }
     ]
   };
@@ -83,6 +109,8 @@ export function createProjectPortfolioStores(db, {
     artifacts: createArtifactStore(createIndexedDbRecordAdapter(db, ARTIFACTS_STORE, { keyPath: 'artifactId' })),
     runs: createRunRecordStore(createIndexedDbRecordAdapter(db, RUNS_STORE, { keyPath: 'runId' })),
     inclusions: createWorkspaceInclusionStore(createIndexedDbRecordAdapter(db, INCLUSIONS_STORE, { keyPath: 'inclusionId' })),
+    graphs: createGraphStore(createIndexedDbRecordAdapter(db, GRAPHS_STORE, { keyPath: 'graphId' })),
+    quadRows: createQuadRowStore(createIndexedDbRecordAdapter(db, QUAD_ROWS_STORE)),
     settings: createSettingsStore(createIndexedDbRecordAdapter(db, SETTINGS_STORE), { scope: projectId })
   };
 }

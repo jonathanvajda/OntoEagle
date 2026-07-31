@@ -11,6 +11,7 @@ import {
   normalizeFileExtension,
   stripFileExtension
 } from '../browser-file-io/index.js';
+import { PROJECT_ARCHIVE_MANIFEST_FILE, createProjectExportManifest } from './project-manifest.js';
 
 const DEFAULT_ARTIFACT_FORMAT_KEY = 'json';
 const DEFAULT_PROJECT_ARCHIVE_FORMAT_KEY = 'zip';
@@ -21,6 +22,8 @@ const ARTIFACT_KIND_DEFAULTS = Object.freeze({
   'sparql-update': 'sparqlUpdate',
   'sql-query': 'sql',
   'nosql-query': 'json',
+  'ontology-rdf': 'turtle',
+  'ontology-table': 'csv',
   'rdf-file': 'turtle',
   'rdf-dataset': 'jsonLd',
   'quad-rows': 'nQuads',
@@ -158,15 +161,47 @@ export function downloadProjectArtifact(artifact, { downloadBlob, BlobConstructo
  * @param {typeof import('jszip')} [options.JSZipConstructor=globalThis.JSZip] JSZip constructor.
  * @returns {Promise<Blob>} ZIP blob.
  */
-export async function createProjectArchiveBlob(project, artifacts, { JSZipConstructor = globalThis.JSZip } = {}) {
+export async function createProjectArchiveBlob(project, artifacts, {
+  JSZipConstructor = globalThis.JSZip,
+  runs = [],
+  workspaceInclusions = [],
+  settings = [],
+  now,
+  appId,
+  packageName
+} = {}) {
   if (typeof JSZipConstructor !== 'function') {
     throw new StorageError('JSZip is not available for project archive creation.', { code: 'JSZIP_UNAVAILABLE' });
   }
   const zip = new JSZipConstructor();
+  const artifactFiles = [];
   zip.file('project.json', JSON.stringify(project || {}, null, 2));
   for (const artifact of Array.isArray(artifacts) ? artifacts : []) {
-    zip.file(`artifacts/${createArtifactDownloadFileName(artifact)}`, serializeArtifactPayload(artifact?.payload ?? artifact));
+    const fileName = createArtifactDownloadFileName(artifact);
+    const { extension, mimeType } = resolveArtifactDownloadFormat(artifact);
+    const path = `artifacts/${fileName}`;
+    artifactFiles.push({
+      path,
+      artifactId: artifact.artifactId || null,
+      artifactKind: artifact.artifactKind || '',
+      role: artifact.role || '',
+      mediaType: mimeType,
+      extension
+    });
+    zip.file(path, serializeArtifactPayload(artifact?.payload ?? artifact));
   }
+  zip.file(PROJECT_ARCHIVE_MANIFEST_FILE, JSON.stringify(createProjectExportManifest({
+    project: project || {},
+    artifacts: Array.isArray(artifacts) ? artifacts : [],
+    runs,
+    workspaceInclusions,
+    settings
+  }, {
+    now,
+    appId,
+    packageName,
+    archiveFiles: artifactFiles
+  }), null, 2));
   return zip.generateAsync({ type: 'blob', mimeType: getDescriptorForFormatKey(DEFAULT_PROJECT_ARCHIVE_FORMAT_KEY).mimeType });
 }
 
