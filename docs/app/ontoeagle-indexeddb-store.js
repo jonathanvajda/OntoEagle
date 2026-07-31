@@ -152,11 +152,11 @@ async function ensureDefaultProject() {
 async function migrateLegacyActiveSettings() {
   const settingsAdapter = await rawAdapterFor(SETTINGS_STORE);
   const { settings } = await projectPortfolioStores();
-  const migrated = await settings.getSetting(ACTIVE_SETTINGS_KEY, null);
+  const migrated = await settings.readSettingValue(ACTIVE_SETTINGS_KEY, null);
   if (migrated) return;
 
   const raw = await settingsAdapter.get(ACTIVE_SETTINGS_KEY);
-  if (raw) await settings.setSetting(ACTIVE_SETTINGS_KEY, raw);
+  if (raw) await settings.writeSettingValue(ACTIVE_SETTINGS_KEY, raw);
 }
 
 async function migrateLegacyDatasetRecords() {
@@ -184,7 +184,7 @@ async function migrateOntoEagleProjectDatabase() {
  */
 export async function getActiveSearchSettings() {
   const { settings } = await projectPortfolioStores();
-  return settings.getSetting(ACTIVE_SETTINGS_KEY, null);
+  return settings.readSettingValue(ACTIVE_SETTINGS_KEY, null);
 }
 
 /**
@@ -195,7 +195,7 @@ export async function getActiveSearchSettings() {
  */
 export async function setActiveSearchSettings(settingsObj) {
   const { settings } = await projectPortfolioStores();
-  await settings.setSetting(ACTIVE_SETTINGS_KEY, settingsObj);
+  await settings.writeSettingValue(ACTIVE_SETTINGS_KEY, settingsObj);
   return settingsObj;
 }
 

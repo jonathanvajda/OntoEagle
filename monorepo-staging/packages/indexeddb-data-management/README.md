@@ -20,6 +20,8 @@ import {
   normalizeDatasetRecord,
   normalizeGraphRecord,
   normalizeRunRecord,
+  normalizeSettingRecord,
+  createScopedSettingKey,
   normalizeWorkspaceInclusionRecord,
   normalizeQuadRow,
   openIndexedDbStore,
@@ -52,7 +54,21 @@ import {
   createRunRecordStore,
   createWorkspaceInclusionStore,
   createGraphStore,
-  createQuadRowStore
+  createQuadRowStore,
+  createActiveWorkspaceGraphPlan,
+  readActiveWorkspaceGraphPlan,
+  storeGraphQuadRows,
+  replaceGraphQuadRows,
+  clearGraphQuadRows,
+  deleteGraphRecordWithQuadRows,
+  convertRdfJsQuadsToQuadRows,
+  convertQuadRowsToRdfJsQuads,
+  createRdfJsStoreFromQuadRows,
+  inspectLegacyIndexedDbDatabase,
+  readLegacyObjectStoreRows,
+  convertLegacyTripleRowsToQuadRows,
+  convertLegacySettingsToSettingRecords,
+  createLegacyMigrationReport
 } from '@ontoeagle/indexeddb-data-management';
 ```
 
@@ -60,7 +76,10 @@ import {
 
 - Store RDF as quads. Triple-only workflows use `graph: null`.
 - Track materialized graph metadata in `graphs`; store actual RDF statements in `quadRows`.
+- Preserve the Axiolotl/Comunica path by converting `quadRows` to RDF/JS quads and in-memory RDF/JS stores.
 - Store user work as project-scoped artifacts, datasets, and runs.
+- Store settings as scoped records using keys such as `app:axiolotl::endpoint` and `project:default-workspace::activeArtifactId`.
+- Treat legacy migration helpers as non-destructive: detect, read, normalize, and report first; deletion requires app/user policy.
 - Use workspace inclusions to decide which reference datasets or project artifacts participate in an active workspace graph.
 - Export project ZIP archives with `project-manifest.json` as the canonical import/export manifest.
 - Download individual artifacts with kind-aware file extensions and download whole projects as ZIP archives through injected browser download and JSZip dependencies.
@@ -74,3 +93,4 @@ import {
 ```powershell
 npm test
 ```
+

@@ -15,6 +15,8 @@ export {
   normalizeDatasetRecord,
   normalizeGraphRecord,
   normalizeRunRecord,
+  normalizeSettingRecord,
+  createScopedSettingKey,
   normalizeWorkspaceInclusionRecord,
   normalizeQuadRow
 } from './records.js';
@@ -58,6 +60,29 @@ export {
   createProjectExportManifest,
   normalizeProjectImportManifest
 } from './project-manifest.js';
+
+export {
+  createActiveWorkspaceGraphPlan,
+  readActiveWorkspaceGraphPlan,
+  storeGraphQuadRows,
+  replaceGraphQuadRows,
+  clearGraphQuadRows,
+  deleteGraphRecordWithQuadRows
+} from './graph-operations.js';
+
+export {
+  convertRdfJsQuadsToQuadRows,
+  convertQuadRowsToRdfJsQuads,
+  createRdfJsStoreFromQuadRows
+} from './rdfjs-quad-rows.js';
+
+export {
+  inspectLegacyIndexedDbDatabase,
+  readLegacyObjectStoreRows,
+  convertLegacyTripleRowsToQuadRows,
+  convertLegacySettingsToSettingRecords,
+  createLegacyMigrationReport
+} from './legacy-migration.js';
 
 export {
   storeProjectArtifactData,

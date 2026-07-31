@@ -219,6 +219,17 @@ listNamedGraphs(projectId)
 countQuadRows(projectId, filter)
 deleteQuadRows(projectId, rows)
 clearQuadRows(projectId, filter)
+
+createActiveWorkspaceGraphPlan(projectId, inclusions, graphs, artifacts)
+readActiveWorkspaceGraphPlan(stores, projectId)
+storeGraphQuadRows(stores, graphRecord, rows, options)
+replaceGraphQuadRows(stores, graphRecord, rows, options)
+clearGraphQuadRows(stores, graphId, options)
+deleteGraphRecordWithQuadRows(stores, graphId)
+
+convertRdfJsQuadsToQuadRows(quads, options)
+convertQuadRowsToRdfJsQuads(rows, DataFactory)
+createRdfJsStoreFromQuadRows(rows, StoreConstructor, DataFactory)
 ```
 
 ### Run and settings store
@@ -235,6 +246,14 @@ getProjectSettings(projectId)
 setProjectSettings(projectId, settings)
 getAppSetting(key)
 setAppSetting(key, value)
+normalizeSettingRecord(record)
+createScopedSettingKey(scope, key)
+
+inspectLegacyIndexedDbDatabase(name, options)
+readLegacyObjectStoreRows(name, storeName, options)
+convertLegacyTripleRowsToQuadRows(rows, options)
+convertLegacySettingsToSettingRecords(rows, options)
+createLegacyMigrationReport(input)
 ```
 
 ## Pilot Recommendation
@@ -895,3 +914,4 @@ disabled
 ```
 
 These values should be normalized in code rather than treated as loose strings. Unknown values can be allowed during early migration, but should trigger warnings in development tests so vocabulary drift does not reappear across apps.
+

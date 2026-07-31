@@ -9,18 +9,24 @@ import {
   createProjectPortfolioStores,
   createProjectArchiveBlob,
   createProjectExportManifest,
+  createActiveWorkspaceGraphPlan,
   createArtifactDownloadBlob,
   createArtifactDownloadFileName,
+  createLegacyMigrationReport,
   createProjectStore,
+  createRdfJsStoreFromQuadRows,
   createQuadRowStore,
   createRunRecordStore,
   createSettingsStore,
   createWorkspaceInclusionStore,
   createStableRecordId,
   createTimestampRecordId,
+  clearGraphQuadRows,
   deleteIndexedDbDatabase,
   DEFAULT_PROJECT_PORTFOLIO_DB_NAME,
   DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID,
+  deleteGraphRecordWithQuadRows,
+  inspectLegacyIndexedDbDatabase,
   downloadProjectArchive,
   downloadProjectArtifact,
   ensureProjectPortfolioProject,
@@ -31,8 +37,16 @@ import {
   normalizeProjectImportManifest,
   normalizeQuadRow,
   normalizeRunRecord,
+  normalizeSettingRecord,
   normalizeWorkspaceInclusionRecord,
+  readActiveWorkspaceGraphPlan,
+  convertLegacyTripleRowsToQuadRows,
+  convertLegacySettingsToSettingRecords,
+  convertQuadRowsToRdfJsQuads,
   resolveArtifactDownloadFormat,
+  replaceGraphQuadRows,
+  convertRdfJsQuadsToQuadRows,
+  storeGraphQuadRows,
   storeProjectArtifactData,
   storeProjectRunData,
   inspectIndexedDbDatabase,
@@ -141,7 +155,7 @@ function createMockObjectStoreDb() {
               return makeRequest(records.get(key) || null, tx);
             },
             put(value, key) {
-              const resolvedKey = key || value.artifactId || value.runId || value.inclusionId || (value.graphId && !value.subject ? value.graphId : '') || value.projectId || value.id || [
+              const resolvedKey = key || (value.graphId && !value.subject ? value.graphId : '') || value.artifactId || value.runId || value.inclusionId || value.projectId || value.id || [
                 value.projectId || '',
                 value.graphId || '',
                 value.subject || '',
@@ -171,6 +185,37 @@ function createMockObjectStoreDb() {
       return tx;
     }
   };
+}
+
+const TestDataFactory = {
+  namedNode: (value) => ({ termType: 'NamedNode', value }),
+  blankNode: (value) => ({ termType: 'BlankNode', value }),
+  literal(value, languageOrDatatype) {
+    if (typeof languageOrDatatype === 'string') {
+      return { termType: 'Literal', value, language: languageOrDatatype, datatype: { value: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#langString' } };
+    }
+    return { termType: 'Literal', value, language: '', datatype: languageOrDatatype || { value: 'http://www.w3.org/2001/XMLSchema#string' } };
+  },
+  defaultGraph: () => ({ termType: 'DefaultGraph', value: '' }),
+  quad: (subject, predicate, object, graph) => ({ subject, predicate, object, graph })
+};
+
+class TestRdfJsStore {
+  constructor() {
+    this.quads = [];
+  }
+
+  addQuad(quad) {
+    this.quads.push(quad);
+  }
+
+  addQuads(quads) {
+    this.quads.push(...quads);
+  }
+
+  getQuads() {
+    return this.quads;
+  }
 }
 
 describe('record id helpers', () => {
@@ -301,6 +346,22 @@ describe('record normalizers', () => {
     });
   });
 
+  test('normalizeSettingRecord uses scoped keys for app and project settings', () => {
+    expect(normalizeSettingRecord({
+      scope: 'app:axiolotl',
+      key: 'activePrefixes',
+      value: ['rdf', 'rdfs'],
+      appId: 'axiolotl'
+    }, { now: FIXED_NOW })).toMatchObject({
+      settingId: 'app:axiolotl::activePrefixes',
+      scope: 'app:axiolotl',
+      key: 'activePrefixes',
+      value: ['rdf', 'rdfs'],
+      appId: 'axiolotl',
+      schemaVersion: 1
+    });
+  });
+
   test('normalizeQuadRow treats triples as default-graph quads', () => {
     expect(normalizeQuadRow({
       projectId: 'project:one',
@@ -397,13 +458,22 @@ describe('store factories over injected adapters', () => {
     const appSettings = createSettingsStore(adapter);
     const projectSettings = createSettingsStore(adapter, { scope: 'project:one' });
 
-    await appSettings.setSetting('theme', 'dark');
-    await projectSettings.setSetting('theme', 'light');
+    await appSettings.writeSettingValue('theme', 'dark');
+    await projectSettings.writeSettingValue('theme', 'light');
 
-    await expect(appSettings.getSetting('theme')).resolves.toBe('dark');
-    await expect(projectSettings.getSetting('theme')).resolves.toBe('light');
-    await expect(projectSettings.listSettings()).resolves.toEqual([{ key: 'theme', value: 'light' }]);
-    await expect(projectSettings.setSetting('', 'x')).rejects.toThrow('Setting key must be a non-empty string.');
+    await expect(appSettings.readSettingValue('theme')).resolves.toBe('dark');
+    await expect(projectSettings.readSettingValue('theme')).resolves.toBe('light');
+    await expect(projectSettings.listSettingRecords()).resolves.toEqual([expect.objectContaining({
+      settingId: 'project:one::theme',
+      scope: 'project:one',
+      key: 'theme',
+      value: 'light'
+    })]);
+    await expect(projectSettings.readSettingRecord('theme')).resolves.toMatchObject({
+      settingId: 'project:one::theme',
+      scope: 'project:one'
+    });
+    await expect(projectSettings.writeSettingValue('', 'x')).rejects.toThrow('Setting key must be a non-empty string.');
   });
 
   test('run store sorts, limits, filters, and tracks latest run id by scope', async () => {
@@ -642,6 +712,229 @@ describe('cross-app project portfolio stores', () => {
       .resolves.toEqual([expect.objectContaining({ graphId: 'graph:ontoeagle:catalog' })]);
     await expect(stores.quadRows.countQuadRows({ graphId: 'graph:ontoeagle:catalog' }))
       .resolves.toBe(1);
+  });
+});
+
+describe('active workspace graph and bulk graph helpers', () => {
+  test('createActiveWorkspaceGraphPlan resolves enabled inclusions to graph metadata', () => {
+    const plan = createActiveWorkspaceGraphPlan({
+      projectId: 'project:one',
+      inclusions: [
+        {
+          inclusionId: 'inclusion:source',
+          projectId: 'project:one',
+          targetType: 'artifact',
+          targetId: 'artifact:source',
+          enabled: true,
+          graphIri: 'urn:graph:source'
+        },
+        {
+          inclusionId: 'inclusion:disabled',
+          projectId: 'project:one',
+          targetType: 'artifact',
+          targetId: 'artifact:disabled',
+          enabled: false
+        }
+      ],
+      artifacts: [{ artifactId: 'artifact:source', projectId: 'project:one', label: 'Source' }],
+      graphs: [{
+        graphId: 'graph:source',
+        projectId: 'project:one',
+        artifactId: 'artifact:source',
+        graphIri: 'urn:graph:source',
+        materialization: { status: 'ready' }
+      }]
+    });
+
+    expect(plan).toMatchObject({
+      projectId: 'project:one',
+      graphIds: ['graph:source'],
+      missingMaterialization: []
+    });
+    expect(plan.entries[0]).toMatchObject({
+      targetArtifact: { artifactId: 'artifact:source' },
+      materialized: true
+    });
+  });
+
+  test('readActiveWorkspaceGraphPlan reads portfolio stores', async () => {
+    const stores = createProjectPortfolioStores(createMockObjectStoreDb(), { projectId: 'project:one' });
+    await stores.artifacts.storeProjectArtifact({
+      artifactId: 'artifact:source',
+      projectId: 'project:one',
+      artifactKind: 'rdf-dataset',
+      role: 'source',
+      label: 'Source'
+    });
+    await stores.inclusions.storeWorkspaceInclusion({
+      projectId: 'project:one',
+      targetType: 'artifact',
+      targetId: 'artifact:source',
+      role: 'project-source',
+      graphIri: 'urn:graph:source'
+    });
+    await stores.graphs.storeGraphRecord({
+      graphId: 'graph:source',
+      projectId: 'project:one',
+      artifactId: 'artifact:source',
+      graphIri: 'urn:graph:source',
+      role: 'source',
+      label: 'Source graph',
+      materialization: { status: 'ready' }
+    });
+
+    await expect(readActiveWorkspaceGraphPlan(stores, 'project:one')).resolves.toMatchObject({
+      graphIds: ['graph:source']
+    });
+  });
+
+  test('bulk graph helpers store, replace, clear, and delete graph rows with metadata', async () => {
+    const stores = createProjectPortfolioStores(createMockObjectStoreDb(), { projectId: 'project:one' });
+    const graphRecord = {
+      graphId: 'graph:source',
+      projectId: 'project:one',
+      graphIri: 'urn:graph:source',
+      artifactId: 'artifact:source',
+      role: 'source',
+      label: 'Source graph'
+    };
+
+    await expect(storeGraphQuadRows(stores, graphRecord, [
+      { subject: 's1', predicate: 'p', object: 'o1' },
+      { subject: 's2', predicate: 'p', object: 'o2' }
+    ], { now: FIXED_NOW })).resolves.toMatchObject({
+      count: 2,
+      graph: {
+        graphId: 'graph:source',
+        materialization: { status: 'ready', quadCount: 2, indexedAt: FIXED_NOW() }
+      }
+    });
+
+    await expect(replaceGraphQuadRows(stores, graphRecord, [
+      { subject: 's3', predicate: 'p', object: 'o3' }
+    ], { now: FIXED_NOW })).resolves.toMatchObject({
+      count: 1,
+      graph: { materialization: { quadCount: 1 } }
+    });
+    await expect(stores.quadRows.listQuadRows({ graphId: 'graph:source' })).resolves.toEqual([
+      expect.objectContaining({ subject: 's3', graph: 'urn:graph:source' })
+    ]);
+    await expect(clearGraphQuadRows(stores, 'graph:source', { now: FIXED_NOW })).resolves.toBe(1);
+    await expect(stores.graphs.getGraphRecord('graph:source')).resolves.toMatchObject({
+      materialization: { status: 'empty', quadCount: 0 }
+    });
+    await storeGraphQuadRows(stores, graphRecord, [{ subject: 's4', predicate: 'p', object: 'o4' }], { now: FIXED_NOW });
+    await expect(deleteGraphRecordWithQuadRows(stores, 'graph:source')).resolves.toEqual({
+      deletedGraph: true,
+      deletedRows: 1
+    });
+  });
+});
+
+describe('RDF/JS quad row conversion helpers', () => {
+  test('convertRdfJsQuadsToQuadRows and convertQuadRowsToRdfJsQuads preserve term metadata', () => {
+    const rdfJsQuad = TestDataFactory.quad(
+      TestDataFactory.namedNode('http://example.test/s'),
+      TestDataFactory.namedNode('http://example.test/p'),
+      TestDataFactory.literal('label', 'en'),
+      TestDataFactory.namedNode('urn:graph:one')
+    );
+
+    const rows = convertRdfJsQuadsToQuadRows([rdfJsQuad], {
+      projectId: 'project:one',
+      graphId: 'graph:one',
+      artifactId: 'artifact:one'
+    });
+    expect(rows).toEqual([expect.objectContaining({
+      projectId: 'project:one',
+      graphId: 'graph:one',
+      artifactId: 'artifact:one',
+      objectType: 'Literal',
+      objectLang: 'en',
+      graph: 'urn:graph:one'
+    })]);
+
+    expect(convertQuadRowsToRdfJsQuads(rows, TestDataFactory)).toEqual([expect.objectContaining({
+      subject: { termType: 'NamedNode', value: 'http://example.test/s' },
+      graph: { termType: 'NamedNode', value: 'urn:graph:one' }
+    })]);
+  });
+
+  test('createRdfJsStoreFromQuadRows keeps the Comunica rdfjsSource path viable', () => {
+    const store = createRdfJsStoreFromQuadRows([{
+      subject: 'http://example.test/s',
+      predicate: 'http://example.test/p',
+      object: 'o',
+      objectType: 'Literal',
+      graph: ''
+    }], TestRdfJsStore, TestDataFactory);
+
+    expect(store.getQuads()).toEqual([expect.objectContaining({
+      graph: { termType: 'DefaultGraph', value: '' }
+    })]);
+  });
+});
+
+describe('legacy migration helpers', () => {
+  test('convertLegacyTripleRowsToQuadRows preserves legacy empty default graph compatibility', () => {
+    expect(convertLegacyTripleRowsToQuadRows([{
+      subject: 's',
+      predicate: 'p',
+      object: 'o',
+      objectType: 'Literal',
+      graph: ''
+    }], {
+      projectId: 'project:one',
+      graphId: 'graph:default',
+      artifactId: 'artifact:legacy'
+    })).toEqual([expect.objectContaining({
+      projectId: 'project:one',
+      graphId: 'graph:default',
+      artifactId: 'artifact:legacy',
+      graph: null
+    })]);
+  });
+
+  test('convertLegacySettingsToSettingRecords scopes app-local rows without deleting legacy data', () => {
+    expect(convertLegacySettingsToSettingRecords([{ key: 'endpoint', value: 'local' }], {
+      scope: 'app:axiolotl',
+      appId: 'axiolotl'
+    })).toEqual([expect.objectContaining({
+      settingId: 'app:axiolotl::endpoint',
+      scope: 'app:axiolotl',
+      appId: 'axiolotl',
+      metadata: { migratedFrom: { key: 'endpoint', value: 'local' } }
+    })]);
+  });
+
+  test('createLegacyMigrationReport is non-destructive and count-focused', () => {
+    expect(createLegacyMigrationReport({
+      sourceApp: 'axiolotl',
+      legacyDatabases: ['inferenceDB', 'SPARQLSettings'],
+      graphs: [{}],
+      quadRows: [{}, {}],
+      settings: [{}]
+    })).toEqual({
+      sourceApp: 'axiolotl',
+      legacyDatabases: ['inferenceDB', 'SPARQLSettings'],
+      counts: {
+        projects: 0,
+        artifacts: 0,
+        graphs: 1,
+        quadRows: 2,
+        settings: 1,
+        runs: 0
+      },
+      destructiveActions: [],
+      requiresUserConfirmation: true
+    });
+  });
+
+  test('inspectLegacyIndexedDbDatabase delegates to IndexedDB inspection', async () => {
+    await expect(inspectLegacyIndexedDbDatabase('ProjectData', { indexedDBRef: createMockIndexedDB() })).resolves.toMatchObject({
+      available: true,
+      exists: true
+    });
   });
 });
 
@@ -928,3 +1221,4 @@ describe('IndexedDB adapter helpers', () => {
       .rejects.toMatchObject({ code: 'IDB_DELETE_BLOCKED' });
   });
 });
+

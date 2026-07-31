@@ -238,6 +238,47 @@ export function normalizeGraphRecord(record, { now } = {}) {
   };
 }
 
+/**
+ * Create a stable scoped setting storage record.
+ *
+ * Scopes should be explicit enough to avoid collisions across apps and
+ * projects, for example `app:axiolotl`, `project:project-x`,
+ * `artifact:artifact-y`, or `user:local`.
+ *
+ * @param {object} record Setting-like input record.
+ * @param {object} [options]
+ * @param {() => string} [options.now] Clock function for missing timestamps.
+ * @returns {object} Normalized SettingRecord.
+ */
+export function normalizeSettingRecord(record, { now } = {}) {
+  requireObject(record, 'setting record');
+  const scope = requireString(record.scope || 'app:default', 'setting.scope');
+  const key = requireString(record.key, 'setting.key');
+  const createdAt = record.createdAt || nowIso(now);
+  return {
+    settingId: record.settingId || createScopedSettingKey(scope, key),
+    scope,
+    key,
+    value: record.value ?? null,
+    schemaVersion: Number.isInteger(record.schemaVersion) ? record.schemaVersion : 1,
+    appId: record.appId || '',
+    createdAt,
+    updatedAt: record.updatedAt || createdAt,
+    metadata: normalizeMetadata(record.metadata)
+  };
+}
+
+/**
+ * Creates the canonical key used for scoped settings.
+ *
+ * @param {string} scope Setting scope.
+ * @param {string} key Setting key within scope.
+ * @returns {string} Stable scoped setting key.
+ */
+export function createScopedSettingKey(scope, key) {
+  return `${requireString(scope, 'setting.scope')}::${requireString(key, 'setting.key')}`;
+}
+
 function normalizeTermValue(value, name) {
   if (value && typeof value === 'object' && typeof value.value === 'string') return value.value;
   return requireString(value, name);

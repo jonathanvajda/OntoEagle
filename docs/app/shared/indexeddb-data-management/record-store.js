@@ -1,4 +1,4 @@
-import { normalizeArtifactRecord, normalizeDatasetRecord, normalizeGraphRecord, normalizeProjectRecord, normalizeQuadRow, normalizeRunRecord, normalizeWorkspaceInclusionRecord } from './records.js';
+import { createScopedSettingKey, normalizeArtifactRecord, normalizeDatasetRecord, normalizeGraphRecord, normalizeProjectRecord, normalizeQuadRow, normalizeRunRecord, normalizeSettingRecord, normalizeWorkspaceInclusionRecord } from './records.js';
 import { resolveIdbRequest, runObjectStoreTransaction } from './indexeddb-adapter.js';
 import { StorageError } from './storage-error.js';
 
@@ -214,32 +214,43 @@ export function createDatasetStore(adapter, { now } = {}) {
  * @param {string} [options.scope='app'] Scope prefix, typically `app` or a project id.
  * @returns {object} Settings store API.
  */
-export function createSettingsStore(adapter, { scope = 'app' } = {}) {
+export function createSettingsStore(adapter, { scope = 'app:default', appId = '' } = {}) {
   requireAdapter(adapter);
   const keyFor = (key) => {
-    if (typeof key !== 'string' || !key.trim()) {
-      throw new StorageError('Setting key must be a non-empty string.', { code: 'INVALID_SETTING_KEY' });
+    try {
+      return createScopedSettingKey(scope, key);
+    } catch (error) {
+      throw new StorageError('Setting key must be a non-empty string.', { code: 'INVALID_SETTING_KEY', cause: error });
     }
-    return `${scope}::${key.trim()}`;
   };
   return {
-    async getSetting(key, fallbackValue = null) {
+    async readSettingValue(key, fallbackValue = null) {
       const record = await adapter.get(keyFor(key));
       return record ? record.value : fallbackValue;
     },
-    async setSetting(key, value) {
-      const record = { scope, key: key.trim(), value };
-      await adapter.put(keyFor(key), record);
+    async writeSettingValue(key, value) {
+      const settingId = keyFor(key);
+      const record = normalizeSettingRecord({ settingId, scope, key: String(key).trim(), value, appId });
+      await adapter.put(settingId, record);
       return value;
     },
-    async deleteSetting(key) {
+    async storeSettingRecord(record) {
+      const normalized = normalizeSettingRecord({ appId, ...record });
+      await adapter.put(normalized.settingId, normalized);
+      return normalized;
+    },
+    async readSettingRecord(key) {
+      const record = await adapter.get(keyFor(key));
+      return record ? normalizeSettingRecord(record) : null;
+    },
+    async deleteSettingRecord(key) {
       return adapter.delete(keyFor(key));
     },
-    async listSettings() {
+    async listSettingRecords() {
       return (await adapter.list())
         .filter((record) => record && record.scope === scope)
         .sort((left, right) => String(left.key).localeCompare(String(right.key)))
-        .map((record) => ({ key: record.key, value: record.value }));
+        .map((record) => normalizeSettingRecord(record));
     }
   };
 }
