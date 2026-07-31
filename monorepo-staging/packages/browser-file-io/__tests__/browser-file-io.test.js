@@ -4,10 +4,14 @@ import {
   createTextBlob,
   downloadBlob,
   downloadTextFile,
+  createSafeFilenameBase,
+  isBlobLike,
+  normalizeFileExtension,
   normalizeDownloadFileName,
   normalizeTextMimeType,
   readFileAsArrayBuffer,
-  readFileAsText
+  readFileAsText,
+  stripFileExtension
 } from '../src/index.js';
 
 function createMockFileReaderConstructor({ result, error, throwOnRead = false } = {}) {
@@ -153,6 +157,22 @@ describe('browser-file-io read adapters', () => {
 });
 
 describe('browser-file-io Blob and download adapters', () => {
+  test('filename utilities normalize extensions and safe basenames', () => {
+    expect(normalizeFileExtension('.TTL')).toBe('ttl');
+    expect(normalizeFileExtension('..JSONLD')).toBe('jsonld');
+    expect(stripFileExtension('report.final.ttl')).toBe('report.final');
+    expect(stripFileExtension('archive.tar.gz')).toBe('archive.tar');
+    expect(createSafeFilenameBase(' Bad/File:Name?.ttl ')).toBe('Bad-File-Name-.ttl');
+    expect(createSafeFilenameBase(stripFileExtension(' Bad/File:Name?.ttl '))).toBe('Bad-File-Name-');
+    expect(createSafeFilenameBase('', { fallbackBase: 'artifact' })).toBe('artifact');
+  });
+
+  test('isBlobLike detects Blob-compatible payloads without relying on global Blob', () => {
+    expect(isBlobLike(new Blob(['x'], { type: 'text/plain' }))).toBe(true);
+    expect(isBlobLike({ type: 'text/plain', arrayBuffer: async () => new ArrayBuffer(0) })).toBe(true);
+    expect(isBlobLike({ type: 'text/plain' })).toBe(false);
+  });
+
   test('normalizeTextMimeType appends charset unless disabled or already present', () => {
     expect(normalizeTextMimeType('text/csv')).toBe('text/csv;charset=utf-8');
     expect(normalizeTextMimeType('text/csv;charset=utf-16')).toBe('text/csv;charset=utf-16');

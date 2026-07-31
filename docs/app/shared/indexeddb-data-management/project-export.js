@@ -1,27 +1,39 @@
 import { StorageError } from './storage-error.js';
+import {
+  getMimeTypeForFormatKey,
+  getOutputMimeTypeForExtension,
+  getPreferredExtensionForMimeType,
+  normalizeSupportedMimeType
+} from '../format-registry/index.js';
+import {
+  createSafeFilenameBase,
+  isBlobLike,
+  normalizeFileExtension,
+  stripFileExtension
+} from '../browser-file-io/index.js';
 
-const DEFAULT_PROJECT_ZIP_MIME = 'application/zip';
-const DEFAULT_JSON_MIME = 'application/json';
+const DEFAULT_ARTIFACT_FORMAT_KEY = 'json';
+const DEFAULT_PROJECT_ARCHIVE_FORMAT_KEY = 'zip';
 
 const ARTIFACT_KIND_DEFAULTS = Object.freeze({
-  'mermaid-diagram': Object.freeze({ extension: 'mmd', mimeType: 'text/mermaid' }),
-  'sparql-query': Object.freeze({ extension: 'rq', mimeType: 'application/sparql-query' }),
-  'sparql-update': Object.freeze({ extension: 'ru', mimeType: 'application/sparql-update' }),
-  'sql-query': Object.freeze({ extension: 'sql', mimeType: 'application/sql' }),
-  'nosql-query': Object.freeze({ extension: 'json', mimeType: DEFAULT_JSON_MIME }),
-  'rdf-file': Object.freeze({ extension: 'ttl', mimeType: 'text/turtle' }),
-  'rdf-dataset': Object.freeze({ extension: 'jsonld', mimeType: 'application/ld+json' }),
-  'quad-rows': Object.freeze({ extension: 'nq', mimeType: 'application/n-quads' }),
-  'tabular-file': Object.freeze({ extension: 'csv', mimeType: 'text/csv' }),
-  'tabular-records': Object.freeze({ extension: 'csv', mimeType: 'text/csv' }),
-  'iri-mapping-table': Object.freeze({ extension: 'csv', mimeType: 'text/csv' }),
-  'shacl-shapes': Object.freeze({ extension: 'ttl', mimeType: 'text/turtle' }),
-  'r2rml-mapping': Object.freeze({ extension: 'ttl', mimeType: 'text/turtle' }),
-  'diagnostic-report': Object.freeze({ extension: 'json', mimeType: DEFAULT_JSON_MIME }),
-  'ontology-slim': Object.freeze({ extension: 'ttl', mimeType: 'text/turtle' }),
-  'search-index': Object.freeze({ extension: 'json', mimeType: DEFAULT_JSON_MIME }),
-  'jsonld-graph': Object.freeze({ extension: 'jsonld', mimeType: 'application/ld+json' }),
-  'ontology-documents': Object.freeze({ extension: 'json', mimeType: DEFAULT_JSON_MIME })
+  'mermaid-diagram': 'mermaid',
+  'sparql-query': 'sparqlQuery',
+  'sparql-update': 'sparqlUpdate',
+  'sql-query': 'sql',
+  'nosql-query': 'json',
+  'rdf-file': 'turtle',
+  'rdf-dataset': 'jsonLd',
+  'quad-rows': 'nQuads',
+  'tabular-file': 'csv',
+  'tabular-records': 'csv',
+  'iri-mapping-table': 'csv',
+  'shacl-shapes': 'turtle',
+  'r2rml-mapping': 'turtle',
+  'diagnostic-report': 'json',
+  'ontology-slim': 'turtle',
+  'search-index': 'json',
+  'jsonld-graph': 'jsonLd',
+  'ontology-documents': 'json'
 });
 
 /**
@@ -64,10 +76,26 @@ export function storeProjectRunData(stores, record) {
  * @returns {{extension: string, mimeType: string}} Download format details.
  */
 export function resolveArtifactDownloadFormat(artifact) {
-  const defaults = ARTIFACT_KIND_DEFAULTS[artifact?.artifactKind] || Object.freeze({ extension: 'json', mimeType: DEFAULT_JSON_MIME });
+  const explicitExtension = normalizeFileExtension(artifact?.extension);
+  const explicitMediaType = normalizeMimeType(artifact?.mediaType);
+  if (explicitMediaType) {
+    return {
+      extension: explicitExtension || getPreferredExtension(explicitMediaType),
+      mimeType: explicitMediaType
+    };
+  }
+
+  if (explicitExtension) {
+    return {
+      extension: explicitExtension,
+      mimeType: getMimeTypeForExtension(explicitExtension)
+    };
+  }
+
+  const defaults = getDescriptorForFormatKey(ARTIFACT_KIND_DEFAULTS[artifact?.artifactKind] || DEFAULT_ARTIFACT_FORMAT_KEY);
   return {
-    extension: normalizeExtension(artifact?.extension || defaults.extension),
-    mimeType: artifact?.mediaType || defaults.mimeType
+    extension: defaults.extensions[0],
+    mimeType: defaults.mimeType
   };
 }
 
@@ -82,7 +110,7 @@ export function resolveArtifactDownloadFormat(artifact) {
 export function createArtifactDownloadFileName(artifact, { fallbackName = 'artifact' } = {}) {
   const { extension } = resolveArtifactDownloadFormat(artifact);
   const sourceName = artifact?.source?.fileName || artifact?.label || artifact?.artifactId || fallbackName;
-  const safeBase = safeFilenameBase(stripKnownExtension(sourceName));
+  const safeBase = createSafeFilenameBase(stripFileExtension(sourceName), { fallbackBase: fallbackName });
   return `${safeBase}.${extension}`;
 }
 
@@ -139,7 +167,7 @@ export async function createProjectArchiveBlob(project, artifacts, { JSZipConstr
   for (const artifact of Array.isArray(artifacts) ? artifacts : []) {
     zip.file(`artifacts/${createArtifactDownloadFileName(artifact)}`, serializeArtifactPayload(artifact?.payload ?? artifact));
   }
-  return zip.generateAsync({ type: 'blob' });
+  return zip.generateAsync({ type: 'blob', mimeType: getDescriptorForFormatKey(DEFAULT_PROJECT_ARCHIVE_FORMAT_KEY).mimeType });
 }
 
 /**
@@ -157,7 +185,7 @@ export async function downloadProjectArchive(project, artifacts, { JSZipConstruc
     throw new StorageError('downloadProjectArchive expected a downloadBlob function.', { code: 'DOWNLOAD_FUNCTION_REQUIRED' });
   }
   const blob = await createProjectArchiveBlob(project, artifacts, { JSZipConstructor });
-  const fileName = `${safeFilenameBase(project?.label || project?.projectId || 'project')}.zip`;
+  const fileName = `${createSafeFilenameBase(project?.label || project?.projectId || 'project', { fallbackBase: 'project' })}.zip`;
   return downloadBlob(fileName, blob, downloadOptions);
 }
 
@@ -167,23 +195,25 @@ function serializeArtifactPayload(payload) {
   return JSON.stringify(payload ?? {}, null, 2);
 }
 
-function normalizeExtension(extension) {
-  return String(extension || 'json').trim().toLowerCase().replace(/^\./, '') || 'json';
+function normalizeMimeType(mimeType) {
+  const text = String(mimeType || '').trim();
+  const result = normalizeSupportedMimeType(text);
+  return result.ok ? result.value.mimeType : text;
 }
 
-function stripKnownExtension(name) {
-  return String(name || '').replace(/\.[A-Za-z0-9_-]{1,12}$/, '');
+function getDescriptorForFormatKey(formatKey) {
+  const result = getMimeTypeForFormatKey(formatKey);
+  return result.ok
+    ? result.value
+    : getMimeTypeForFormatKey(DEFAULT_ARTIFACT_FORMAT_KEY).value;
 }
 
-function safeFilenameBase(value) {
-  return String(value || 'artifact')
-    .trim()
-    .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '-')
-    .replace(/\s+/g, ' ')
-    .slice(0, 120)
-    || 'artifact';
+function getPreferredExtension(mimeType) {
+  const result = getPreferredExtensionForMimeType(mimeType);
+  return result.ok ? result.value : getDescriptorForFormatKey(DEFAULT_ARTIFACT_FORMAT_KEY).extensions[0];
 }
 
-function isBlobLike(value) {
-  return value && typeof value === 'object' && typeof value.arrayBuffer === 'function' && typeof value.type === 'string';
+function getMimeTypeForExtension(extension) {
+  const result = getOutputMimeTypeForExtension(extension);
+  return result.ok ? result.value.mimeType : getDescriptorForFormatKey('binary').mimeType;
 }

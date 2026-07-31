@@ -97,9 +97,17 @@ describe('format-registry MIME helpers', () => {
       ok: true,
       value: { id: 'sparqlResultsXml', mimeType: 'application/sparql-results+xml', category: 'query' }
     });
+    expect(getSupportedMimeTypeForFilename('statement.sql')).toMatchObject({
+      ok: true,
+      value: { id: 'sql', mimeType: 'application/sql', category: 'query' }
+    });
     expect(getSupportedMimeTypeForFilename('notes.json')).toMatchObject({
       ok: true,
       value: { id: 'json', mimeType: 'application/json', category: 'data' }
+    });
+    expect(getSupportedMimeTypeForFilename('project.zip')).toMatchObject({
+      ok: true,
+      value: { id: 'zip', mimeType: 'application/zip', category: 'archive' }
     });
   });
 
@@ -150,6 +158,7 @@ describe('format-registry MIME helpers', () => {
     expect(getPreferredExtensionForMimeType('jsonLd')).toEqual({ ok: true, value: 'jsonld' });
     expect(getPreferredExtensionForMimeType('text/mermaid')).toEqual({ ok: true, value: 'mmd' });
     expect(getPreferredExtensionForMimeType('application/d3+json')).toEqual({ ok: true, value: 'json' });
+    expect(getPreferredExtensionForMimeType('application/zip')).toEqual({ ok: true, value: 'zip' });
   });
 
   test('Mermaid and D3 JSON output descriptors are distinct from generic JSON detection', () => {
@@ -222,7 +231,7 @@ describe('format-registry MIME helpers', () => {
     expect(getAcceptExtensions('rdf')).toContain('.ttl');
     expect(getAcceptExtensions('rdf')).toContain('.jsonld');
     expect(getAcceptExtensions('rdf')).not.toContain('.csv');
-    expect(getAcceptExtensions('query')).toBe('.rq,.sparql,.ru,.srj,.srx');
+    expect(getAcceptExtensions('query')).toBe('.rq,.sparql,.ru,.srj,.srx,.sql');
   });
 
   test('guessRdfMimeTypeFromText handles paradigmatic RDF snippets and plain text fallback', () => {

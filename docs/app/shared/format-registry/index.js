@@ -5,6 +5,10 @@ export {
   getOutputMimeTypeForExtension,
   normalizeSupportedMimeType,
   getPreferredExtensionForMimeType,
+  getInputKindForExtension,
+  getMimeTypeForFormatKey,
+  createFormatMimeTypeMap,
+  createFormatExtensionMap,
   getMermaidOutputMimeDescriptor,
   getD3JsonOutputMimeDescriptor,
   isMimeDescriptorCategory
@@ -16,3 +20,9 @@ export {
   isN3ParserSupportedMimeType,
   rdfSerializationPreservesNamedGraphs
 } from './rdf-parser-formats.js';
+
+export {
+  downloadTextFile,
+  getAcceptExtensions,
+  guessRdfMimeTypeFromText
+} from './browser-file-actions.js';

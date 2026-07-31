@@ -559,7 +559,7 @@ describe('project artifact and archive export helpers', () => {
     });
 
     const zipDescription = JSON.parse(await blob.text());
-    expect(zipDescription.options).toEqual({ type: 'blob' });
+    expect(zipDescription.options).toEqual({ type: 'blob', mimeType: 'application/zip' });
     expect(zipDescription.files).toEqual([
       expect.objectContaining({ name: 'project.json' }),
       expect.objectContaining({ name: 'artifacts/Flow.mmd', content: 'graph TD; A-->B' }),
