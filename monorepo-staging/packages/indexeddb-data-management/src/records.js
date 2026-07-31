@@ -161,6 +161,39 @@ export function normalizeRunRecord(record, { now } = {}) {
   };
 }
 
+/**
+ * Normalize a workspace inclusion record. Inclusions make graph visibility
+ * explicit: a project can include a reference dataset or project artifact
+ * without silently reading every available dataset in the browser.
+ *
+ * @param {object} record Inclusion-like input record.
+ * @param {object} [options]
+ * @param {() => string} [options.now] Clock function for missing timestamps.
+ * @returns {object} Normalized WorkspaceInclusionRecord.
+ */
+export function normalizeWorkspaceInclusionRecord(record, { now } = {}) {
+  requireObject(record, 'workspace inclusion record');
+  const projectId = requireString(record.projectId, 'inclusion.projectId');
+  const targetType = requireString(record.targetType, 'inclusion.targetType');
+  const targetId = requireString(record.targetId, 'inclusion.targetId');
+  const role = requireString(record.role || 'project-source', 'inclusion.role');
+  const inclusionId = String(record.inclusionId || createStableRecordId('inclusion', [projectId, targetType, targetId])).trim();
+  const createdAt = record.createdAt || nowIso(now);
+  return {
+    inclusionId,
+    projectId,
+    targetType,
+    targetId,
+    role,
+    enabled: record.enabled !== false,
+    graphIri: record.graphIri || '',
+    includeMode: record.includeMode || 'read-only',
+    createdAt,
+    updatedAt: record.updatedAt || createdAt,
+    metadata: normalizeMetadata(record.metadata)
+  };
+}
+
 function normalizeTermValue(value, name) {
   if (value && typeof value === 'object' && typeof value.value === 'string') return value.value;
   return requireString(value, name);

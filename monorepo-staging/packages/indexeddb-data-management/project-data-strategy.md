@@ -189,6 +189,14 @@ storeProjectArtifact(record, payload, options)
 getProjectArtifact(artifactId, options)
 listProjectArtifacts(projectId, filter)
 deleteProjectArtifact(artifactId, options)
+
+storeProjectArtifactData(stores, record, payload)
+resolveArtifactDownloadFormat(artifact)
+createArtifactDownloadFileName(artifact)
+createArtifactDownloadBlob(artifact)
+downloadProjectArtifact(artifact, options)
+createProjectArchiveBlob(project, artifacts, options)
+downloadProjectArchive(project, artifacts, options)
 ```
 
 ### Dataset and graph store
@@ -198,6 +206,12 @@ storeDatasetRecord(record)
 listDatasetRecords(projectId, filter)
 setDatasetEnabled(datasetId, enabled)
 deleteDataset(datasetId)
+
+storeWorkspaceInclusion(record)
+getWorkspaceInclusion(inclusionId)
+listWorkspaceInclusions(projectId, filter)
+setWorkspaceInclusionEnabled(inclusionId, enabled)
+deleteWorkspaceInclusion(inclusionId)
 
 upsertQuadRows(projectId, rows, options)
 listQuadRows(projectId, filter)
@@ -271,3 +285,514 @@ The promoted storage package should satisfy these Mermaid-derived requirements b
 - `query-artifacts.json`: SPARQL, SQL, and NoSQL query artifacts.
 - `mermaid-project.json`: project with two Mermaid diagrams.
 - `migration-axiolotl-default-graph.json`: empty-string graph rows converted to canonical default graph representation.
+
+## Cross-App Project Portfolio Clarification
+
+The project portfolio is intended to span apps. A project is not owned by OntoEagle, TOM, Axiolotl, Table Nova, IRI Swapper, Mermaid, or any other single app. Each app may contribute its own artifacts, runs, settings, and derived outputs to the same project.
+
+Recommended storage split:
+
+```text
+OntologyWorkbenchProjects
+  projects
+  artifacts
+  runs
+  settings
+
+App-local databases
+  app-specific caches
+  vendor-required legacy stores
+  derived indexes
+  transient acceleration structures
+```
+
+Examples:
+
+- OntoEagle contributes selected ontology catalog artifacts, ontology slim artifacts, search/import runs, and project-level selection settings.
+- CQ Ferret contributes competency-question JSON-LD artifacts, CSV import runs, Mermaid/query sub-artifacts, and generated vocabulary outputs.
+- TOM contributes ontology workspace snapshots, prefix/import settings, table rows, axiom artifacts, and exported RDF artifacts.
+- Axiolotl contributes RDF graph artifacts, quad rows, SPARQL query artifacts, query result artifacts, inference runs, and workspace state.
+- Table Nova contributes source tabular files, parsed tabular records, RDF conversion outputs, and export artifacts.
+- IRI Swapper contributes source ontology artifacts, IRI mapping artifacts, rewritten RDF artifacts, and replacement run records.
+- Mermaid contributes diagram artifacts inside the same project portfolio rather than living in a separate mental model.
+
+App-local databases are still valid, but they should be treated as implementation details unless the stored data is durable user work. For example, OntoEagle's extracted document cache and search indexes can stay app-local, while user-selected ontologies, imported files, transformed outputs, and runs should be represented in the shared project portfolio.
+
+## Reference Catalogs Versus Project Work
+
+Stock/default resources should not automatically become user project data. They should be modeled as reference resources that a project can explicitly use.
+
+```text
+ReferenceCatalog
+  ReferenceDataset
+  ReferenceArtifact
+
+ProjectPortfolio
+  Project
+    ProjectArtifact
+    WorkspaceInclusion
+    RunRecord
+    Settings
+```
+
+Reference resources include:
+
+- OntoEagle's preloaded ontology catalog.
+- Axiolotl's stock graphs that are ready to load but not automatically inserted into the user's active store.
+- TOM's optimized parent lookup JSON, if promoted into a fuller ontology/reference catalog.
+- Stock SHACL templates, SPARQL query templates, Mermaid templates, namespace catalogs, and other reusable resources.
+
+Project resources include:
+
+- User-uploaded ontology files.
+- User-selected reference datasets added to a project workspace.
+- Parsed tabular records.
+- Loaded RDF datasets or quad rows.
+- Staged transformations.
+- Generated ontology slims, rewritten ontology files, diagnostic reports, diagrams, query results, and exports.
+
+Decision:
+
+```text
+Reference data = available shared knowledge.
+Project data = user-selected or user-created durable work.
+App-local cache = performance/runtime implementation detail.
+```
+
+## Workspace Inclusion Records
+
+Many ontology workflows need reference ontologies available in an active workspace for labels, taxonomy closure, superclass discovery, parent lookup, and validation. Reading every available reference graph implicitly would be confusing and could create hidden collisions. The project should therefore record explicit workspace inclusions.
+
+```js
+{
+  inclusionId: 'inclusion:project-x:bfo',
+  projectId: 'project:x',
+  targetType: 'reference-dataset', // reference-dataset | artifact
+  targetId: 'reference:bfo',
+  role: 'imported-reference',      // imported-reference | project-source | generated-output
+  enabled: true,
+  graphIri: 'urn:graph:reference:bfo',
+  includeMode: 'read-only',        // read-only | editable | generated
+  createdAt: '2026-07-30T00:00:00.000Z',
+  metadata: {
+    reason: 'taxonomy closure and labels'
+  }
+}
+```
+
+For a user-loaded ontology artifact:
+
+```js
+{
+  inclusionId: 'inclusion:project-x:user-domain-ontology',
+  projectId: 'project:x',
+  targetType: 'artifact',
+  targetId: 'artifact:user-domain-ontology',
+  role: 'project-source',
+  enabled: true,
+  graphIri: 'urn:graph:project:x:user-domain-ontology',
+  includeMode: 'editable'
+}
+```
+
+Workspace inclusions make it easy for users to add/remove reference ontologies from an active project without copying the reference catalog itself into every project. They also make graph visibility explicit: a project reads only enabled inclusions.
+
+## Active Workspace Graph
+
+An active workspace graph is a computed or materialized view over enabled workspace inclusions.
+
+```text
+ActiveWorkspaceGraph(projectId)
+  = enabled reference datasets
+  + enabled project source artifacts
+  + enabled staged/generated artifacts
+```
+
+Named graphs should remain explicit:
+
+```text
+urn:graph:reference:bfo
+urn:graph:reference:cco
+urn:graph:project:x:user-source
+urn:graph:project:x:generated-slim
+```
+
+This supports multiple graph views:
+
+- Label/taxonomy view: all enabled reference and project graphs.
+- Editable view: editable project graphs only.
+- Export view: selected output graph(s).
+- Reasoning/closure view: project graph plus selected references.
+- Debug view: all enabled named graphs with provenance.
+
+Collision handling should happen at named-graph and inclusion boundaries. The package should avoid flattening all reference and user data into one anonymous graph too early.
+
+## Artifact Lifecycle Buckets
+
+A project artifact is any durable unit of user-relevant work, whether original, loaded, staged, transformed, generated, or exported.
+
+Recommended artifact roles:
+
+```text
+reference
+source
+loaded
+staged
+transformed
+generated
+export
+cache
+```
+
+Recommended artifact kinds:
+
+```text
+rdf-file
+rdf-dataset
+quad-rows
+tabular-file
+tabular-records
+iri-mapping-table
+sparql-query
+sql-query
+nosql-query
+mermaid-diagram
+shacl-shapes
+r2rml-mapping
+diagnostic-report
+ontology-slim
+search-index
+```
+
+Table Nova example:
+
+```text
+source CSV file
+  -> loaded tabular records
+  -> transformed RDF dataset
+  -> exported Turtle/JSON-LD file
+```
+
+IRI Swapper example:
+
+```text
+source ontology file
+source old-to-new IRI mapping
+  -> loaded RDF dataset
+  -> transformed rewritten RDF dataset
+  -> exported rewritten ontology file
+```
+
+Each operation should also create a `RunRecord` connecting input and output artifact ids.
+
+```js
+{
+  runKind: 'rdf-iri-rewrite',
+  inputArtifactIds: [
+    'artifact:source-ontology',
+    'artifact:iri-mapping-table'
+  ],
+  outputArtifactIds: [
+    'artifact:rewritten-rdf-dataset',
+    'artifact:rewritten-rdf-file'
+  ],
+  payload: {
+    replacementCount: 128,
+    unmappedCount: 3,
+    targetFormat: 'text/turtle'
+  }
+}
+```
+
+## File-Manager Style Navigation
+
+The storage architecture should support a UI similar to Protege, Windows File Explorer, or a project explorer. The UI should expose a logical tree, not raw IndexedDB object stores.
+
+Possible navigation model:
+
+```text
+Projects
+  Diabetes Ontology Cleanup
+    Active Workspace
+      Included References
+        BFO                  read-only
+        CCO                  read-only
+      Project Sources
+        diabetes-source.ttl  editable
+      Staged Work
+        parent choices
+        axiom draft table
+      Transformed Outputs
+        rewritten-output.ttl
+        generated-slim.ttl
+    Ontologies
+    Tabular Data
+    Mappings
+    Queries
+    Diagrams
+    Reports
+    Runs / History
+    Settings
+
+Reference Catalogs
+  OntoEagle Built-ins
+  Axiolotl Stock Graphs
+  TOM Parent Lookup Catalog
+  Query Templates
+  SHACL Templates
+
+Caches
+  Search indexes
+  Parsed lookup indexes
+```
+
+The tree can be generated from normalized records rather than folder paths:
+
+```text
+projectId
+artifactKind
+role
+source.origin
+workspace inclusion enabled/disabled state
+provenance.derivedFrom
+runKind
+createdAt / updatedAt
+```
+
+A later shared utility can provide this as a pure UI-neutral projection:
+
+```js
+createProjectNavigationTree(records, options)
+```
+
+Apps can render that tree differently while preserving the same logical organization.
+
+## Resolved Design Decisions For User Feedback
+
+### Default Project Behavior
+
+Each app should assume it is contributing to a shared active project. If the user has not chosen or named a project, the app should write to the default project.
+
+Decision:
+
+```text
+Apps save durable user work to the active project.
+If no active project exists, apps create/use the shared default project.
+```
+
+This avoids forcing project-management UI into every app before the storage model is useful. It also keeps the model compatible with later project selection, project rename, and cross-app project navigation.
+
+### Reference Inclusion Records
+
+Adding a reference dataset to a project should create a `WorkspaceInclusionRecord`. It should not create a full project artifact unless the user forks, annotates, edits, snapshots, or exports that reference data.
+
+Recommended rule:
+
+```text
+Reference selected for use = WorkspaceInclusionRecord only.
+Reference copied/mutated by user = ProjectArtifact plus WorkspaceInclusionRecord.
+```
+
+A lightweight project artifact that points to a reference can be useful later for project manifests, offline bundles, or exportable project packages. It should not be required for ordinary workspace inclusion, because that would make reference use look like user-created project data even when it is only a read-only dependency.
+
+### Reference Mutation And Revert
+
+Reference datasets should be immutable by default, but users should be allowed to fork them into editable project artifacts.
+
+The forked artifact should preserve provenance and mutation status:
+
+```js
+{
+  artifactKind: 'rdf-dataset',
+  role: 'forked-reference',
+  source: {
+    origin: 'reference-fork',
+    referenceId: 'reference:bfo',
+    fingerprint: 'sha256:original-reference'
+  },
+  provenance: {
+    derivedFrom: ['reference:bfo']
+  },
+  metadata: {
+    mutatedFromReference: true,
+    canRevertToReference: true
+  }
+}
+```
+
+Reverting should not mutate the reference catalog. It should either:
+
+- Replace the forked project artifact payload with the current stock/reference payload.
+- Disable/delete the forked artifact and re-enable the original read-only reference inclusion.
+
+The second option is cleaner for provenance because it preserves the distinction between stock data and user-edited data.
+
+### Active Workspace Materialization
+
+Active workspace graph views should support both computed and materialized strategies. The strategy should be app-specific.
+
+Recommended modes:
+
+```text
+computed-on-demand
+materialized-on-import
+materialized-on-first-use
+materialized-on-run
+```
+
+OntoEagle should materialize selected built-in and user-added ontology datasets because search, IRI seed management, and slim generation depend on fast indexed access. Axiolotl can defer materialization until the user loads a graph into the active store or runs an operation that requires local quad access. Table Nova and IRI Swapper can usually materialize only around a transformation run.
+
+The package should make this explicit on the workspace inclusion or artifact summary:
+
+```js
+{
+  materialization: {
+    strategy: 'materialized-on-import',
+    status: 'ready',
+    quadCount: 45000,
+    indexedAt: '2026-07-30T00:00:00.000Z'
+  }
+}
+```
+
+### Collision Warnings
+
+The project storage package should not produce user-facing collision warnings by default.
+
+Decision:
+
+```text
+Storage records provenance and graph boundaries.
+Specialized apps inspect conflicts when needed.
+```
+
+Ontology Compliance Diagnostic and related validation tools are better places to surface conflicting labels, subclass relations, domain/range assertions, or metadata. The storage layer should preserve enough named-graph and provenance information for those tools to inspect conflicts accurately.
+
+### Cache Visibility
+
+Caches should appear in the navigator only under advanced/debug mode.
+
+Default project navigation should show durable user work:
+
+- Projects.
+- Active workspace inclusions.
+- Source artifacts.
+- Staged artifacts.
+- Transformed/generated artifacts.
+- Queries.
+- Diagrams.
+- Reports.
+- Runs/history.
+- Settings.
+
+Advanced/debug navigation can show implementation details:
+
+- Search indexes.
+- Parsed lookup indexes.
+- Materialized quad stores.
+- Vendor-local stores.
+- App-local acceleration caches.
+
+This keeps the user mental model focused on work products, while still giving developers and advanced users a way to inspect storage behavior.
+
+### Controlled Vocabulary Before TOM, Axiolotl, And Mermaid Migration
+
+The controlled vocabulary should be broad enough for the next migrations, but not so broad that every app invents its own near-duplicate terms.
+
+Recommended `artifactKind` values:
+
+```text
+rdf-file
+rdf-dataset
+quad-rows
+tabular-file
+tabular-records
+iri-mapping-table
+sparql-query
+sparql-update
+sql-query
+nosql-query
+query-results
+mermaid-diagram
+shacl-shapes
+r2rml-mapping
+diagnostic-report
+ontology-slim
+ontology-catalog
+reference-dataset
+project-snapshot
+app-settings
+export-bundle
+```
+
+Recommended `role` values:
+
+```text
+reference
+source
+loaded
+staged
+transformed
+generated
+forked-reference
+query
+report
+setting
+cache
+export
+```
+
+Recommended `runKind` values:
+
+```text
+import
+export
+parse
+load
+query
+transformation
+rdf-iri-rewrite
+tabular-to-rdf
+diagnostic
+inference
+generation
+materialization
+migration
+```
+
+Recommended `source.origin` values:
+
+```text
+builtin
+reference-catalog
+upload
+generated
+transformed
+remote
+imported-folder
+legacy-migration
+reference-fork
+```
+
+Recommended `WorkspaceInclusionRecord.role` values:
+
+```text
+imported-reference
+project-source
+staged-work
+generated-output
+forked-reference
+query-context
+validation-context
+```
+
+Recommended `includeMode` values:
+
+```text
+read-only
+editable
+generated
+disabled
+```
+
+These values should be normalized in code rather than treated as loose strings. Unknown values can be allowed during early migration, but should trigger warnings in development tests so vocabulary drift does not reappear across apps.

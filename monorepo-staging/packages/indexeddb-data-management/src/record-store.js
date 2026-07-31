@@ -1,4 +1,4 @@
-import { normalizeArtifactRecord, normalizeDatasetRecord, normalizeProjectRecord, normalizeQuadRow, normalizeRunRecord } from './records.js';
+import { normalizeArtifactRecord, normalizeDatasetRecord, normalizeProjectRecord, normalizeQuadRow, normalizeRunRecord, normalizeWorkspaceInclusionRecord } from './records.js';
 import { resolveIdbRequest, runObjectStoreTransaction } from './indexeddb-adapter.js';
 import { StorageError } from './storage-error.js';
 
@@ -283,6 +283,49 @@ export function createRunRecordStore(adapter, { now } = {}) {
     setLastRunId(projectId, runKind, runId) {
       lastRunByScope.set(`${projectId || ''}::${runKind}`, runId);
       return runId;
+    }
+  };
+}
+
+/**
+ * Create a workspace inclusion store. Inclusions explicitly connect a project
+ * to reference datasets or project artifacts that should participate in the
+ * active workspace graph.
+ *
+ * @param {object} adapter Minimal async adapter with get/put/delete/list.
+ * @param {object} [options]
+ * @param {() => string} [options.now] Clock function for missing timestamps.
+ * @returns {object} Workspace inclusion store API.
+ */
+export function createWorkspaceInclusionStore(adapter, { now } = {}) {
+  requireAdapter(adapter);
+  return {
+    async storeWorkspaceInclusion(record) {
+      const normalized = normalizeWorkspaceInclusionRecord(record, { now });
+      await adapter.put(normalized.inclusionId, normalized);
+      return normalized;
+    },
+    async getWorkspaceInclusion(inclusionId) {
+      const record = await adapter.get(inclusionId);
+      return record ? normalizeWorkspaceInclusionRecord(record, { now }) : null;
+    },
+    async listWorkspaceInclusions(projectId, filter = {}) {
+      const records = (await adapter.list()).map((record) => normalizeWorkspaceInclusionRecord(record, { now }));
+      return filterByProject(records, projectId)
+        .filter((record) => filter.enabledOnly ? record.enabled : true)
+        .filter((record) => filter.targetType ? record.targetType === filter.targetType : true)
+        .filter((record) => filter.role ? record.role === filter.role : true)
+        .sort(compareDescendingBy('updatedAt'));
+    },
+    async setWorkspaceInclusionEnabled(inclusionId, enabled) {
+      const existing = await adapter.get(inclusionId);
+      if (!existing) return null;
+      const updated = normalizeWorkspaceInclusionRecord({ ...existing, enabled: !!enabled, updatedAt: now?.() || new Date().toISOString() }, { now });
+      await adapter.put(inclusionId, updated);
+      return updated;
+    },
+    async deleteWorkspaceInclusion(inclusionId) {
+      return adapter.delete(inclusionId);
     }
   };
 }

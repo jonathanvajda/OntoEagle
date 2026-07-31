@@ -14,6 +14,7 @@ export {
   normalizeArtifactRecord,
   normalizeDatasetRecord,
   normalizeRunRecord,
+  normalizeWorkspaceInclusionRecord,
   normalizeQuadRow
 } from './records.js';
 
@@ -34,6 +35,7 @@ export {
   createDatasetStore,
   createSettingsStore,
   createRunRecordStore,
+  createWorkspaceInclusionStore,
   createQuadRowStore
 } from './record-store.js';
 
@@ -46,3 +48,14 @@ export {
   createProjectPortfolioStores,
   ensureProjectPortfolioProject
 } from './project-portfolio-store.js';
+
+export {
+  storeProjectArtifactData,
+  storeProjectRunData,
+  resolveArtifactDownloadFormat,
+  createArtifactDownloadFileName,
+  createArtifactDownloadBlob,
+  downloadProjectArtifact,
+  createProjectArchiveBlob,
+  downloadProjectArchive
+} from './project-export.js';

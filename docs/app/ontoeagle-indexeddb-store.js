@@ -118,6 +118,33 @@ function restoreDatasetMeta(record) {
   };
 }
 
+function datasetInclusionId(datasetId) {
+  return `inclusion:ontoeagle:${datasetId}`;
+}
+
+function datasetArtifactId(datasetId) {
+  return `artifact:ontoeagle:${datasetId}:documents`;
+}
+
+function datasetWorkspaceInclusionRecord(datasetId, meta = {}) {
+  const isBuiltin = (meta.source || (datasetId === 'builtin' ? 'builtin' : 'user')) === 'builtin';
+  return {
+    inclusionId: datasetInclusionId(datasetId),
+    projectId: ONTOEAGLE_ACTIVE_PROJECT_ID,
+    targetType: isBuiltin ? 'reference-dataset' : 'artifact',
+    targetId: isBuiltin ? `reference:ontoeagle:${datasetId}` : datasetArtifactId(datasetId),
+    role: isBuiltin ? 'imported-reference' : 'project-source',
+    enabled: meta.enabled !== false,
+    graphIri: isBuiltin ? `urn:graph:reference:ontoeagle:${datasetId}` : `urn:graph:project:${ONTOEAGLE_ACTIVE_PROJECT_ID}:ontoeagle:${datasetId}`,
+    includeMode: isBuiltin ? 'read-only' : 'editable',
+    metadata: {
+      app: 'OntoEagle',
+      datasetId,
+      datasetSource: isBuiltin ? 'builtin' : 'user'
+    }
+  };
+}
+
 async function ensureDefaultProject() {
   await projectPortfolioStores();
 }
@@ -134,11 +161,13 @@ async function migrateLegacyActiveSettings() {
 
 async function migrateLegacyDatasetRecords() {
   const adapter = await rawAdapterFor(DATASETS_STORE);
+  const { inclusions } = await projectPortfolioStores();
   const records = await adapter.list();
   for (const record of records) {
-    if (!record || record.projectId === ONTOEAGLE_ACTIVE_PROJECT_ID) continue;
-    const migrated = normalizeDatasetMeta(record.datasetId, record);
+    if (!record) continue;
+    const migrated = record.projectId === ONTOEAGLE_ACTIVE_PROJECT_ID ? restoreDatasetMeta(record) : normalizeDatasetMeta(record.datasetId, record);
     await adapter.put(migrated.datasetId, migrated);
+    await inclusions.storeWorkspaceInclusion(datasetWorkspaceInclusionRecord(migrated.datasetId, migrated));
   }
 }
 
@@ -190,6 +219,8 @@ export async function getOntologyDatasetMeta(datasetId) {
  */
 export async function storeOntologyDatasetMeta(datasetId, meta) {
   const record = await (await datasetStore()).storeDatasetRecord(normalizeDatasetMeta(datasetId, meta));
+  const { inclusions } = await projectPortfolioStores();
+  await inclusions.storeWorkspaceInclusion(datasetWorkspaceInclusionRecord(datasetId, restoreDatasetMeta(record)));
   return restoreDatasetMeta(record);
 }
 
@@ -231,7 +262,7 @@ export async function storeOntologyDatasetDocuments(datasetId, docs) {
   }
   const { artifacts } = await projectPortfolioStores();
   await artifacts.storeProjectArtifact({
-    artifactId: `artifact:ontoeagle:${datasetId}:documents`,
+    artifactId: datasetArtifactId(datasetId),
     projectId: ONTOEAGLE_ACTIVE_PROJECT_ID,
     artifactKind: 'ontology-documents',
     role: datasetId === 'builtin' ? 'loaded' : 'source',
@@ -293,8 +324,13 @@ export async function deleteOntologyDatasetDocuments(datasetId) {
  * @returns {Promise<object[]>} Enabled ontology documents.
  */
 export async function listEnabledOntologyDocuments() {
-  const metas = await listOntologyDatasetMeta();
-  const enabledIds = new Set(metas.filter((meta) => meta && meta.enabled !== false).map((meta) => meta.datasetId));
+  const { inclusions } = await projectPortfolioStores();
+  const activeInclusions = await inclusions.listWorkspaceInclusions(ONTOEAGLE_ACTIVE_PROJECT_ID, { enabledOnly: true });
+  const enabledIds = new Set(activeInclusions.map((inclusion) => inclusion.metadata?.datasetId).filter(Boolean));
+  if (!enabledIds.size) {
+    const metas = await listOntologyDatasetMeta();
+    metas.filter((meta) => meta && meta.enabled !== false).forEach((meta) => enabledIds.add(meta.datasetId));
+  }
   const docs = await (await adapterFor(DOCUMENTS_STORE)).list();
   return docs.filter((doc) => doc && typeof doc.iri === 'string' && enabledIds.has(doc.datasetId));
 }
@@ -308,6 +344,10 @@ export async function listEnabledOntologyDocuments() {
  */
 export async function setOntologyDatasetEnabled(datasetId, enabled) {
   const record = await (await datasetStore()).setDatasetEnabled(datasetId, enabled);
+  if (record) {
+    const { inclusions } = await projectPortfolioStores();
+    await inclusions.storeWorkspaceInclusion(datasetWorkspaceInclusionRecord(datasetId, restoreDatasetMeta(record)));
+  }
   return restoreDatasetMeta(record);
 }
 
@@ -321,8 +361,9 @@ export async function deleteOntologyDataset(datasetId) {
   await deleteOntologyDatasetDocuments(datasetId);
   await deleteOntologyDatasetMeta(datasetId);
   await (await adapterFor(INDEX_STORE)).delete(datasetId);
-  const { artifacts } = await projectPortfolioStores();
-  await artifacts.deleteProjectArtifact(`artifact:ontoeagle:${datasetId}:documents`);
+  const { artifacts, inclusions } = await projectPortfolioStores();
+  await artifacts.deleteProjectArtifact(datasetArtifactId(datasetId));
+  await inclusions.deleteWorkspaceInclusion(datasetInclusionId(datasetId));
   return true;
 }
 
@@ -352,7 +393,7 @@ export async function storeOntologySearchIndex(datasetId, indexObj) {
     artifactKind: 'search-index',
     role: 'transformed',
     label: `${datasetId} search index`,
-    provenance: { derivedFrom: [`artifact:ontoeagle:${datasetId}:documents`] },
+    provenance: { derivedFrom: [datasetArtifactId(datasetId)] },
     summary: {
       keys: indexObj && typeof indexObj === 'object' ? Object.keys(indexObj).length : 0
     }

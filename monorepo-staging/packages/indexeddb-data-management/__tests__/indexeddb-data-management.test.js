@@ -6,21 +6,31 @@ import {
   createMemoryRecordAdapter,
   createProjectPortfolioSchema,
   createProjectPortfolioStores,
+  createProjectArchiveBlob,
+  createArtifactDownloadBlob,
+  createArtifactDownloadFileName,
   createProjectStore,
   createQuadRowStore,
   createRunRecordStore,
   createSettingsStore,
+  createWorkspaceInclusionStore,
   createStableRecordId,
   createTimestampRecordId,
   deleteIndexedDbDatabase,
   DEFAULT_PROJECT_PORTFOLIO_DB_NAME,
   DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID,
+  downloadProjectArchive,
+  downloadProjectArtifact,
   ensureProjectPortfolioProject,
   normalizeArtifactRecord,
   normalizeDatasetRecord,
   normalizeProjectRecord,
   normalizeQuadRow,
   normalizeRunRecord,
+  normalizeWorkspaceInclusionRecord,
+  resolveArtifactDownloadFormat,
+  storeProjectArtifactData,
+  storeProjectRunData,
   inspectIndexedDbDatabase,
   openIndexedDbStore,
   resolveIdbRequest,
@@ -127,7 +137,7 @@ function createMockObjectStoreDb() {
               return makeRequest(records.get(key) || null, tx);
             },
             put(value, key) {
-              const resolvedKey = key || value.artifactId || value.runId || value.projectId || value.id;
+              const resolvedKey = key || value.artifactId || value.runId || value.inclusionId || value.projectId || value.id;
               records.set(resolvedKey, value);
               return makeRequest(resolvedKey, tx);
             },
@@ -161,6 +171,20 @@ describe('record id helpers', () => {
       .toBe('run:2026-07-29t12-00-00-000z:abc');
   });
 });
+
+class FakeZip {
+  constructor() {
+    this.files = [];
+  }
+
+  file(name, content) {
+    this.files.push({ name, content });
+  }
+
+  async generateAsync(options) {
+    return new Blob([JSON.stringify({ options, files: this.files })], { type: 'application/zip' });
+  }
+}
 
 describe('record normalizers', () => {
   test('normalizeProjectRecord creates a portfolio-ready project record', () => {
@@ -214,6 +238,25 @@ describe('record normalizers', () => {
       label: 'OCD report',
       inputArtifactIds: ['artifact:a'],
       outputArtifactIds: []
+    });
+  });
+
+  test('normalizeWorkspaceInclusionRecord makes graph participation explicit', () => {
+    expect(normalizeWorkspaceInclusionRecord({
+      projectId: 'project:one',
+      targetType: 'reference-dataset',
+      targetId: 'reference:bfo',
+      role: 'imported-reference',
+      graphIri: 'urn:graph:reference:bfo'
+    }, { now: FIXED_NOW })).toMatchObject({
+      inclusionId: 'inclusion:project-one-reference-dataset-reference-bfo',
+      projectId: 'project:one',
+      targetType: 'reference-dataset',
+      targetId: 'reference:bfo',
+      role: 'imported-reference',
+      enabled: true,
+      includeMode: 'read-only',
+      graphIri: 'urn:graph:reference:bfo'
     });
   });
 
@@ -339,6 +382,31 @@ describe('store factories over injected adapters', () => {
     expect(store.getLastRunId('project:one', 'transformation')).toBe('run:new');
   });
 
+  test('workspace inclusion store lists active project graph inputs explicitly', async () => {
+    const store = createWorkspaceInclusionStore(createMemoryRecordAdapter(), { now: FIXED_NOW });
+    const bfo = await store.storeWorkspaceInclusion({
+      projectId: 'project:one',
+      targetType: 'reference-dataset',
+      targetId: 'reference:bfo',
+      role: 'imported-reference',
+      graphIri: 'urn:graph:reference:bfo'
+    });
+    await store.storeWorkspaceInclusion({
+      projectId: 'project:one',
+      targetType: 'artifact',
+      targetId: 'artifact:user-source',
+      role: 'project-source',
+      includeMode: 'editable',
+      enabled: false
+    });
+
+    await expect(store.listWorkspaceInclusions('project:one', { enabledOnly: true })).resolves.toEqual([
+      expect.objectContaining({ targetId: 'reference:bfo' })
+    ]);
+    await expect(store.setWorkspaceInclusionEnabled(bfo.inclusionId, false)).resolves.toMatchObject({ enabled: false });
+    await expect(store.listWorkspaceInclusions('project:one', { enabledOnly: true })).resolves.toHaveLength(0);
+  });
+
   test('quad store handles default graph, named graphs, filters, and exact deletion', async () => {
     const store = createQuadRowStore(createMemoryRecordAdapter());
     const defaultRow = {
@@ -386,11 +454,12 @@ describe('cross-app project portfolio stores', () => {
   test('createProjectPortfolioSchema uses the shared portfolio database and stores', () => {
     expect(createProjectPortfolioSchema()).toEqual({
       name: DEFAULT_PROJECT_PORTFOLIO_DB_NAME,
-      version: 1,
+      version: 2,
       stores: [
         { name: 'projects', options: { keyPath: 'projectId' } },
         { name: 'artifacts', options: { keyPath: 'artifactId' } },
         { name: 'runs', options: { keyPath: 'runId' } },
+        { name: 'workspaceInclusions', options: { keyPath: 'inclusionId' } },
         { name: 'settings' }
       ]
     });
@@ -410,6 +479,13 @@ describe('cross-app project portfolio stores', () => {
       role: 'loaded',
       label: 'OntoEagle catalog'
     });
+    await stores.inclusions.storeWorkspaceInclusion({
+      projectId: DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID,
+      targetType: 'artifact',
+      targetId: 'artifact:ontoeagle:catalog',
+      role: 'imported-reference',
+      graphIri: 'urn:graph:reference:ontoeagle-catalog'
+    });
     await stores.artifacts.storeProjectArtifact({
       artifactId: 'artifact:axiolotl:query',
       projectId: DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID,
@@ -425,6 +501,124 @@ describe('cross-app project portfolio stores', () => {
         expect.objectContaining({ artifactId: 'artifact:axiolotl:query' }),
         expect.objectContaining({ artifactId: 'artifact:ontoeagle:catalog' })
       ]));
+    await expect(stores.inclusions.listWorkspaceInclusions(DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID, { enabledOnly: true }))
+      .resolves.toEqual([
+        expect.objectContaining({ targetId: 'artifact:ontoeagle:catalog' })
+      ]);
+  });
+});
+
+describe('project artifact and archive export helpers', () => {
+  test('resolveArtifactDownloadFormat assigns common artifact extensions and MIME types', () => {
+    expect(resolveArtifactDownloadFormat({ artifactKind: 'mermaid-diagram' })).toEqual({
+      extension: 'mmd',
+      mimeType: 'text/mermaid'
+    });
+    expect(resolveArtifactDownloadFormat({ artifactKind: 'sparql-query' })).toEqual({
+      extension: 'rq',
+      mimeType: 'application/sparql-query'
+    });
+    expect(resolveArtifactDownloadFormat({ artifactKind: 'rdf-dataset' })).toEqual({
+      extension: 'jsonld',
+      mimeType: 'application/ld+json'
+    });
+    expect(resolveArtifactDownloadFormat({ artifactKind: 'rdf-file', extension: 'owl', mediaType: 'application/rdf+xml' })).toEqual({
+      extension: 'owl',
+      mimeType: 'application/rdf+xml'
+    });
+  });
+
+  test('downloadProjectArtifact creates a file name and blob from artifact payload', async () => {
+    const downloads = [];
+    const result = downloadProjectArtifact({
+      artifactId: 'artifact:query',
+      artifactKind: 'sparql-query',
+      label: 'Class query',
+      payload: 'SELECT * WHERE { ?s ?p ?o }'
+    }, {
+      downloadBlob(fileName, blob) {
+        downloads.push({ fileName, blob });
+        return { fileName };
+      }
+    });
+
+    expect(result).toEqual({ fileName: 'Class query.rq' });
+    expect(downloads[0].blob.type).toBe('application/sparql-query');
+    await expect(downloads[0].blob.text()).resolves.toBe('SELECT * WHERE { ?s ?p ?o }');
+  });
+
+  test('createProjectArchiveBlob creates project JSON plus artifact files', async () => {
+    const blob = await createProjectArchiveBlob({
+      projectId: DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID,
+      label: 'Shared Project'
+    }, [
+      { artifactId: 'artifact:mmd', artifactKind: 'mermaid-diagram', label: 'Flow', payload: 'graph TD; A-->B' },
+      { artifactId: 'artifact:rdf', artifactKind: 'jsonld-graph', label: 'Graph', payload: { '@graph': [] } }
+    ], {
+      JSZipConstructor: FakeZip
+    });
+
+    const zipDescription = JSON.parse(await blob.text());
+    expect(zipDescription.options).toEqual({ type: 'blob' });
+    expect(zipDescription.files).toEqual([
+      expect.objectContaining({ name: 'project.json' }),
+      expect.objectContaining({ name: 'artifacts/Flow.mmd', content: 'graph TD; A-->B' }),
+      expect.objectContaining({ name: 'artifacts/Graph.jsonld', content: '{\n  "@graph": []\n}' })
+    ]);
+  });
+
+  test('downloadProjectArchive downloads a zip using injected JSZip and download function', async () => {
+    const result = await downloadProjectArchive({
+      projectId: 'project:test',
+      label: 'Demo Project'
+    }, [], {
+      JSZipConstructor: FakeZip,
+      downloadBlob(fileName, blob) {
+        return { fileName, mimeType: blob.type };
+      }
+    });
+
+    expect(result).toEqual({
+      fileName: 'Demo Project.zip',
+      mimeType: 'application/zip'
+    });
+  });
+
+  test('storeProjectArtifactData and storeProjectRunData add records to portfolio stores', async () => {
+    const stores = createProjectPortfolioStores(createMockObjectStoreDb());
+    await ensureProjectPortfolioProject(stores);
+    const artifact = await storeProjectArtifactData(stores, {
+      artifactId: 'artifact:csv',
+      projectId: DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID,
+      artifactKind: 'tabular-file',
+      role: 'source',
+      label: 'terms.csv'
+    }, 'id,label\nx,X');
+    const run = await storeProjectRunData(stores, {
+      runId: 'run:csv-to-rdf',
+      projectId: DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID,
+      runKind: 'tabular-to-rdf',
+      label: 'CSV to RDF',
+      inputArtifactIds: [artifact.artifactId]
+    });
+
+    await expect(stores.artifacts.getProjectArtifact('artifact:csv')).resolves.toMatchObject({
+      artifactId: 'artifact:csv',
+      payload: 'id,label\nx,X'
+    });
+    expect(run.inputArtifactIds).toEqual(['artifact:csv']);
+  });
+
+  test('createArtifactDownloadFileName sanitizes names and createArtifactDownloadBlob serializes objects', async () => {
+    const artifact = {
+      artifactId: 'artifact:report',
+      artifactKind: 'diagnostic-report',
+      label: 'Bad / Report',
+      payload: { status: 'ok' }
+    };
+    expect(createArtifactDownloadFileName(artifact)).toBe('Bad - Report.json');
+    const blob = createArtifactDownloadBlob(artifact);
+    await expect(blob.text()).resolves.toBe('{\n  "status": "ok"\n}');
   });
 });
 
