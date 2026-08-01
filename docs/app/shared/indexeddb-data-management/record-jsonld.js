@@ -1,4 +1,4 @@
-import { iriForNamespaceId, namespacePrefixMapFromRegistry } from '../namespace-registry/index.js';
+import { COMMON_NAMESPACE_IRIS, iriForNamespaceId, namespacePrefixMapFromRegistry } from '../namespace-registry/index.js';
 import {
   normalizeArtifactRecord,
   normalizeDatasetRecord,
@@ -21,37 +21,20 @@ export const PROJECT_RECORD_JSONLD_CONTEXT = Object.freeze({
   okea: PREFIXES.okea
 });
 
-const DCTERMS_CREATED = 'dcterms:created';
-const DCTERMS_IDENTIFIER = 'dcterms:identifier';
-const DCTERMS_IS_PART_OF = 'dcterms:isPartOf';
-const DCTERMS_MODIFIED = 'dcterms:modified';
-const DCTERMS_PROVENANCE = 'dcterms:provenance';
-const DCTERMS_SOURCE = 'dcterms:source';
-const DCTERMS_TITLE = 'dcterms:title';
-const RDFS_LABEL = 'rdfs:label';
-const XSD_STRING = 'xsd:string';
-
-const CCE_COMPUTER_PROGRAM_EXECUTION = 'cceo:ComputerProgramExecution';
-const CCO_INFORMATION_CONTENT_ENTITY = 'cco2:ont00000958';
-const OKEA_GRAPH = 'okea:Graph';
-const OKEA_PROJECT = 'okea:Project';
-const OKEA_SETTING = 'okea:Setting';
-const OKEA_WORKSPACE_INCLUSION = 'okea:WorkspaceInclusion';
-
-function compactDateTime(value) {
-  return value ? { '@value': value, '@type': 'xsd:dateTime' } : null;
+function createDateTimeLiteral(value) {
+  return value ? { '@value': value, '@type': COMMON_NAMESPACE_IRIS.xsd.dateTime } : null;
 }
 
-function compactIdentifier(value) {
-  return value ? { '@value': value, '@type': XSD_STRING } : null;
+function createIdentifierLiteral(value) {
+  return value ? { '@value': value, '@type': COMMON_NAMESPACE_IRIS.xsd.string } : null;
 }
 
-function compactReference(value, type = null) {
+function createIriReference(value, type = null) {
   if (!value) return null;
   return stripNullishEntries({
     '@id': value,
     '@type': type,
-    [DCTERMS_IDENTIFIER]: compactIdentifier(value)
+    [COMMON_NAMESPACE_IRIS.dcterms.identifier]: createIdentifierLiteral(value)
   });
 }
 
@@ -81,7 +64,7 @@ export function readJsonLdRecordValue(record, keys, fallback = null) {
 }
 
 /**
- * Converts a ProjectRecord into a compact JSON-LD object.
+ * Converts a ProjectRecord into a JSON-LD object with full IRI keys.
  *
  * @param {object} record ProjectRecord or compatible DTO.
  * @param {object} [options]
@@ -93,20 +76,20 @@ export function convertProjectRecordToJsonLd(record, options = {}) {
   return stripNullishEntries({
     '@context': PROJECT_RECORD_JSONLD_CONTEXT,
     '@id': project.projectId,
-    '@type': OKEA_PROJECT,
-    [DCTERMS_IDENTIFIER]: compactIdentifier(project.projectId),
-    [DCTERMS_TITLE]: project.label,
-    [DCTERMS_CREATED]: compactDateTime(project.createdAt),
-    [DCTERMS_MODIFIED]: compactDateTime(project.updatedAt),
-    'okea:storageBackend': project.storageBackend,
-    'okea:activeArtifact': compactReference(project.activeArtifactId, CCO_INFORMATION_CONTENT_ENTITY),
-    'okea:tag': project.tags,
-    'okea:metadata': project.metadata
+    '@type': COMMON_NAMESPACE_IRIS.okea.Project,
+    [COMMON_NAMESPACE_IRIS.dcterms.identifier]: createIdentifierLiteral(project.projectId),
+    [COMMON_NAMESPACE_IRIS.dcterms.title]: project.label,
+    [COMMON_NAMESPACE_IRIS.dcterms.created]: createDateTimeLiteral(project.createdAt),
+    [COMMON_NAMESPACE_IRIS.dcterms.modified]: createDateTimeLiteral(project.updatedAt),
+    [COMMON_NAMESPACE_IRIS.okea.storageBackend]: project.storageBackend,
+    [COMMON_NAMESPACE_IRIS.okea.activeArtifact]: createIriReference(project.activeArtifactId, COMMON_NAMESPACE_IRIS.cco2.informationContentEntity),
+    [COMMON_NAMESPACE_IRIS.okea.tag]: project.tags,
+    [COMMON_NAMESPACE_IRIS.okea.metadata]: project.metadata
   });
 }
 
 /**
- * Converts an ArtifactRecord into a compact JSON-LD object.
+ * Converts an ArtifactRecord into a JSON-LD object with full IRI keys.
  *
  * @param {object} record ArtifactRecord or compatible DTO.
  * @param {object} [options]
@@ -118,25 +101,25 @@ export function convertArtifactRecordToJsonLd(record, options = {}) {
   return stripNullishEntries({
     '@context': PROJECT_RECORD_JSONLD_CONTEXT,
     '@id': artifact.artifactId,
-    '@type': CCO_INFORMATION_CONTENT_ENTITY,
-    [DCTERMS_IDENTIFIER]: compactIdentifier(artifact.artifactId),
-    [DCTERMS_IS_PART_OF]: compactReference(artifact.projectId, OKEA_PROJECT),
-    'okea:artifactKind': artifact.artifactKind,
-    'okea:role': artifact.role,
-    [DCTERMS_TITLE]: artifact.label,
-    'dcterms:format': artifact.mediaType,
-    'okea:fileExtension': artifact.extension,
-    [DCTERMS_CREATED]: compactDateTime(artifact.createdAt),
-    [DCTERMS_MODIFIED]: compactDateTime(artifact.updatedAt),
-    [DCTERMS_SOURCE]: artifact.source,
-    'okea:storageRef': artifact.storageRef,
-    [DCTERMS_PROVENANCE]: artifact.provenance,
-    'okea:summary': artifact.summary
+    '@type': COMMON_NAMESPACE_IRIS.cco2.informationContentEntity,
+    [COMMON_NAMESPACE_IRIS.dcterms.identifier]: createIdentifierLiteral(artifact.artifactId),
+    [COMMON_NAMESPACE_IRIS.dcterms.isPartOf]: createIriReference(artifact.projectId, COMMON_NAMESPACE_IRIS.okea.Project),
+    [COMMON_NAMESPACE_IRIS.okea.artifactKind]: artifact.artifactKind,
+    [COMMON_NAMESPACE_IRIS.okea.role]: artifact.role,
+    [COMMON_NAMESPACE_IRIS.dcterms.title]: artifact.label,
+    [COMMON_NAMESPACE_IRIS.dcterms.format]: artifact.mediaType,
+    [COMMON_NAMESPACE_IRIS.okea.fileExtension]: artifact.extension,
+    [COMMON_NAMESPACE_IRIS.dcterms.created]: createDateTimeLiteral(artifact.createdAt),
+    [COMMON_NAMESPACE_IRIS.dcterms.modified]: createDateTimeLiteral(artifact.updatedAt),
+    [COMMON_NAMESPACE_IRIS.dcterms.source]: artifact.source,
+    [COMMON_NAMESPACE_IRIS.okea.storageRef]: artifact.storageRef,
+    [COMMON_NAMESPACE_IRIS.dcterms.provenance]: artifact.provenance,
+    [COMMON_NAMESPACE_IRIS.okea.summary]: artifact.summary
   });
 }
 
 /**
- * Converts a DatasetRecord into a compact JSON-LD object.
+ * Converts a DatasetRecord into a JSON-LD object with full IRI keys.
  *
  * @param {object} record DatasetRecord or compatible DTO.
  * @param {object} [options]
@@ -148,25 +131,25 @@ export function convertDatasetRecordToJsonLd(record, options = {}) {
   return stripNullishEntries({
     '@context': PROJECT_RECORD_JSONLD_CONTEXT,
     '@id': dataset.datasetId,
-    '@type': CCO_INFORMATION_CONTENT_ENTITY,
-    [DCTERMS_IDENTIFIER]: compactIdentifier(dataset.datasetId),
-    [DCTERMS_IS_PART_OF]: compactReference(dataset.projectId, OKEA_PROJECT),
-    [DCTERMS_SOURCE]: dataset.source,
-    'okea:enabled': dataset.enabled,
-    [DCTERMS_TITLE]: dataset.label,
-    'okea:schemaVersion': dataset.schemaVersion,
-    'okea:fingerprint': dataset.fingerprint,
-    'okea:fileName': dataset.fileName,
-    'okea:documentCount': dataset.documentCount,
-    'okea:ontologyCount': dataset.ontologyCount,
-    [DCTERMS_CREATED]: compactDateTime(dataset.createdAt),
-    [DCTERMS_MODIFIED]: compactDateTime(dataset.updatedAt),
-    'okea:metadata': dataset.metadata
+    '@type': COMMON_NAMESPACE_IRIS.cco2.informationContentEntity,
+    [COMMON_NAMESPACE_IRIS.dcterms.identifier]: createIdentifierLiteral(dataset.datasetId),
+    [COMMON_NAMESPACE_IRIS.dcterms.isPartOf]: createIriReference(dataset.projectId, COMMON_NAMESPACE_IRIS.okea.Project),
+    [COMMON_NAMESPACE_IRIS.dcterms.source]: dataset.source,
+    [COMMON_NAMESPACE_IRIS.okea.enabled]: dataset.enabled,
+    [COMMON_NAMESPACE_IRIS.dcterms.title]: dataset.label,
+    [COMMON_NAMESPACE_IRIS.okea.schemaVersion]: dataset.schemaVersion,
+    [COMMON_NAMESPACE_IRIS.okea.fingerprint]: dataset.fingerprint,
+    [COMMON_NAMESPACE_IRIS.okea.fileName]: dataset.fileName,
+    [COMMON_NAMESPACE_IRIS.okea.documentCount]: dataset.documentCount,
+    [COMMON_NAMESPACE_IRIS.okea.ontologyCount]: dataset.ontologyCount,
+    [COMMON_NAMESPACE_IRIS.dcterms.created]: createDateTimeLiteral(dataset.createdAt),
+    [COMMON_NAMESPACE_IRIS.dcterms.modified]: createDateTimeLiteral(dataset.updatedAt),
+    [COMMON_NAMESPACE_IRIS.okea.metadata]: dataset.metadata
   });
 }
 
 /**
- * Converts a RunRecord into a compact JSON-LD object.
+ * Converts a RunRecord into a JSON-LD object with full IRI keys.
  *
  * @param {object} record RunRecord or compatible DTO.
  * @param {object} [options]
@@ -178,23 +161,23 @@ export function convertRunRecordToJsonLd(record, options = {}) {
   return stripNullishEntries({
     '@context': PROJECT_RECORD_JSONLD_CONTEXT,
     '@id': run.runId,
-    '@type': CCE_COMPUTER_PROGRAM_EXECUTION,
-    [DCTERMS_IDENTIFIER]: compactIdentifier(run.runId),
-    [DCTERMS_IS_PART_OF]: compactReference(run.projectId, OKEA_PROJECT),
-    'okea:runKind': run.runKind,
-    [DCTERMS_TITLE]: run.label,
-    [DCTERMS_CREATED]: compactDateTime(run.createdAt),
-    [DCTERMS_MODIFIED]: compactDateTime(run.updatedAt),
-    'okea:inputArtifact': run.inputArtifactIds.map((artifactId) => compactReference(artifactId, CCO_INFORMATION_CONTENT_ENTITY)),
-    'okea:outputArtifact': run.outputArtifactIds.map((artifactId) => compactReference(artifactId, CCO_INFORMATION_CONTENT_ENTITY)),
-    'okea:payload': run.payload,
-    'okea:uiState': run.uiState,
-    'okea:metadata': run.metadata
+    '@type': COMMON_NAMESPACE_IRIS.cceo.ComputerProgramExecution,
+    [COMMON_NAMESPACE_IRIS.dcterms.identifier]: createIdentifierLiteral(run.runId),
+    [COMMON_NAMESPACE_IRIS.dcterms.isPartOf]: createIriReference(run.projectId, COMMON_NAMESPACE_IRIS.okea.Project),
+    [COMMON_NAMESPACE_IRIS.okea.runKind]: run.runKind,
+    [COMMON_NAMESPACE_IRIS.dcterms.title]: run.label,
+    [COMMON_NAMESPACE_IRIS.dcterms.created]: createDateTimeLiteral(run.createdAt),
+    [COMMON_NAMESPACE_IRIS.dcterms.modified]: createDateTimeLiteral(run.updatedAt),
+    [COMMON_NAMESPACE_IRIS.okea.inputArtifact]: run.inputArtifactIds.map((artifactId) => createIriReference(artifactId, COMMON_NAMESPACE_IRIS.cco2.informationContentEntity)),
+    [COMMON_NAMESPACE_IRIS.okea.outputArtifact]: run.outputArtifactIds.map((artifactId) => createIriReference(artifactId, COMMON_NAMESPACE_IRIS.cco2.informationContentEntity)),
+    [COMMON_NAMESPACE_IRIS.okea.payload]: run.payload,
+    [COMMON_NAMESPACE_IRIS.okea.uiState]: run.uiState,
+    [COMMON_NAMESPACE_IRIS.okea.metadata]: run.metadata
   });
 }
 
 /**
- * Converts a SettingRecord into a compact JSON-LD object.
+ * Converts a SettingRecord into a JSON-LD object with full IRI keys.
  *
  * @param {object} record SettingRecord or compatible DTO.
  * @param {object} [options]
@@ -206,21 +189,21 @@ export function convertSettingRecordToJsonLd(record, options = {}) {
   return stripNullishEntries({
     '@context': PROJECT_RECORD_JSONLD_CONTEXT,
     '@id': setting.settingId,
-    '@type': OKEA_SETTING,
-    [DCTERMS_IDENTIFIER]: compactIdentifier(setting.settingId),
-    'okea:scope': setting.scope,
-    'okea:settingKey': setting.key,
-    'rdf:value': setting.value,
-    'okea:schemaVersion': setting.schemaVersion,
-    'okea:appId': setting.appId,
-    [DCTERMS_CREATED]: compactDateTime(setting.createdAt),
-    [DCTERMS_MODIFIED]: compactDateTime(setting.updatedAt),
-    'okea:metadata': setting.metadata
+    '@type': COMMON_NAMESPACE_IRIS.okea.Setting,
+    [COMMON_NAMESPACE_IRIS.dcterms.identifier]: createIdentifierLiteral(setting.settingId),
+    [COMMON_NAMESPACE_IRIS.okea.scope]: setting.scope,
+    [COMMON_NAMESPACE_IRIS.okea.settingKey]: setting.key,
+    [COMMON_NAMESPACE_IRIS.rdf.value]: setting.value,
+    [COMMON_NAMESPACE_IRIS.okea.schemaVersion]: setting.schemaVersion,
+    [COMMON_NAMESPACE_IRIS.okea.appId]: setting.appId,
+    [COMMON_NAMESPACE_IRIS.dcterms.created]: createDateTimeLiteral(setting.createdAt),
+    [COMMON_NAMESPACE_IRIS.dcterms.modified]: createDateTimeLiteral(setting.updatedAt),
+    [COMMON_NAMESPACE_IRIS.okea.metadata]: setting.metadata
   });
 }
 
 /**
- * Converts a WorkspaceInclusionRecord into a compact JSON-LD object.
+ * Converts a WorkspaceInclusionRecord into a JSON-LD object with full IRI keys.
  *
  * @param {object} record WorkspaceInclusionRecord or compatible DTO.
  * @param {object} [options]
@@ -232,23 +215,23 @@ export function convertWorkspaceInclusionRecordToJsonLd(record, options = {}) {
   return stripNullishEntries({
     '@context': PROJECT_RECORD_JSONLD_CONTEXT,
     '@id': inclusion.inclusionId,
-    '@type': OKEA_WORKSPACE_INCLUSION,
-    [DCTERMS_IDENTIFIER]: compactIdentifier(inclusion.inclusionId),
-    [DCTERMS_IS_PART_OF]: compactReference(inclusion.projectId, OKEA_PROJECT),
-    'okea:targetType': inclusion.targetType,
-    'okea:target': compactReference(inclusion.targetId),
-    'okea:role': inclusion.role,
-    'okea:enabled': inclusion.enabled,
-    'okea:graphIri': inclusion.graphIri,
-    'okea:includeMode': inclusion.includeMode,
-    [DCTERMS_CREATED]: compactDateTime(inclusion.createdAt),
-    [DCTERMS_MODIFIED]: compactDateTime(inclusion.updatedAt),
-    'okea:metadata': inclusion.metadata
+    '@type': COMMON_NAMESPACE_IRIS.okea.WorkspaceInclusion,
+    [COMMON_NAMESPACE_IRIS.dcterms.identifier]: createIdentifierLiteral(inclusion.inclusionId),
+    [COMMON_NAMESPACE_IRIS.dcterms.isPartOf]: createIriReference(inclusion.projectId, COMMON_NAMESPACE_IRIS.okea.Project),
+    [COMMON_NAMESPACE_IRIS.okea.targetType]: inclusion.targetType,
+    [COMMON_NAMESPACE_IRIS.okea.target]: createIriReference(inclusion.targetId),
+    [COMMON_NAMESPACE_IRIS.okea.role]: inclusion.role,
+    [COMMON_NAMESPACE_IRIS.okea.enabled]: inclusion.enabled,
+    [COMMON_NAMESPACE_IRIS.okea.graphIri]: inclusion.graphIri,
+    [COMMON_NAMESPACE_IRIS.okea.includeMode]: inclusion.includeMode,
+    [COMMON_NAMESPACE_IRIS.dcterms.created]: createDateTimeLiteral(inclusion.createdAt),
+    [COMMON_NAMESPACE_IRIS.dcterms.modified]: createDateTimeLiteral(inclusion.updatedAt),
+    [COMMON_NAMESPACE_IRIS.okea.metadata]: inclusion.metadata
   });
 }
 
 /**
- * Converts a GraphRecord into a compact JSON-LD object.
+ * Converts a GraphRecord into a JSON-LD object with full IRI keys.
  *
  * @param {object} record GraphRecord or compatible DTO.
  * @param {object} [options]
@@ -260,19 +243,19 @@ export function convertGraphRecordToJsonLd(record, options = {}) {
   return stripNullishEntries({
     '@context': PROJECT_RECORD_JSONLD_CONTEXT,
     '@id': graph.graphId,
-    '@type': OKEA_GRAPH,
-    [DCTERMS_IDENTIFIER]: compactIdentifier(graph.graphId),
-    [DCTERMS_IS_PART_OF]: compactReference(graph.projectId, OKEA_PROJECT),
-    'okea:graphIri': graph.graphIri,
-    'okea:artifact': compactReference(graph.artifactId, CCO_INFORMATION_CONTENT_ENTITY),
-    'okea:role': graph.role,
-    [RDFS_LABEL]: graph.label,
-    [DCTERMS_CREATED]: compactDateTime(graph.createdAt),
-    [DCTERMS_MODIFIED]: compactDateTime(graph.updatedAt),
-    [DCTERMS_SOURCE]: graph.source,
-    'okea:materialization': graph.materialization,
-    [DCTERMS_PROVENANCE]: graph.provenance,
-    'okea:metadata': graph.metadata
+    '@type': COMMON_NAMESPACE_IRIS.okea.Graph,
+    [COMMON_NAMESPACE_IRIS.dcterms.identifier]: createIdentifierLiteral(graph.graphId),
+    [COMMON_NAMESPACE_IRIS.dcterms.isPartOf]: createIriReference(graph.projectId, COMMON_NAMESPACE_IRIS.okea.Project),
+    [COMMON_NAMESPACE_IRIS.okea.graphIri]: graph.graphIri,
+    [COMMON_NAMESPACE_IRIS.okea.artifact]: createIriReference(graph.artifactId, COMMON_NAMESPACE_IRIS.cco2.informationContentEntity),
+    [COMMON_NAMESPACE_IRIS.okea.role]: graph.role,
+    [COMMON_NAMESPACE_IRIS.rdfs.label]: graph.label,
+    [COMMON_NAMESPACE_IRIS.dcterms.created]: createDateTimeLiteral(graph.createdAt),
+    [COMMON_NAMESPACE_IRIS.dcterms.modified]: createDateTimeLiteral(graph.updatedAt),
+    [COMMON_NAMESPACE_IRIS.dcterms.source]: graph.source,
+    [COMMON_NAMESPACE_IRIS.okea.materialization]: graph.materialization,
+    [COMMON_NAMESPACE_IRIS.dcterms.provenance]: graph.provenance,
+    [COMMON_NAMESPACE_IRIS.okea.metadata]: graph.metadata
   });
 }
 

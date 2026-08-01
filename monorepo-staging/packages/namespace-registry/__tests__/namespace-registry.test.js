@@ -120,6 +120,10 @@ describe('namespace-registry package', () => {
       ok: true,
       value: 'https://github.com/jonathanvajda/okea/OntologyOfKnowledgeEngineeringArtifacts'
     });
+    expect(iriForNamespaceId('okea', 'artifact')).toEqual({
+      ok: true,
+      value: 'https://github.com/jonathanvajda/okea/artifact'
+    });
     expect(iriForNamespaceId('dc', 'contributor')).toEqual({
       ok: true,
       value: 'http://purl.org/dc/elements/1.1/contributor'

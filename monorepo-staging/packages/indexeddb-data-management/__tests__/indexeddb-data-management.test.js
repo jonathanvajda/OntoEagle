@@ -1,4 +1,8 @@
 import {
+  COMMON_NAMESPACE_IRIS
+} from '../../namespace-registry/src/index.js';
+
+import {
   StorageError,
   createArtifactStore,
   createIndexedDbRecordAdapter,
@@ -411,15 +415,15 @@ describe('record JSON-LD conversion', () => {
       updatedAt: '2026-07-30T12:00:00.000Z'
     })).toMatchObject({
       '@id': 'project:one',
-      '@type': 'okea:Project',
-      'dcterms:identifier': { '@value': 'project:one', '@type': 'xsd:string' },
-      'dcterms:title': 'Ontology Work',
-      'dcterms:created': { '@value': '2026-07-29T12:00:00.000Z', '@type': 'xsd:dateTime' },
-      'dcterms:modified': { '@value': '2026-07-30T12:00:00.000Z', '@type': 'xsd:dateTime' }
+      '@type': COMMON_NAMESPACE_IRIS.okea.Project,
+      [COMMON_NAMESPACE_IRIS.dcterms.identifier]: { '@value': 'project:one', '@type': COMMON_NAMESPACE_IRIS.xsd.string },
+      [COMMON_NAMESPACE_IRIS.dcterms.title]: 'Ontology Work',
+      [COMMON_NAMESPACE_IRIS.dcterms.created]: { '@value': '2026-07-29T12:00:00.000Z', '@type': COMMON_NAMESPACE_IRIS.xsd.dateTime },
+      [COMMON_NAMESPACE_IRIS.dcterms.modified]: { '@value': '2026-07-30T12:00:00.000Z', '@type': COMMON_NAMESPACE_IRIS.xsd.dateTime }
     });
   });
 
-  test('artifact, run, and setting records use compact RDF vocabulary keys', () => {
+  test('artifact, run, and setting records use full IRI RDF vocabulary keys', () => {
     expect(convertArtifactRecordToJsonLd({
       artifactId: 'artifact:one',
       projectId: 'project:one',
@@ -430,15 +434,15 @@ describe('record JSON-LD conversion', () => {
       createdAt: '2026-07-29T12:00:00.000Z'
     })).toMatchObject({
       '@id': 'artifact:one',
-      '@type': 'cco2:ont00000958',
-      'dcterms:identifier': { '@value': 'artifact:one', '@type': 'xsd:string' },
-      'dcterms:isPartOf': {
+      '@type': COMMON_NAMESPACE_IRIS.cco2.informationContentEntity,
+      [COMMON_NAMESPACE_IRIS.dcterms.identifier]: { '@value': 'artifact:one', '@type': COMMON_NAMESPACE_IRIS.xsd.string },
+      [COMMON_NAMESPACE_IRIS.dcterms.isPartOf]: {
         '@id': 'project:one',
-        '@type': 'okea:Project',
-        'dcterms:identifier': { '@value': 'project:one', '@type': 'xsd:string' }
+        '@type': COMMON_NAMESPACE_IRIS.okea.Project,
+        [COMMON_NAMESPACE_IRIS.dcterms.identifier]: { '@value': 'project:one', '@type': COMMON_NAMESPACE_IRIS.xsd.string }
       },
-      'dcterms:title': 'Saved query',
-      'dcterms:format': 'application/sparql-query'
+      [COMMON_NAMESPACE_IRIS.dcterms.title]: 'Saved query',
+      [COMMON_NAMESPACE_IRIS.dcterms.format]: 'application/sparql-query'
     });
 
     expect(convertRunRecordToJsonLd({
@@ -451,17 +455,17 @@ describe('record JSON-LD conversion', () => {
       createdAt: '2026-07-29T12:00:00.000Z'
     })).toMatchObject({
       '@id': 'run:one',
-      '@type': 'cceo:ComputerProgramExecution',
-      'dcterms:title': 'Query run',
-      'okea:inputArtifact': [{
+      '@type': COMMON_NAMESPACE_IRIS.cceo.ComputerProgramExecution,
+      [COMMON_NAMESPACE_IRIS.dcterms.title]: 'Query run',
+      [COMMON_NAMESPACE_IRIS.okea.inputArtifact]: [{
         '@id': 'artifact:query',
-        '@type': 'cco2:ont00000958',
-        'dcterms:identifier': { '@value': 'artifact:query', '@type': 'xsd:string' }
+        '@type': COMMON_NAMESPACE_IRIS.cco2.informationContentEntity,
+        [COMMON_NAMESPACE_IRIS.dcterms.identifier]: { '@value': 'artifact:query', '@type': COMMON_NAMESPACE_IRIS.xsd.string }
       }],
-      'okea:outputArtifact': [{
+      [COMMON_NAMESPACE_IRIS.okea.outputArtifact]: [{
         '@id': 'artifact:results',
-        '@type': 'cco2:ont00000958',
-        'dcterms:identifier': { '@value': 'artifact:results', '@type': 'xsd:string' }
+        '@type': COMMON_NAMESPACE_IRIS.cco2.informationContentEntity,
+        [COMMON_NAMESPACE_IRIS.dcterms.identifier]: { '@value': 'artifact:results', '@type': COMMON_NAMESPACE_IRIS.xsd.string }
       }]
     });
 
@@ -472,11 +476,11 @@ describe('record JSON-LD conversion', () => {
       createdAt: '2026-07-29T12:00:00.000Z'
     })).toMatchObject({
       '@id': 'user:local::theme',
-      '@type': 'okea:Setting',
-      'dcterms:identifier': { '@value': 'user:local::theme', '@type': 'xsd:string' },
-      'okea:scope': 'user:local',
-      'okea:settingKey': 'theme',
-      'rdf:value': 'light'
+      '@type': COMMON_NAMESPACE_IRIS.okea.Setting,
+      [COMMON_NAMESPACE_IRIS.dcterms.identifier]: { '@value': 'user:local::theme', '@type': COMMON_NAMESPACE_IRIS.xsd.string },
+      [COMMON_NAMESPACE_IRIS.okea.scope]: 'user:local',
+      [COMMON_NAMESPACE_IRIS.okea.settingKey]: 'theme',
+      [COMMON_NAMESPACE_IRIS.rdf.value]: 'light'
     });
   });
 
@@ -488,10 +492,10 @@ describe('record JSON-LD conversion', () => {
       createdAt: '2026-07-29T12:00:00.000Z'
     })).toMatchObject({
       '@id': 'graph:one',
-      '@type': 'okea:Graph',
-      'dcterms:identifier': { '@value': 'graph:one', '@type': 'xsd:string' },
-      'rdfs:label': 'Default graph',
-      'dcterms:created': { '@value': '2026-07-29T12:00:00.000Z', '@type': 'xsd:dateTime' }
+      '@type': COMMON_NAMESPACE_IRIS.okea.Graph,
+      [COMMON_NAMESPACE_IRIS.dcterms.identifier]: { '@value': 'graph:one', '@type': COMMON_NAMESPACE_IRIS.xsd.string },
+      [COMMON_NAMESPACE_IRIS.rdfs.label]: 'Default graph',
+      [COMMON_NAMESPACE_IRIS.dcterms.created]: { '@value': '2026-07-29T12:00:00.000Z', '@type': COMMON_NAMESPACE_IRIS.xsd.dateTime }
     });
   });
 

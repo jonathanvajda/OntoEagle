@@ -501,6 +501,7 @@ export const COMMON_NAMESPACE_REGISTRY = Object.freeze({
       WorkspaceInclusion: 'WorkspaceInclusion',
       activeArtifact: 'activeArtifact',
       appId: 'appId',
+      artifact: 'artifact',
       artifactKind: 'artifactKind',
       documentCount: 'documentCount',
       enabled: 'enabled',
