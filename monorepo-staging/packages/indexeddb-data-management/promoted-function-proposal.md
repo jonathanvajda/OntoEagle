@@ -18,6 +18,7 @@
 |Logging|Several apps log from storage functions; Axiolotl dispatches DOM events from storage.|No logging in core package. Callers can wrap with logging or event callbacks.|
 |Side effects|Storage, DOM, localStorage, parsing, serialization, and UI refresh are frequently mixed.|Pure helpers are side-effect free. IndexedDB helpers perform only storage effects. Store factories depend on injected adapters.|
 |RDF graph model|Axiolotl uses triples/quads with empty-string default graph; other apps often store RDF as strings or documents.|Canonical quad row uses `graph: null` for default graph. Named graphs remain explicit strings.|
+|Record vocabulary|Current app records use local keys such as `label`, `createdAt`, `updatedAt`, `mediaType`, and `value`.|Use compact JSON-LD at storage/import-export boundaries. Prefer BFO/CCO for ontological typing and DCTERMS/SKOS/RDFS for metadata where they cover the meaning; use `okea:` only for uncovered knowledge-engineering/project terms. DTO aliases remain migration inputs only.|
 |Project model|Mermaid has explicit projects and diagrams; TOM has one implicit ontology project; others store run history.|Canonical model supports cross-app project portfolios and project-scoped artifacts, datasets, runs, and quad rows. App-local caches can remain app-local, but user project records must use the shared portfolio boundary.|
 |Deletion model|Axiolotl has granular deletion; Mermaid has project/diagram deletion; IRI/Table Nova have run deletion.|Expose exact record deletion and filtered clearing. Destructive app confirmation remains in the app layer.|
 |Vendor dependencies|Axiolotl uses `idb`; others use native IndexedDB wrappers; Mermaid uses native IDB/FSA.|Core package has no vendor dependency. Native IndexedDB adapters are small and injectable.|
@@ -46,6 +47,27 @@ normalizeQuadRow(row)
 ```
 
 These functions provide the shared data model. They are pure, fixture-friendly, and usable in Node, workers, and browser app code.
+
+### JSON-LD Record Conversion
+
+```js
+PROJECT_RECORD_JSONLD_CONTEXT
+createRecordJsonLdVocabulary()
+readJsonLdRecordValue(record, keys, fallback)
+convertProjectRecordToJsonLd(record, options)
+convertArtifactRecordToJsonLd(record, options)
+convertDatasetRecordToJsonLd(record, options)
+convertRunRecordToJsonLd(record, options)
+convertSettingRecordToJsonLd(record, options)
+convertWorkspaceInclusionRecordToJsonLd(record, options)
+convertGraphRecordToJsonLd(record, options)
+```
+
+These functions make the promoted storage/interchange shape explicit. They map JS migration fields to existing vocabulary terms where possible: IDs to `@id` and `dcterms:identifier`, `label` to `dcterms:title` or `rdfs:label`, `createdAt` to `dcterms:created`, `updatedAt` to `dcterms:modified`, `mediaType` to `dcterms:format`, and setting values to `rdf:value`.
+
+Project-management-specific gaps use `okea:` from the Ontology of Knowledge Engineering Artifacts. Generic artifacts and datasets should be typed as CCO information content entities unless a more specific OKEA class already exists, operation runs should be typed as CCO computer program executions, and metadata should use DCTERMS/SKOS/RDFS. Provisional OKEA terms such as `okea:Project`, `okea:WorkspaceInclusion`, `okea:inputArtifact`, `okea:outputArtifact`, or `okea:storageBackend` should be added to that ontology only where no existing vocabulary term is a good fit.
+
+The current IndexedDB schema still uses keyPaths such as `projectId` and `artifactId`. Directly storing pure JSON-LD records therefore needs a separate schema migration to out-of-line keys or JSON-LD-compatible key paths. Until then, app code can normalize DTO input and use `convert*RecordToJsonLd()` for previews, manifests, exports, and migration validation.
 
 ### IndexedDB Boundary
 
@@ -79,6 +101,42 @@ createQuadRowStore(adapter)
 These are intentionally adapter-driven. Apps can back them with IndexedDB object stores now and later with File System Access or OPFS backends.
 
 `openProjectPortfolioDatabase` is the shared cross-app portfolio entrypoint. Apps should use it for `projects`, `artifacts`, `runs`, and project-scoped settings so one user project can contain an OntoEagle ontology catalog artifact, TOM workspace artifact, Axiolotl graph/query artifact, Mermaid diagram artifact, and downstream reports. App-specific caches such as OntoEagle's extracted document cache may stay in app-local databases when they are derived or implementation-specific.
+
+### File System Access Backend
+
+```js
+detectFileSystemAccessSupport()
+selectProjectFolder(options)
+initializeProjectFolderAccess(handleStore, options)
+requestProjectFolderPermission(handleRecord)
+
+createProjectFolderHandleStore(adapter, options)
+storeProjectFolderHandleRecord(record)
+readProjectFolderHandleRecord(handleId)
+listProjectFolderHandleRecords(filter)
+updateProjectFolderHandleRecord(handleId, patch)
+deleteProjectFolderHandleRecord(handleId)
+
+sanitizeProjectFileName(name)
+splitProjectRelativePath(path)
+createProjectFileLockKey(path)
+guardWritableProjectPath(path, options)
+
+listProjectFolderEntries(folderStore, path, options)
+readProjectFileBytes(folderStore, path, options)
+readProjectFileText(folderStore, path, options)
+writeProjectFileBytes(folderStore, path, bytes, options)
+writeProjectFileText(folderStore, path, text, options)
+createProjectDirectory(folderStore, path, options)
+renameProjectFileEntry(folderStore, fromPath, toName, options)
+deleteProjectFileEntry(folderStore, path, options)
+
+writeProjectManifestToFolder(folderStore, manifest, options)
+writeProjectArtifactToFolder(folderStore, artifact, payload, options)
+readProjectManifestFromFolder(folderStore, options)
+```
+
+These should be promoted from Mermaid's File System Access implementation after removing Mermaid-specific branding, `.mmd` assumptions, and UI routing. IndexedDB remains the default browser persistence and the handle registry; FSA becomes an optional local-folder backend for durable project files.
 
 ## Why This Is Not a Frankenstein Function
 
@@ -164,6 +222,7 @@ The new suite covers:
 ## Remaining Work Before App Rollout
 
 - Add a browser IndexedDB object-store adapter that implements the minimal `get`, `put`, `delete`, `list`, and `clear` interface.
+- Plan the IndexedDB schema migration required for storing pure compact JSON-LD records directly rather than DTO records with `projectId`/`artifactId` keyPaths.
 - Add fixtures for OntoEagle built-in/user datasets and Axiolotl named/default graph migrations.
 - Decide whether project deletion cascades, blocks, or archives artifacts per app.
 - Add app-specific migration notes before deleting local duplicates.

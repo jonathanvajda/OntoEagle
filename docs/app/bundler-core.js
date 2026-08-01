@@ -249,9 +249,9 @@ export function shortId(iri) {
 
 export const RDFS_IS_DEFINED_BY_KEYS = Object.freeze([
   NS.cco2.curatedIn,
-  'cco:ont00001760',
+  'cceo:ont00001760',
   NS.cceo.curatedIn,
-  'cco:is_curated_in_ontology',
+  'cceo:is_curated_in_ontology',
   'rdfs:isDefinedBy',
   NS.rdfs.isDefinedBy
 ]);

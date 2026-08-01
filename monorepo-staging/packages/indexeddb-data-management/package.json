@@ -7,6 +7,6 @@
     ".": "./src/index.js"
   },
   "scripts": {
-    "test": "node --experimental-vm-modules ../../../node_modules/jest/bin/jest.js __tests__/indexeddb-data-management.test.js"
+    "test": "node --experimental-vm-modules ../../../node_modules/jest/bin/jest.js __tests__"
   }
 }

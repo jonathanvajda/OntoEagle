@@ -55,10 +55,24 @@ const OKEA = {
   HAS_MERMAID_TEXT: "https://github.com/jonathanvajda/okea/has_mermaid_diagram_text_value",
   HAS_QUERY_TEXT: "https://github.com/jonathanvajda/okea/has_query_text_value",
   HAS_SPARQL_QUERY_TEXT: "https://github.com/jonathanvajda/okea/has_sparql_query_text_value",
-  HAS_SQL_QUERY_TEXT: "https://github.com/jonathanvajda/okea/has_sql_query_text_value",
-
-  HAS_TEXT_VALUE_CCO: NS.cco2.textValue
+  HAS_SQL_QUERY_TEXT: "https://github.com/jonathanvajda/okea/has_sql_query_text_value"
 };
+
+const CCO_HAS_TEXT_VALUE = NS.cco2.hasTextValue;
+
+/**
+ * Read a JSON-LD literal from the project convention predicate cco2:hasTextValue.
+ * CQ Ferret intentionally uses this CCO predicate while ignoring its narrow
+ * rdfs:domain axiom for app data.
+ *
+ * @param {Record<string, unknown>|null|undefined} node JSON-LD node object.
+ * @param {string} fallback Value returned when the predicate is absent.
+ * @returns {string} Literal value or fallback.
+ */
+function readCcoTextValueLiteral(node, fallback = '') {
+  return node?.[CCO_HAS_TEXT_VALUE]?.[0]?.['@value']
+    ?? fallback;
+}
 
 function getDatabaseQuerySemantics(syntax) {
   switch (syntax) {
@@ -228,19 +242,19 @@ function loadCQIntoForm(cqId) {
   console.log("Found Participant Nodes:", participantNodes);
   participantNodes.forEach(pNode => {
     const personId = pNode['@id'];
-    const emailId = pNode[NS.cco2.emailAddressRelation]?.[0]?.['@id'] ?? '';
+    const emailId = pNode[NS.cco2.isSubjectOf]?.[0]?.['@id'] ?? '';
     const name = pNode[NS.rdfs.label]?.[0]?.['@value'] ?? '';
     const notes = pNode[NS.rdfs.comment]?.[0]?.['@value'] ?? '';
     let contact = '';
     if (emailId) {
       const emailNode = allNodesCache.find(n => n['@id'] === emailId);
-      contact = emailNode?.[NS.cco2.textValue]?.[0]?.['@value'] ?? '';
+      contact = readCcoTextValueLiteral(emailNode);
     }
     let role = 'Other';
     const roleLink = pNode[NS.bfo.bearerOf]?.[0]?.['@id'];
     if (roleLink) {
       const roleNode = allNodesCache.find(n => n['@id'] === roleLink);
-      role = roleNode?.[NS.cco2.textValue]?.[0]?.['@value'] ?? 'Other';
+      role = readCcoTextValueLiteral(roleNode, 'Other');
     }
     console.log(`Calling addPersonItem with personId: ${personId}`);
     addPersonItem(name, role, contact, notes, personId, emailId);
@@ -256,7 +270,7 @@ function loadCQIntoForm(cqId) {
     n["@type"].includes("https://github.com/jonathanvajda/okea/ont000001")
   );
 
-  subquestionNodes.forEach(node => addSubquestionItem(node[NS.cco2.textValue][0]["@value"]));
+  subquestionNodes.forEach(node => addSubquestionItem(readCcoTextValueLiteral(node)));
   if (subquestionsList.children.length === 0) addSubquestionItem();
   const decisionLogicList = document.getElementById('decision-logic-list');
   decisionLogicList.innerHTML = '';
@@ -265,7 +279,7 @@ function loadCQIntoForm(cqId) {
     n["@type"].includes("https://github.com/jonathanvajda/okea/ont000009")
   );
 
-  logicNodes.forEach(node => addDecisionLogicItem(node[NS.cco2.textValue][0]["@value"]));
+  logicNodes.forEach(node => addDecisionLogicItem(readCcoTextValueLiteral(node)));
   if (decisionLogicList.children.length === 0) addDecisionLogicItem();
   const dataRequirementsList = document.getElementById('data-requirements-list');
   dataRequirementsList.innerHTML = '';
@@ -275,7 +289,7 @@ function loadCQIntoForm(cqId) {
   );
 
   dataSourceNodes.forEach(dsNode => {
-    const sourceText = dsNode[NS.cco2.textValue]?.[0]?.["@value"] ?? '';
+    const sourceText = readCcoTextValueLiteral(dsNode);
     const qualityText = dsNode[NS.rdfs.comment]?.[0]?.["@value"] ?? '';
     addDataRequirementItem(sourceText, qualityText);
   });
@@ -552,9 +566,9 @@ function addPersonItem(name = '', role = 'Creator', contact = '', notes = '', pe
       const resultItem = document.createElement('div');
       resultItem.className = 'person-search-result-item';
       const personName = match[NS.rdfs.label]?.[0]?.['@value'] ?? '';
-      const emailIdMatch = match[NS.cco2.emailAddressRelation]?.[0]?.['@id'];
+      const emailIdMatch = match[NS.cco2.isSubjectOf]?.[0]?.['@id'];
       const emailNode = allNodesCache.find(n => n['@id'] === emailIdMatch);
-      const personContact = emailNode?.[NS.cco2.textValue]?.[0]?.['@value'] ?? 'No contact info';
+      const personContact = readCcoTextValueLiteral(emailNode, 'No contact info');
       resultItem.innerHTML = `${personName} <small>${personContact}</small>`;
       resultItem.addEventListener('click', () => {
         const selectedPersonId = match['@id'];
@@ -655,7 +669,7 @@ function generateJSONLD() {
         console.log(`Found existing person for "${p.name}" with ID: ${existingPersonNode['@id']}`);
         personId = existingPersonNode['@id'];
         // Try to get the existing email ID too
-        emailId = existingPersonNode[NS.cco2.emailAddressRelation]?.[0]?.['@id'] || emailId;
+        emailId = existingPersonNode[NS.cco2.isSubjectOf]?.[0]?.['@id'] || emailId;
       }
     }
 
@@ -665,7 +679,7 @@ function generateJSONLD() {
     }
     // Generate email ID if still missing
     if (!emailId) {
-      emailId = `${NS.cco2.EmailAddress}_${Date.now() + index}`;
+      emailId = `${NS.cco2.emailBox}_${Date.now() + index}`;
     }
 
     const roleId = `${NS.bfo.role}_role_${p.role.replace(/\s+/g, '')}`;
@@ -680,7 +694,7 @@ function generateJSONLD() {
         "@type": [NS.cco2.person, NS.owl.NamedIndividual],
         [NS.rdfs.label]: [{ "@value": p.name }],
         [NS.rdfs.comment]: [{ "@value": p.notes }],
-        [NS.cco2.emailAddressRelation]: [{ "@id": emailId }],
+        [NS.cco2.isSubjectOf]: [{ "@id": emailId }],
         [NS.bfo.bearerOf]: [{ "@id": roleId }]
       });
     }
@@ -689,9 +703,9 @@ function generateJSONLD() {
     if (!allNodesCache.find(n => n['@id'] === emailId)) {
       personRelatedNodes.push({
         "@id": emailId,
-        "@type": [NS.cco2.EmailAddress, NS.owl.NamedIndividual],
+        "@type": [NS.cco2.emailBox, NS.owl.NamedIndividual],
         // Use a more robust property name here, ensure it matches your email node definition
-        [NS.cco2.textValue]: [{ "@value": p.contact }],
+        [CCO_HAS_TEXT_VALUE]: [{ "@value": p.contact }],
       });
     }
 
@@ -700,7 +714,7 @@ function generateJSONLD() {
       personRelatedNodes.push({
         "@id": roleId,
         "@type": [NS.bfo.role, NS.owl.NamedIndividual],
-        [NS.cco2.textValue]: [{ "@value": p.role }],
+        [CCO_HAS_TEXT_VALUE]: [{ "@value": p.role }],
       });
     }
   });
@@ -711,20 +725,20 @@ function generateJSONLD() {
     "@id": `${NS.cco2.database}/Database_${cqUniqueId}_${index + 1}`,
     // ... rest of data source node ...
     "@type": [NS.cco2.database, NS.owl.NamedIndividual],
-    [NS.cco2.textValue]: [{ "@value": dr.source }],
+    [CCO_HAS_TEXT_VALUE]: [{ "@value": dr.source }],
     [NS.rdfs.comment]: [{ "@value": dr.quality }]
   }));
   const subquestionNodes = subquestions.map((sq, index) => ({
     "@id": `https://github.com/jonathanvajda/okea/ont000001_IterrogativeICE_${cqUniqueId}_${index + 1}`,
     // ... rest of subquestion node ...
     "@type": ["https://github.com/jonathanvajda/okea/ont000001", NS.owl.NamedIndividual],
-    [NS.cco2.textValue]: [{ "@value": sq }],
+    [CCO_HAS_TEXT_VALUE]: [{ "@value": sq }],
   }));
   const decisionLogicNodes = decisionLogic.map((dl, index) => ({
     "@id": `https://github.com/jonathanvajda/okea/ont000009_DecisionLogic_${cqUniqueId}_${index + 1}`,
     // ... rest of logic node ...
     "@type": ["https://github.com/jonathanvajda/okea/ont000009", NS.owl.NamedIndividual],
-    [NS.cco2.textValue]: [{ "@value": dl }],
+    [CCO_HAS_TEXT_VALUE]: [{ "@value": dl }],
   }));
   
   const mermaidDiagramNodes = mermaidDiagram.map((dl, index) => ({
@@ -915,7 +929,7 @@ function createCompetencyQuestionCsvRecords(nodes) {
     participantNodes.forEach(pNode => {
       itemsFound++;
       const personId = pNode['@id'];
-      const emailId = pNode[NS.cco2.emailAddressRelation]?.[0]?.['@id'] ?? '';
+      const emailId = pNode[NS.cco2.isSubjectOf]?.[0]?.['@id'] ?? '';
       const roleLink = pNode[NS.bfo.bearerOf]?.[0]?.['@id'];
 
       const emailNode = sourceNodes.find(n => n['@id'] === emailId);
@@ -926,8 +940,8 @@ function createCompetencyQuestionCsvRecords(nodes) {
         item_type: 'Contributor',
         item_id: personId,
         item_text: pNode[NS.rdfs.label]?.[0]?.['@value'] ?? '',
-        contributor_role: roleNode?.[NS.cco2.textValue]?.[0]?.['@value'] ?? '',
-        contributor_contact: emailNode?.[NS.cco2.textValue]?.[0]?.['@value'] ?? '',
+        contributor_role: readCcoTextValueLiteral(roleNode),
+        contributor_contact: readCcoTextValueLiteral(emailNode),
         contributor_notes: pNode[NS.rdfs.comment]?.[0]?.['@value'] ?? '',
         // ADDED: Populate the new ID columns
         contributor_email_id: emailId,
@@ -971,7 +985,7 @@ function createCompetencyQuestionCsvRecords(nodes) {
         };
 
         if (config.type === 'Subquestion' || config.type === 'DecisionLogic' || config.type === 'DataSource') {
-          row.item_text = node[NS.cco2.textValue]?.[0]?.['@value'] ?? '';
+          row.item_text = readCcoTextValueLiteral(node);
         }
 
         if (config.type === 'DataSource') {
@@ -1087,7 +1101,7 @@ async function handleCSVUpload(event) {
                 "@id": row.item_id, "@type": [NS.cco2.person, NS.owl.NamedIndividual],
                 [NS.rdfs.label]: [{ "@value": row.item_text }],
                 [NS.rdfs.comment]: [{ "@value": row.contributor_notes }],
-                [NS.cco2.emailAddressRelation]: [{ "@id": row.contributor_email_id }],
+                [NS.cco2.isSubjectOf]: [{ "@id": row.contributor_email_id }],
                 [NS.bfo.bearerOf]: [{ "@id": row.contributor_role_id }]
               };
               newGraph.push(pNode);
@@ -1095,8 +1109,8 @@ async function handleCSVUpload(event) {
             }
             if (row.contributor_email_id && !processedNodeIds.has(row.contributor_email_id)) {
               const eNode = {
-                "@id": row.contributor_email_id, "@type": [NS.cco2.EmailAddress, NS.owl.NamedIndividual],
-                [NS.cco2.textValue]: [{ "@value": row.contributor_contact }],
+                "@id": row.contributor_email_id, "@type": [NS.cco2.emailBox, NS.owl.NamedIndividual],
+                [CCO_HAS_TEXT_VALUE]: [{ "@value": row.contributor_contact }],
               };
               newGraph.push(eNode);
               processedNodeIds.add(row.contributor_email_id);
@@ -1104,7 +1118,7 @@ async function handleCSVUpload(event) {
             if (row.contributor_role_id && !processedNodeIds.has(row.contributor_role_id)) {
               const rNode = {
                 "@id": row.contributor_role_id, "@type": [NS.bfo.role, NS.owl.NamedIndividual],
-                [NS.cco2.textValue]: [{ "@value": row.contributor_role }],
+                [CCO_HAS_TEXT_VALUE]: [{ "@value": row.contributor_role }],
               };
               newGraph.push(rNode);
               processedNodeIds.add(row.contributor_role_id);
@@ -1117,7 +1131,7 @@ async function handleCSVUpload(event) {
             if (!processedNodeIds.has(row.item_id)) {
               const sqNode = {
                 "@id": row.item_id, "@type": ["https://github.com/jonathanvajda/okea/ont000001", NS.owl.NamedIndividual],
-                [NS.cco2.textValue]: [{ "@value": row.item_text }],
+                [CCO_HAS_TEXT_VALUE]: [{ "@value": row.item_text }],
               };
               newGraph.push(sqNode);
               processedNodeIds.add(row.item_id);
@@ -1129,7 +1143,7 @@ async function handleCSVUpload(event) {
             if (!processedNodeIds.has(row.item_id)) {
               const dlNode = {
                 "@id": row.item_id, "@type": ["https://github.com/jonathanvajda/okea/ont000009", NS.owl.NamedIndividual],
-                [NS.cco2.textValue]: [{ "@value": row.item_text }],
+                [CCO_HAS_TEXT_VALUE]: [{ "@value": row.item_text }],
               };
               newGraph.push(dlNode);
               processedNodeIds.add(row.item_id);
@@ -1142,7 +1156,7 @@ async function handleCSVUpload(event) {
               const dsNode = {
                 "@id": row.item_id,
                 "@type": [NS.cco2.database, NS.owl.NamedIndividual],
-                [NS.cco2.textValue]: [{ "@value": row.item_text }],
+                [CCO_HAS_TEXT_VALUE]: [{ "@value": row.item_text }],
                 [NS.rdfs.comment]: [{ "@value": row.datasource_quality_notes }]
               };
               newGraph.push(dsNode);

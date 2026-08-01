@@ -3,7 +3,7 @@
 ## Capability Family
 
 - **Capability family:** IndexedDB and app data management
-- **Date updated:** 2026-07-28
+- **Date updated:** 2026-07-31
 
 ## Maturity Scale
 
@@ -30,6 +30,7 @@
 |MAT-008|Table Nova run store|3|4|Small ESM module with JSDoc, explicit run shape, metadata list, transaction helper.|DB handle passed manually; run shape is graph/dataset-specific; no discovered storage fixtures.|Use as candidate for `storeTransformationRun` and graph artifact storage tests.|TBD|2026-07-28|
 |MAT-009|Mermaid IndexedDB project/diagram backend|4|4|Explicit project/diagram CRUD backend with mock IndexedDB tests and project concept separation.|Domain is Mermaid diagrams; ID shape differs from RDF/project artifacts.|Use as reference architecture, not direct copy.|TBD|2026-07-28|
 |MAT-010|Mermaid File System Access storage and registry|4|4|Structured `StorageError`, lock strategy, handle registry, migration tests.|Browser FSA only; not all OntoEagle apps need folder-backed projects immediately.|Treat as optional `file-system-project-store` adapter after core IDB model.|TBD|2026-07-28|
+|MAT-011|Cross-app File System Access project-folder backend|2|5|Mermaid proves the low-level capability; project manifest/export work defines portable project shape.|No shared package implementation yet; ontology apps need artifact-kind-aware file layout, manifest-last batch writes, and graph/profile conventions.|Promote Mermaid path/FSA primitives into app-neutral package modules before app rewiring.|TBD|2026-07-31|
 
 ## Promotion Checklist Status
 
@@ -49,3 +50,5 @@
 - Axiolotl and OntoEagle should be demanding pilots because they exercise graph storage and dataset preload/user dataset distinctions.
 - Mermaid should influence maturity expectations for this cycle. A promoted project/artifact package should have tested create, list, rename/update, delete, nested-artifact listing, cascade/delete behavior, and backend-boundary tests before being rated package-ready.
 - Mermaid should not inflate the maturity rating of ontology-specific stores. It provides a strong project-management benchmark, while RDF datasets, quads, preload/user dataset distinctions, and ontology workspace hydration still need fixtures from OntoEagle and Axiolotl.
+- Pilot migration plans now exist for Axiolotl and TOM. These plans keep legacy discovery/export/migration non-destructive while targeting a clean shared storage architecture after user validation.
+- File System Access promotion planning now exists. Mermaid's implementation is package-ready as a reference for low-level folder access, but cross-app project-folder storage is not canonical until app-neutral manifest/artifact layout helpers and at least one ontology-app pilot are implemented.

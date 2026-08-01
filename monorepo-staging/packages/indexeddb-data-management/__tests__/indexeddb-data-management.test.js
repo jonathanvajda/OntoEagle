@@ -9,6 +9,7 @@ import {
   createProjectPortfolioStores,
   createProjectArchiveBlob,
   createProjectExportManifest,
+  createRecordJsonLdVocabulary,
   createActiveWorkspaceGraphPlan,
   createArtifactDownloadBlob,
   createArtifactDownloadFileName,
@@ -21,6 +22,11 @@ import {
   createWorkspaceInclusionStore,
   createStableRecordId,
   createTimestampRecordId,
+  convertArtifactRecordToJsonLd,
+  convertGraphRecordToJsonLd,
+  convertProjectRecordToJsonLd,
+  convertRunRecordToJsonLd,
+  convertSettingRecordToJsonLd,
   clearGraphQuadRows,
   deleteIndexedDbDatabase,
   DEFAULT_PROJECT_PORTFOLIO_DB_NAME,
@@ -39,6 +45,7 @@ import {
   normalizeRunRecord,
   normalizeSettingRecord,
   normalizeWorkspaceInclusionRecord,
+  readJsonLdRecordValue,
   readActiveWorkspaceGraphPlan,
   convertLegacyTripleRowsToQuadRows,
   convertLegacySettingsToSettingRecords,
@@ -395,6 +402,120 @@ describe('record normalizers', () => {
   });
 });
 
+describe('record JSON-LD conversion', () => {
+  test('project records use dcterms title/created/modified keys', () => {
+    expect(convertProjectRecordToJsonLd({
+      projectId: 'project:one',
+      label: 'Ontology Work',
+      createdAt: '2026-07-29T12:00:00.000Z',
+      updatedAt: '2026-07-30T12:00:00.000Z'
+    })).toMatchObject({
+      '@id': 'project:one',
+      '@type': 'okea:Project',
+      'dcterms:identifier': { '@value': 'project:one', '@type': 'xsd:string' },
+      'dcterms:title': 'Ontology Work',
+      'dcterms:created': { '@value': '2026-07-29T12:00:00.000Z', '@type': 'xsd:dateTime' },
+      'dcterms:modified': { '@value': '2026-07-30T12:00:00.000Z', '@type': 'xsd:dateTime' }
+    });
+  });
+
+  test('artifact, run, and setting records use compact RDF vocabulary keys', () => {
+    expect(convertArtifactRecordToJsonLd({
+      artifactId: 'artifact:one',
+      projectId: 'project:one',
+      artifactKind: 'sparql-query',
+      role: 'query',
+      label: 'Saved query',
+      mediaType: 'application/sparql-query',
+      createdAt: '2026-07-29T12:00:00.000Z'
+    })).toMatchObject({
+      '@id': 'artifact:one',
+      '@type': 'cco2:ont00000958',
+      'dcterms:identifier': { '@value': 'artifact:one', '@type': 'xsd:string' },
+      'dcterms:isPartOf': {
+        '@id': 'project:one',
+        '@type': 'okea:Project',
+        'dcterms:identifier': { '@value': 'project:one', '@type': 'xsd:string' }
+      },
+      'dcterms:title': 'Saved query',
+      'dcterms:format': 'application/sparql-query'
+    });
+
+    expect(convertRunRecordToJsonLd({
+      runId: 'run:one',
+      projectId: 'project:one',
+      runKind: 'query',
+      label: 'Query run',
+      inputArtifactIds: ['artifact:query'],
+      outputArtifactIds: ['artifact:results'],
+      createdAt: '2026-07-29T12:00:00.000Z'
+    })).toMatchObject({
+      '@id': 'run:one',
+      '@type': 'cceo:ComputerProgramExecution',
+      'dcterms:title': 'Query run',
+      'okea:inputArtifact': [{
+        '@id': 'artifact:query',
+        '@type': 'cco2:ont00000958',
+        'dcterms:identifier': { '@value': 'artifact:query', '@type': 'xsd:string' }
+      }],
+      'okea:outputArtifact': [{
+        '@id': 'artifact:results',
+        '@type': 'cco2:ont00000958',
+        'dcterms:identifier': { '@value': 'artifact:results', '@type': 'xsd:string' }
+      }]
+    });
+
+    expect(convertSettingRecordToJsonLd({
+      scope: 'user:local',
+      key: 'theme',
+      value: 'light',
+      createdAt: '2026-07-29T12:00:00.000Z'
+    })).toMatchObject({
+      '@id': 'user:local::theme',
+      '@type': 'okea:Setting',
+      'dcterms:identifier': { '@value': 'user:local::theme', '@type': 'xsd:string' },
+      'okea:scope': 'user:local',
+      'okea:settingKey': 'theme',
+      'rdf:value': 'light'
+    });
+  });
+
+  test('graph records use rdfs:label and dcterms timestamps', () => {
+    expect(convertGraphRecordToJsonLd({
+      graphId: 'graph:one',
+      projectId: 'project:one',
+      label: 'Default graph',
+      createdAt: '2026-07-29T12:00:00.000Z'
+    })).toMatchObject({
+      '@id': 'graph:one',
+      '@type': 'okea:Graph',
+      'dcterms:identifier': { '@value': 'graph:one', '@type': 'xsd:string' },
+      'rdfs:label': 'Default graph',
+      'dcterms:created': { '@value': '2026-07-29T12:00:00.000Z', '@type': 'xsd:dateTime' }
+    });
+  });
+
+  test('record JSON-LD vocabulary is derived from the namespace registry', () => {
+    expect(createRecordJsonLdVocabulary()).toMatchObject({
+      title: 'http://purl.org/dc/terms/title',
+      created: 'http://purl.org/dc/terms/created',
+      identifier: 'http://purl.org/dc/terms/identifier',
+      modified: 'http://purl.org/dc/terms/modified',
+      label: 'http://www.w3.org/2000/01/rdf-schema#label',
+      informationContentEntity: 'https://www.commoncoreontologies.org/ont00000958',
+      computerProgramExecution: 'http://www.ontologyrepository.com/CommonCoreOntologies/ComputerProgramExecution',
+      okea: 'https://github.com/jonathanvajda/okea/OntologyOfKnowledgeEngineeringArtifacts'
+    });
+  });
+
+  test('readJsonLdRecordValue reads compact JSON-LD keys and legacy aliases', () => {
+    expect(readJsonLdRecordValue({ 'dcterms:modified': { '@value': '2026' } }, ['dcterms:modified', 'updatedAt']))
+      .toBe('2026');
+    expect(readJsonLdRecordValue({ updatedAt: 'legacy' }, ['dcterms:modified', 'updatedAt']))
+      .toBe('legacy');
+  });
+});
+
 describe('store factories over injected adapters', () => {
   test('project store creates, updates, lists, gets, and deletes projects', async () => {
     const store = createProjectStore(createMemoryRecordAdapter(), { now: FIXED_NOW });
@@ -638,10 +759,11 @@ describe('cross-app project portfolio stores', () => {
   test('createProjectPortfolioSchema uses the shared portfolio database and stores', () => {
     expect(createProjectPortfolioSchema()).toEqual({
       name: DEFAULT_PROJECT_PORTFOLIO_DB_NAME,
-      version: 3,
+      version: 4,
       stores: [
         { name: 'projects', options: { keyPath: 'projectId' } },
         { name: 'artifacts', options: { keyPath: 'artifactId' } },
+        { name: 'datasets', options: { keyPath: 'datasetId' } },
         { name: 'runs', options: { keyPath: 'runId' } },
         { name: 'workspaceInclusions', options: { keyPath: 'inclusionId' } },
         expect.objectContaining({ name: 'graphs', options: { keyPath: 'graphId' } }),
@@ -654,6 +776,7 @@ describe('cross-app project portfolio stores', () => {
   test('portfolio stores let different apps contribute artifacts to one project', async () => {
     const db = createMockObjectStoreDb();
     const stores = createProjectPortfolioStores(db);
+    expect(typeof stores.datasets.listDatasetRecords).toBe('function');
     await ensureProjectPortfolioProject(stores, {
       label: 'Shared ontology project'
     });

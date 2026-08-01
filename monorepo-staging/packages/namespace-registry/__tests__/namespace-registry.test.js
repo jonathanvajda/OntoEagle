@@ -35,7 +35,7 @@ describe('namespace-registry package', () => {
     expect(namespacePrefixMapFromRegistry()).toMatchObject({
       rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
       owl: 'http://www.w3.org/2002/07/owl#',
-      cco: 'http://www.ontologyrepository.com/CommonCoreOntologies/',
+      cceo: 'http://www.ontologyrepository.com/CommonCoreOntologies/',
       bfo: 'http://purl.obolibrary.org/obo/BFO_',
       iao: 'http://purl.obolibrary.org/obo/IAO_',
       oboInOwl: 'http://www.geneontology.org/formats/oboInOwl#',
@@ -44,6 +44,7 @@ describe('namespace-registry package', () => {
       dcat: 'http://www.w3.org/ns/dcat#',
       geo: 'http://www.w3.org/2003/01/geo/wgs84_pos#',
       geojson: 'https://purl.org/geojson/vocab#',
+      okea: 'https://github.com/jonathanvajda/okea/',
       vcard: 'http://www.w3.org/2006/vcard/ns#',
       xhtml: 'http://www.w3.org/1999/xhtml'
     });
@@ -107,6 +108,18 @@ describe('namespace-registry package', () => {
       ok: true,
       value: 'http://purl.org/dc/terms/modified'
     });
+    expect(iriForNamespaceId('cco2', 'informationContentEntity')).toEqual({
+      ok: true,
+      value: 'https://www.commoncoreontologies.org/ont00000958'
+    });
+    expect(iriForNamespaceId('cceo', 'ComputerProgramExecution')).toEqual({
+      ok: true,
+      value: 'http://www.ontologyrepository.com/CommonCoreOntologies/ComputerProgramExecution'
+    });
+    expect(iriForNamespaceId('okea', 'OntologyOfKnowledgeEngineeringArtifacts')).toEqual({
+      ok: true,
+      value: 'https://github.com/jonathanvajda/okea/OntologyOfKnowledgeEngineeringArtifacts'
+    });
     expect(iriForNamespaceId('dc', 'contributor')).toEqual({
       ok: true,
       value: 'http://purl.org/dc/elements/1.1/contributor'
@@ -124,6 +137,11 @@ describe('namespace-registry package', () => {
       value: 'http://www.w3.org/2003/11/swrl#Imp'
     });
     expect(iriForNamespaceId('cco', 'acronym')).toEqual({
+      ok: false,
+      error: 'unknown namespace',
+      input: 'cco'
+    });
+    expect(iriForNamespaceId('cceo', 'acronym')).toEqual({
       ok: true,
       value: 'http://www.ontologyrepository.com/CommonCoreOntologies/ont00001753'
     });
@@ -131,9 +149,21 @@ describe('namespace-registry package', () => {
       ok: true,
       value: 'http://www.ontologyrepository.com/CommonCoreOntologies/is_curated_in_ontology'
     });
-    expect(iriForNamespaceId('cco2', 'textValue')).toEqual({
+    expect(iriForNamespaceId('cco2', 'isTokenizedBy')).toEqual({
       ok: true,
       value: 'https://www.commoncoreontologies.org/ont00001761'
+    });
+    expect(iriForNamespaceId('cco2', 'hasTextValue')).toEqual({
+      ok: true,
+      value: 'https://www.commoncoreontologies.org/ont00001765'
+    });
+    expect(iriForNamespaceId('cco2', 'isSubjectOf')).toEqual({
+      ok: true,
+      value: 'https://www.commoncoreontologies.org/ont00001801'
+    });
+    expect(iriForNamespaceId('cco2', 'emailBox')).toEqual({
+      ok: true,
+      value: 'https://www.commoncoreontologies.org/ont00000906'
     });
     expect(iriForNamespaceId('cceo', 'hasBooleanValue')).toEqual({
       ok: true,

@@ -94,3 +94,44 @@ export {
   createProjectArchiveBlob,
   downloadProjectArchive
 } from './project-export.js';
+
+export {
+  PROJECT_FILE_MAX_SEGMENT_LENGTH,
+  PROJECT_FILE_MAX_PATH_LENGTH,
+  sanitizeProjectFileName,
+  splitProjectRelativePath,
+  createProjectFileLockKey,
+  guardWritableProjectPath
+} from './project-file-paths.js';
+
+export {
+  runWithProjectFileLock,
+  resetProjectFileLockQueuesForTests
+} from './project-file-locks.js';
+
+export {
+  detectFileSystemAccessSupport,
+  selectProjectFolder,
+  readProjectFolderPermission,
+  requestProjectFolderPermission,
+  createProjectFolderStore,
+  initializeProjectFolderAccess
+} from './file-system-access.js';
+
+export {
+  normalizeProjectFolderHandleRecord,
+  createProjectFolderHandleStore
+} from './project-folder-handle-store.js';
+
+export {
+  PROJECT_RECORD_JSONLD_CONTEXT,
+  createRecordJsonLdVocabulary,
+  readJsonLdRecordValue,
+  convertProjectRecordToJsonLd,
+  convertArtifactRecordToJsonLd,
+  convertDatasetRecordToJsonLd,
+  convertRunRecordToJsonLd,
+  convertSettingRecordToJsonLd,
+  convertWorkspaceInclusionRecordToJsonLd,
+  convertGraphRecordToJsonLd
+} from './record-jsonld.js';

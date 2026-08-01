@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="OntoEagle Projects Viewer is a dev-only browser storage explorer for shared project, artifact, dataset, run, graph, and settings records." />
+    <meta name="author" content="Jonathan Vajda" />
+    <meta name="dcterms.creator" content="Jonathan Vajda" />
+    <meta name="dcterms.rightsHolder" content="Jonathan Vajda" />
+    <meta name="license" content="GNU General Public License version 3.0" />
+  <link rel="license" href="https://www.gnu.org/licenses/gpl-3.0.en.html" />
+  <meta name="dcterms.license" content="https://www.gnu.org/licenses/gpl-3.0.en.html" />
+  <meta name="version" content="0.1.0" />
+    <link rel="icon" type="image/x-icon" href="./images/block-logo.png">
+    <title>OntoEagle Projects Dev Viewer</title>
+    <!-- Public CSS -->
+    <link rel="stylesheet" href="./styles/skeleton.css" />  
+    <!-- App Global CSS -->
+    <script>
+        (function () {
+        const APPBASE_CSS_SOURCES = [
+            "./styles/app-base.css", /* local dev copy first */
+            "https://jonathanvajda.github.io/OntoEagle/styles/app-base.css",
+            "https://jonathanvajda.github.io/table-nova/styles/app-base.css",
+        ];
+
+        function loadCss(href) {
+            return new Promise((resolve, reject) => {
+            const link = document.createElement("link");
+            link.rel = "stylesheet";
+            link.href = href;
+
+            link.onload = () => resolve(href);
+            link.onerror = () => reject(new Error("CSS failed: " + href));
+
+            document.head.appendChild(link);
+            });
+        }
+
+        function showFailure(msg) {
+            console.error(msg);
+            // Optional user-visible banner
+            const style = document.createElement("style");
+            style.textContent =
+            ".asset-fail-banner{position:fixed;left:0;right:0;top:0;z-index:9999;" +
+            "padding:.5rem .75rem;font:14px system-ui;background:#ffe8e8;color:#400;" +
+            "border-bottom:1px solid rgba(0,0,0,.2)}";
+            document.head.appendChild(style);
+
+            const div = document.createElement("div");
+            div.className = "asset-fail-banner";
+            div.textContent = msg;
+            document.body ? document.body.prepend(div) : document.addEventListener("DOMContentLoaded", () => document.body.prepend(div));
+        }
+
+        (async () => {
+            for (const href of APPBASE_CSS_SOURCES) {
+            try { await loadCss(href); return; } catch (_) {}
+            }
+            showFailure("Failed to load app base CSS from all sources.");
+        })();
+        })();
+    </script>
+    <script>
+        (function () {
+        const HEADER_CSS_SOURCES = [
+            "./styles/site-header.css", /* local dev copy first */
+            "https://jonathanvajda.github.io/OntoEagle/styles/site-header.css",
+            "https://jonathanvajda.github.io/table-nova/styles/site-header.css",
+        ];
+
+        function loadCss(href) {
+            return new Promise((resolve, reject) => {
+            const link = document.createElement("link");
+            link.rel = "stylesheet";
+            link.href = href;
+
+            link.onload = () => resolve(href);
+            link.onerror = () => reject(new Error("CSS failed: " + href));
+
+            document.head.appendChild(link);
+            });
+        }
+
+        function showFailure(msg) {
+            console.error(msg);
+            // Optional user-visible banner
+            const style = document.createElement("style");
+            style.textContent =
+            ".asset-fail-banner{position:fixed;left:0;right:0;top:0;z-index:9999;" +
+            "padding:.5rem .75rem;font:14px system-ui;background:#ffe8e8;color:#400;" +
+            "border-bottom:1px solid rgba(0,0,0,.2)}";
+            document.head.appendChild(style);
+
+            const div = document.createElement("div");
+            div.className = "asset-fail-banner";
+            div.textContent = msg;
+            document.body ? document.body.prepend(div) : document.addEventListener("DOMContentLoaded", () => document.body.prepend(div));
+        }
+
+        (async () => {
+            for (const href of HEADER_CSS_SOURCES) {
+            try { await loadCss(href); return; } catch (_) {}
+            }
+            showFailure("Failed to load header CSS from all sources.");
+        })();
+        })();
+    </script>
+    <link rel="stylesheet" href="./styles/bundler.css" />
+    <link rel="stylesheet" href="./styles/search-app.css" />
+    <link rel="modulepreload" href="./app/shared/namespace-registry/index.js" />
+    <link rel="modulepreload" href="./app/shared/browser-file-io/index.js" />
+    <link rel="modulepreload" href="./app/shared/tabular-io/index.js" />
+    <link rel="modulepreload" href="./app/shared/rdf-io/index.js" />
+    <link rel="modulepreload" href="./app/shared/indexeddb-data-management/index.js" />
+    <style>
+      .project-dev {
+        width: min(1180px, calc(100vw - 2rem));
+        margin: 0 auto;
+        padding: 1rem 0 2rem;
+      }
+
+      .project-dev__toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin: 0 0 1rem;
+      }
+
+      .project-dev__title {
+        margin: 0;
+      }
+
+      .project-dev__status {
+        min-height: 1.5rem;
+        font-size: 0.95rem;
+        color: var(--ont-muted, #667085);
+      }
+
+      .project-dev__status[data-kind="error"] {
+        color: #b42318;
+      }
+
+      .project-dev__status[data-kind="ok"] {
+        color: #067647;
+      }
+
+      .project-dev__grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 1rem;
+      }
+
+      .project-dev__section {
+        border: 1px solid var(--ont-border, #d0d5dd);
+        border-radius: 8px;
+        padding: 1rem;
+        background: var(--ont-surface, #fff);
+        color: var(--ont-text, #101828);
+      }
+
+      .project-dev__section h3 {
+        margin: 0 0 0.75rem;
+        font-size: 1.05rem;
+      }
+
+      .project-dev__metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .project-dev__metric {
+        border: 1px solid var(--ont-border, #d0d5dd);
+        border-radius: 6px;
+        padding: 0.5rem;
+        background: var(--ont-emph-bg, #f9fafb);
+      }
+
+      .project-dev__metric strong,
+      .project-dev__metric span {
+        display: block;
+      }
+
+      .project-dev__metric strong {
+        font-size: 1.15rem;
+      }
+
+      .project-dev__metric span {
+        font-size: 0.8rem;
+        color: var(--ont-muted, #667085);
+      }
+
+      .project-dev__list {
+        list-style: none;
+        margin: 0.75rem 0 0;
+        padding: 0;
+      }
+
+      .project-dev__list li {
+        border-top: 1px solid var(--ont-border, #d0d5dd);
+        padding: 0.45rem 0;
+      }
+
+      .project-dev__code {
+        max-height: 260px;
+        overflow: auto;
+        white-space: pre-wrap;
+        font-size: 0.78rem;
+      }
+
+      .project-dev__empty,
+      .project-dev__note {
+        color: var(--ont-muted, #667085);
+      }
+    </style>
+
+  </head>
+
+  <body data-page-id="ontoeagle" data-db-name="OntoEagleDB" data-db-stores="settings,datasets,documents,index" data-manage-data-label="Manage data">
+    <header id="siteHeader" class="sitehdr-root" role="banner" aria-label="Site header">
+    
+    </header>
+    <main id="project-manager" class="project-dev">
+        <div class="project-dev__toolbar">
+          <div>
+            <h2 class="project-dev__title">Projects and Assets</h2>
+            <div id="projectStatus" class="project-dev__status" role="status">Initializing project explorer...</div>
+          </div>
+          <button id="refreshProjectsBtn" class="button button-primary" type="button">Refresh</button>
+        </div>
+        <div id="app" class="project-dev__grid"></div>
+    </main>
+
+    <!-- Header JS -->
+    <script>
+        (function () {
+        const JS_SOURCES = [
+            "./app/site-header.js", /* local dev copy first */
+            "https://jonathanvajda.github.io/OntoEagle/app/site-header.js",
+            "https://jonathanvajda.github.io/table-nova/app/site-header.js",
+        ];
+
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+            const s = document.createElement("script");
+            s.type = "module";
+            s.src = src;
+            s.defer = true;
+
+            s.onload = () => resolve(src);
+            s.onerror = () => reject(new Error("JS failed: " + src));
+
+            document.head.appendChild(s);
+            });
+        }
+
+        function showFailure(msg) {
+            console.error(msg);
+            const div = document.createElement("div");
+            div.style.cssText =
+            "position:fixed;left:0;right:0;bottom:0;z-index:9999;" +
+            "padding:.5rem .75rem;font:14px system-ui;background:#ffe8e8;color:#400;" +
+            "border-top:1px solid rgba(0,0,0,.2)";
+            div.textContent = msg;
+            document.body ? document.body.appendChild(div) : document.addEventListener("DOMContentLoaded", () => document.body.appendChild(div));
+        }
+
+        (async () => {
+            for (const src of JS_SOURCES) {
+            try { await loadScript(src); return; } catch (_) {}
+            }
+            showFailure("Failed to load header JavaScript from all sources.");
+        })();
+        })();
+    </script>
+    <!-- App JS -->
+    <script type="module" src="./app/projects-dev.js"></script>
+  </body>
+</html>

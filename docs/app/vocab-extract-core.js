@@ -41,7 +41,7 @@ import {
 
     // Read text from these properties across the graph
     TEXT_PROPERTIES: [
-      NS.cco2.textValue, // generic text field in your graph
+      NS.cco2.hasTextValue, // project convention: use CCO text value while ignoring its narrow domain axiom
       NS.rdfs.label,
       NS.dcterms.description,
       NS.rdfs.comment

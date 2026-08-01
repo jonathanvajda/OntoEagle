@@ -150,8 +150,8 @@ export const COMMON_NAMESPACE_REGISTRY = Object.freeze({
     namespaceIri: 'http://purl.obolibrary.org/obo/',
     ids: Object.freeze({})
   }),
-  cco: Object.freeze({
-    prefix: 'cco',
+  cceo: Object.freeze({
+    prefix: 'cceo',
     namespaceIri: 'http://www.ontologyrepository.com/CommonCoreOntologies/',
     ids: Object.freeze({})
   }),

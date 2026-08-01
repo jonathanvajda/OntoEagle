@@ -1,5 +1,6 @@
 import {
   createArtifactStore,
+  createDatasetStore,
   createGraphStore,
   createIndexedDbRecordAdapter,
   createProjectStore,
@@ -11,11 +12,12 @@ import {
 import { openIndexedDbStore } from './indexeddb-adapter.js';
 
 export const DEFAULT_PROJECT_PORTFOLIO_DB_NAME = 'OntologyWorkbenchProjects';
-export const DEFAULT_PROJECT_PORTFOLIO_DB_VERSION = 3;
+export const DEFAULT_PROJECT_PORTFOLIO_DB_VERSION = 4;
 export const DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID = 'project:default-workspace';
 
 const PROJECTS_STORE = 'projects';
 const ARTIFACTS_STORE = 'artifacts';
+const DATASETS_STORE = 'datasets';
 const RUNS_STORE = 'runs';
 const SETTINGS_STORE = 'settings';
 const INCLUSIONS_STORE = 'workspaceInclusions';
@@ -45,6 +47,7 @@ export function createProjectPortfolioSchema({
     stores: [
       { name: PROJECTS_STORE, options: { keyPath: 'projectId' } },
       { name: ARTIFACTS_STORE, options: { keyPath: 'artifactId' } },
+      { name: DATASETS_STORE, options: { keyPath: 'datasetId' } },
       { name: RUNS_STORE, options: { keyPath: 'runId' } },
       { name: INCLUSIONS_STORE, options: { keyPath: 'inclusionId' } },
       {
@@ -107,6 +110,7 @@ export function createProjectPortfolioStores(db, {
     projectId,
     projects: createProjectStore(createIndexedDbRecordAdapter(db, PROJECTS_STORE, { keyPath: 'projectId' })),
     artifacts: createArtifactStore(createIndexedDbRecordAdapter(db, ARTIFACTS_STORE, { keyPath: 'artifactId' })),
+    datasets: createDatasetStore(createIndexedDbRecordAdapter(db, DATASETS_STORE, { keyPath: 'datasetId' })),
     runs: createRunRecordStore(createIndexedDbRecordAdapter(db, RUNS_STORE, { keyPath: 'runId' })),
     inclusions: createWorkspaceInclusionStore(createIndexedDbRecordAdapter(db, INCLUSIONS_STORE, { keyPath: 'inclusionId' })),
     graphs: createGraphStore(createIndexedDbRecordAdapter(db, GRAPHS_STORE, { keyPath: 'graphId' })),
