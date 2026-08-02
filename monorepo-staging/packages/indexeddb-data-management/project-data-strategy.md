@@ -562,6 +562,40 @@ Project/artifact/run/settings records
   -> File System Access project folder when the user designates a local folder
 ```
 
+Decisions made:
+
+- When a user grants File System Access to a project folder, the folder is authoritative for durable artifact bytes. IndexedDB remains authoritative for the project index, settings, run records, derived graph/table caches, UI resume state, folder handle registry, and sync status.
+- Synchronization should be bidirectional. The folder can receive writes from IndexedDB-backed app operations, and folder files can be scanned and registered back into IndexedDB project records.
+- The package should not assume live folder change listeners. Browser FSA does not provide a reliable cross-browser folder watch API. Use explicit scans on project open, app startup, user refresh, or a future polling/sync action.
+- New loose files discovered in the folder should enter a review workflow. The app should show a "new files found" panel before registering/importing them as project artifacts.
+- Conflicts should not be silently overwritten. If both the IndexedDB artifact record/payload and folder file changed since the last sync, mark the artifact as conflicted and let the user choose folder version, IndexedDB version, keep both, export a copy, or ignore.
+- Use manifest records for every folder-backed artifact. Loose files are allowed in the folder, but they should be represented as `discovered` scan results until the user or deterministic app policy registers them into the manifest.
+- Prefer newest modified timestamp only for non-conflict cases where one side changed since the last sync. If both sides changed, require explicit user choice.
+- Do not auto-run transformations because an input file changed. If `source.csv` changes, generated RDF artifacts and graph rows should be marked stale until the user reruns the CSV-to-RDF workflow.
+- Do not auto-materialize RDF/tabular file changes into graph or table stores unless an app provides an explicit auto-refresh mode. The default is metadata update plus stale-cache notification.
+
+Recommended sync status values:
+
+```text
+synced
+folder-newer
+indexeddb-newer
+conflict
+discovered
+missing-folder-file
+missing-indexeddb-record
+stale-derived-output
+```
+
+Recommended folder scan flow:
+
+1. List project folder entries and compare file path, size, last modified time, and known checksum where available against the manifest and IndexedDB artifact records.
+2. Produce scan results without mutating project records.
+3. Register known clean changes automatically only when the policy is unambiguous.
+4. Present discovered files and conflicts in a review panel.
+5. On user approval, create or update artifact records, manifest entries, and sync status.
+6. Mark downstream generated/transformed artifacts stale when their source artifact changed.
+
 Recommended folder layout:
 
 ```text

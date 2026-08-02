@@ -39,6 +39,43 @@ Important current behavior to preserve:
 
 TOM should initially remain a single-project app. The shared package should provide the storage substrate; TOM should continue to own the ontology table model, grid rendering, settings modal, and RDF generation UI.
 
+## File System Access Rollout Guidance
+
+TOM should migrate to shared IndexedDB project storage first, then add File System Access as an optional folder-backed artifact store. TOM is the recommended first FSA pilot because its dominant workflow is a single ontology project with source table artifacts and generated ontology artifacts.
+
+Recommended TOM source-of-truth policy:
+
+- When no project folder is granted, IndexedDB stores the project index, working snapshot, settings, artifact payloads, and generated RDF.
+- When a project folder is granted, the folder is authoritative for durable artifact bytes such as source CSV/TSV/XLSX files and generated ontology RDF files.
+- IndexedDB remains authoritative for the TOM project index, settings, latest workspace state, derived metadata, sync status, and folder handle registry.
+- TOM workspace snapshots remain app-owned staged artifacts. They should not be treated as the same thing as an ontology source file.
+
+Recommended folder-backed artifacts:
+
+|Folder file|Artifact kind|Role|Handling|
+|:---|:---|:---|:---|
+|Source CSV/TSV/XLSX|`ontology-table`|`source`|Register after review; loading into TOM table is explicit user action unless TOM opens the project from that artifact.|
+|Normalized TOM workspace snapshot|`tom-workspace-snapshot`|`staged`|May be written by TOM as app state; not expected to be edited manually.|
+|Generated Turtle/JSON-LD/RDF/XML|`ontology-rdf`|`generated` or `transformed`|Written by TOM generation/export; remains a separate artifact from the table source.|
+|Namespace/profile JSON-LD|namespace/profile artifact or project setting|`setting`|Use shared setting records and ontology-backed JSON-LD keys.|
+
+Folder scan behavior:
+
+1. On startup, project open, or user-triggered refresh, scan the selected TOM project folder.
+2. Files not present in the manifest become `discovered` scan results.
+3. Show a "new files found" review panel for discovered source tables and RDF files.
+4. Register approved files as artifacts; do not immediately overwrite the active TOM table unless the user selects that action.
+5. If a registered source table changes in the folder, mark it `folder-newer` and mark generated RDF artifacts derived from it as `stale-derived-output`.
+6. Do not automatically regenerate RDF after a source table changes. The user must rerun ontology generation.
+7. If generated RDF changes in the folder, mark the artifact `folder-newer`; materializing graph rows is an explicit reload/parse action.
+
+Conflict handling:
+
+- If TOM changed the staged workspace in IndexedDB and the corresponding folder artifact also changed since the last sync, mark `conflict`.
+- Do not silently choose newest for true two-sided changes.
+- Offer user actions: use folder version, use IndexedDB version, keep both, export IndexedDB copy, or ignore.
+- For simple one-sided changes, newest modified timestamp can determine `folder-newer` or `indexeddb-newer`.
+
 ## Migration Mapping
 
 |Legacy data|Target conversion|Target write|
@@ -97,6 +134,9 @@ Minimum Jest coverage before rewiring:
 - Invalid or partial legacy snapshots produce warnings and do not overwrite valid project data.
 - Restoring migrated settings preserves ontology IRI, prefixes, imports, and metadata.
 - Generated RDF can optionally be parsed and materialized as graph rows without changing the canonical serialized artifact.
+- Folder-backed source files can be discovered without mutating the active TOM table.
+- A changed source table marks generated RDF as stale rather than regenerating it automatically.
+- FSA conflict scenarios produce reviewable sync statuses and do not overwrite either side silently.
 
 Manual browser validation before old DB deletion:
 
@@ -107,6 +147,8 @@ Manual browser validation before old DB deletion:
 - Generate RDF and confirm export output is unchanged or documented where different.
 - Save again and confirm no new writes go to `TabularOntologyDB`.
 - Export the project archive and verify `project-manifest.json`.
+- Grant a TOM project folder, drop a CSV or RDF file into it, refresh, and confirm the file appears in the "new files found" review flow before registration.
+- Edit a registered source CSV outside TOM and confirm TOM marks downstream generated RDF stale without rerunning generation.
 
 ## Risks And Open Decisions
 
@@ -114,6 +156,7 @@ Manual browser validation before old DB deletion:
 - Storing every historical workspace snapshot may create clutter. Initial migration should preserve the latest valid snapshot plus latest generated RDF. Historical snapshot preservation can be added as an advanced import option.
 - Generated RDF should remain a serialized ontology artifact even if also materialized into `quadRows`. This avoids making RDF parser success a prerequisite for restoring TOM's working table.
 - TOM-specific artifact kinds should be added to the package vocabulary before migration: `ontology-table`, `tom-workspace-snapshot`, and `ontology-rdf`.
+- Folder-backed TOM support requires a shared folder scan/reconcile layer before rollout. Low-level FSA read/write/list exists, but automatic project manifest reconciliation is not complete yet.
 
 ## Success Criteria
 
@@ -121,4 +164,5 @@ Manual browser validation before old DB deletion:
 - Existing user sessions can be migrated or exported before old data is deleted.
 - Ontology settings are stored as scoped project settings.
 - Generated ontology RDF is stored as a project artifact and can be downloaded through shared file/export utilities.
+- Folder-backed source and generated artifacts can be scanned, reviewed, registered, and synced without silently overwriting TOM workspace state.
 - App-local persistence code is removed after tests and manual validation prove the shared stores cover the old inputs and outputs.

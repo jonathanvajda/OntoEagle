@@ -1,19 +1,28 @@
 import {
   StorageError,
   createMemoryRecordAdapter,
+  createArtifactRecordFromProjectFolderFile,
+  createProjectArtifactFolderPath,
+  createProjectFolderManifest,
   createProjectFileLockKey,
   createProjectFolderHandleStore,
   createProjectFolderStore,
   detectFileSystemAccessSupport,
   guardWritableProjectPath,
   initializeProjectFolderAccess,
+  markDerivedProjectArtifactsStale,
+  readProjectManifestFromFolder,
+  reconcileProjectFolderScan,
   readProjectFolderPermission,
   requestProjectFolderPermission,
   resetProjectFileLockQueuesForTests,
   runWithProjectFileLock,
   sanitizeProjectFileName,
+  scanProjectFolder,
   selectProjectFolder,
-  splitProjectRelativePath
+  splitProjectRelativePath,
+  writeProjectArtifactToFolder,
+  writeProjectManifestToFolder
 } from '../src/index.js';
 
 class MockFileHandle {
@@ -36,6 +45,7 @@ class MockFileHandle {
       },
       async close() {
         handle.file = new Blob(chunks);
+        handle.file = Object.assign(handle.file, { lastModified: Date.now() });
       },
       async abort() {
         chunks.length = 0;
@@ -201,5 +211,187 @@ describe('project folder handle store', () => {
     expect(await handles.readProjectFolderHandleRecord(stored.handleId)).toMatchObject({ label: 'Renamed Folder' });
     expect(await handles.deleteProjectFolderHandleRecord(stored.handleId)).toBe(true);
     expect(await handles.readProjectFolderHandleRecord(stored.handleId)).toBeNull();
+  });
+});
+
+describe('project folder manifest and synchronization helpers', () => {
+  test('creates artifact folder paths from artifact kind and role', () => {
+    expect(createProjectArtifactFolderPath({
+      artifactId: 'artifact:query',
+      projectId: 'project:one',
+      artifactKind: 'sparql-query',
+      role: 'query',
+      label: 'Class query'
+    })).toBe('artifacts/queries/Class query.rq');
+
+    expect(createProjectArtifactFolderPath({
+      artifactId: 'artifact:rdf',
+      projectId: 'project:one',
+      artifactKind: 'ontology-rdf',
+      role: 'generated',
+      label: 'Generated ontology'
+    })).toBe('artifacts/generated/Generated ontology.ttl');
+  });
+
+  test('writes and reads project folder manifests', async () => {
+    const store = await createProjectFolderStore(new MockDirectoryHandle()).initialize();
+    const manifest = createProjectFolderManifest({
+      project: { projectId: 'project:one', label: 'One' },
+      artifacts: [{
+        artifactId: 'artifact:source',
+        projectId: 'project:one',
+        artifactKind: 'tabular-file',
+        role: 'source',
+        label: 'terms.csv'
+      }]
+    }, {
+      now: () => '2026-08-01T12:00:00.000Z'
+    });
+
+    await writeProjectManifestToFolder(store, manifest);
+    await expect(readProjectManifestFromFolder(store)).resolves.toMatchObject({
+      project: { projectId: 'project:one' },
+      files: [expect.objectContaining({ path: 'artifacts/source/terms.csv' })]
+    });
+  });
+
+  test('writes artifacts to folder with storageRef metadata', async () => {
+    const store = await createProjectFolderStore(new MockDirectoryHandle()).initialize();
+    const result = await writeProjectArtifactToFolder(store, {
+      artifactId: 'artifact:diagram',
+      projectId: 'project:one',
+      artifactKind: 'mermaid-diagram',
+      role: 'source',
+      label: 'Flow'
+    }, 'graph TD; A-->B', {
+      now: () => '2026-08-01T12:00:00.000Z'
+    });
+
+    expect(result).toMatchObject({
+      artifact: {
+        storageRef: {
+          backend: 'file-system-access',
+          path: 'artifacts/diagrams/Flow.mmd',
+          syncStatus: 'synced'
+        }
+      },
+      file: {
+        path: 'artifacts/diagrams/Flow.mmd',
+        mediaType: 'text/mermaid',
+        extension: 'mmd'
+      }
+    });
+    await expect(store.readProjectFileText('artifacts/diagrams/Flow.mmd')).resolves.toBe('graph TD; A-->B');
+  });
+
+  test('scans folders recursively and creates artifact records for discovered files', async () => {
+    const store = await createProjectFolderStore(new MockDirectoryHandle()).initialize();
+    await store.writeProjectFileText('artifacts/source/input.ttl', '@prefix ex: <http://example.org/> .');
+    await store.writeProjectFileText('artifacts/queries/query.rq', 'SELECT * WHERE { ?s ?p ?o }');
+    const entries = await scanProjectFolder(store);
+
+    expect(entries.map((entry) => entry.path)).toEqual([
+      'artifacts',
+      'artifacts/queries',
+      'artifacts/queries/query.rq',
+      'artifacts/source',
+      'artifacts/source/input.ttl'
+    ]);
+    expect(createArtifactRecordFromProjectFolderFile('project:one', entries.find((entry) => entry.path.endsWith('query.rq')), {
+      now: () => '2026-08-01T12:00:00.000Z'
+    })).toMatchObject({
+      projectId: 'project:one',
+      artifactKind: 'sparql-query',
+      mediaType: 'application/sparql-query',
+      storageRef: {
+        path: 'artifacts/queries/query.rq',
+        syncStatus: 'discovered'
+      }
+    });
+  });
+
+  test('reconciles synced, folder-newer, indexeddb-newer, conflict, missing, and discovered files', () => {
+    const syncedAt = '2026-08-01T12:00:00.000Z';
+    const artifacts = [
+      {
+        artifactId: 'artifact:synced',
+        projectId: 'project:one',
+        artifactKind: 'rdf-file',
+        role: 'source',
+        label: 'Synced',
+        updatedAt: '2026-08-01T11:00:00.000Z',
+        storageRef: { path: 'artifacts/source/synced.ttl', size: 1, syncedAt }
+      },
+      {
+        artifactId: 'artifact:folder',
+        projectId: 'project:one',
+        artifactKind: 'rdf-file',
+        role: 'source',
+        label: 'Folder',
+        updatedAt: '2026-08-01T11:00:00.000Z',
+        storageRef: { path: 'artifacts/source/folder.ttl', size: 1, syncedAt }
+      },
+      {
+        artifactId: 'artifact:idb',
+        projectId: 'project:one',
+        artifactKind: 'rdf-file',
+        role: 'source',
+        label: 'IDB',
+        updatedAt: '2026-08-01T13:00:00.000Z',
+        storageRef: { path: 'artifacts/source/idb.ttl', size: 1, syncedAt }
+      },
+      {
+        artifactId: 'artifact:conflict',
+        projectId: 'project:one',
+        artifactKind: 'rdf-file',
+        role: 'source',
+        label: 'Conflict',
+        updatedAt: '2026-08-01T13:00:00.000Z',
+        storageRef: { path: 'artifacts/source/conflict.ttl', size: 1, syncedAt }
+      },
+      {
+        artifactId: 'artifact:missing',
+        projectId: 'project:one',
+        artifactKind: 'rdf-file',
+        role: 'source',
+        label: 'Missing',
+        storageRef: { path: 'artifacts/source/missing.ttl', size: 1, syncedAt }
+      }
+    ];
+    const folderEntries = [
+      { kind: 'file', path: 'artifacts/source/synced.ttl', name: 'synced.ttl', size: 1, modified: Date.parse('2026-08-01T11:30:00.000Z') },
+      { kind: 'file', path: 'artifacts/source/folder.ttl', name: 'folder.ttl', size: 2, modified: Date.parse('2026-08-01T13:00:00.000Z') },
+      { kind: 'file', path: 'artifacts/source/idb.ttl', name: 'idb.ttl', size: 1, modified: Date.parse('2026-08-01T11:30:00.000Z') },
+      { kind: 'file', path: 'artifacts/source/conflict.ttl', name: 'conflict.ttl', size: 2, modified: Date.parse('2026-08-01T13:00:00.000Z') },
+      { kind: 'file', path: 'artifacts/source/new.ttl', name: 'new.ttl', size: 1, modified: Date.parse('2026-08-01T13:00:00.000Z') }
+    ];
+
+    expect(reconcileProjectFolderScan({ artifacts, folderEntries }).counts).toEqual({
+      synced: 1,
+      'folder-newer': 1,
+      'indexeddb-newer': 1,
+      conflict: 1,
+      'missing-folder-file': 1,
+      discovered: 1
+    });
+  });
+
+  test('marks derived artifacts stale when source artifacts changed', () => {
+    expect(markDerivedProjectArtifactsStale([
+      {
+        artifactId: 'artifact:generated',
+        provenance: { derivedFrom: ['artifact:source'] },
+        storageRef: { path: 'artifacts/generated/output.ttl', syncStatus: 'synced' }
+      },
+      {
+        artifactId: 'artifact:other',
+        provenance: { derivedFrom: ['artifact:other-source'] }
+      }
+    ], ['artifact:source'])).toEqual([
+      expect.objectContaining({
+        artifactId: 'artifact:generated',
+        storageRef: expect.objectContaining({ syncStatus: 'stale-derived-output' })
+      })
+    ]);
   });
 });

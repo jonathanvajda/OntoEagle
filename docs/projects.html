@@ -152,6 +152,13 @@
         gap: 1rem;
       }
 
+      .project-dev__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: flex-end;
+      }
+
       .project-dev__section {
         border: 1px solid var(--ont-border, #d0d5dd);
         border-radius: 8px;
@@ -229,7 +236,11 @@
             <h2 class="project-dev__title">Projects and Assets</h2>
             <div id="projectStatus" class="project-dev__status" role="status">Initializing project explorer...</div>
           </div>
-          <button id="refreshProjectsBtn" class="button button-primary" type="button">Refresh</button>
+          <div class="project-dev__actions">
+            <button id="selectProjectFolderBtn" class="button" type="button">Choose Folder</button>
+            <button id="scanProjectFolderBtn" class="button" type="button">Scan Folder</button>
+            <button id="refreshProjectsBtn" class="button button-primary" type="button">Refresh</button>
+          </div>
         </div>
         <div id="app" class="project-dev__grid"></div>
     </main>

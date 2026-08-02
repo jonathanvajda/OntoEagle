@@ -105,11 +105,12 @@ import {
 - Preserve the Axiolotl/Comunica path by converting `quadRows` to RDF/JS quads and in-memory RDF/JS stores.
 - Store user work as project-scoped artifacts, datasets, and runs.
 - Store settings as scoped records using keys such as `app:axiolotl::endpoint` and `project:default-workspace::activeArtifactId`.
-- Treat compact JSON-LD as the canonical storage/import-export shape for project records where possible. Use `dcterms:title`, `dcterms:created`, `dcterms:modified`, `dcterms:format`, `rdfs:label`, and `rdf:value` instead of inventing local field names at boundaries.
+- Treat JSON-LD with full IRI keys from the namespace registry as the canonical storage/import-export shape for project records where possible. CURIE compaction is a serialization/display concern, not the internal data model.
 - Keep DTO aliases such as `label`, `createdAt`, and `updatedAt` as temporary JS convenience inputs during migration. They should not be the final cross-app interchange vocabulary.
 - Treat legacy migration helpers as non-destructive: detect, read, normalize, and report first; deletion requires app/user policy.
 - Use workspace inclusions to decide which reference datasets or project artifacts participate in an active workspace graph.
 - Export project ZIP archives with `project-manifest.json` as the canonical import/export manifest.
+- Use project-folder helpers to write/read manifests, write artifact payloads to File System Access folders, scan folders, reconcile manifest/files/IndexedDB records, and stage discovered files for user review.
 - Download individual artifacts with kind-aware file extensions and download whole projects as ZIP archives through injected browser download and JSZip dependencies.
 - Keep parsers in `rdf-io` and `tabular-io`.
 - Keep file read/download behavior in `browser-file-io`.
@@ -118,33 +119,24 @@ import {
 
 ## JSON-LD Record Boundary
 
-The current store APIs still normalize plain JS records so existing apps can migrate incrementally. The promoted boundary is compact JSON-LD:
+The current store APIs still normalize plain JS records so existing apps can migrate incrementally. The promoted boundary is JSON-LD with full IRI keys derived from the namespace registry:
 
 ```js
 {
-  "@context": {
-    "cceo": "http://www.ontologyrepository.com/CommonCoreOntologies/",
-    "cco2": "https://www.commoncoreontologies.org/",
-    "dcterms": "http://purl.org/dc/terms/",
-    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "xsd": "http://www.w3.org/2001/XMLSchema#",
-    "okea": "https://github.com/jonathanvajda/okea/"
-  },
   "@id": "project:default-workspace",
-  "@type": "okea:Project",
-  "dcterms:identifier": {
+  "@type": "https://github.com/jonathanvajda/okea/Project",
+  "http://purl.org/dc/terms/identifier": {
     "@value": "project:default-workspace",
-    "@type": "xsd:string"
+    "@type": "http://www.w3.org/2001/XMLSchema#string"
   },
-  "dcterms:title": "Default Cross-App Workspace",
-  "dcterms:created": {
+  "http://purl.org/dc/terms/title": "Default Cross-App Workspace",
+  "http://purl.org/dc/terms/created": {
     "@value": "2026-07-31T00:00:00.000Z",
-    "@type": "xsd:dateTime"
+    "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
   },
-  "dcterms:modified": {
+  "http://purl.org/dc/terms/modified": {
     "@value": "2026-07-31T00:00:00.000Z",
-    "@type": "xsd:dateTime"
+    "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
   }
 }
 ```

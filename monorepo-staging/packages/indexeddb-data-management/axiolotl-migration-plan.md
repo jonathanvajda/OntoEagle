@@ -46,6 +46,44 @@ shared quadRows -> RDF/JS quads -> N3.Store or rdfjsSource -> Comunica
 
 This preserves the investment in Axiolotl's Comunica-backed triplestore behavior while replacing the local IndexedDB schema underneath it.
 
+## File System Access Rollout Guidance
+
+Axiolotl should migrate after TOM because its graph materialization and Comunica query path create a larger regression surface. FSA should be introduced as an optional durable artifact backend after the shared IndexedDB quad-store migration is validated.
+
+Recommended Axiolotl source-of-truth policy:
+
+- When no project folder is granted, IndexedDB stores graph metadata, quad rows, saved query artifacts, settings, and imported RDF artifact payloads.
+- When a project folder is granted, the folder is authoritative for durable artifact bytes such as RDF source files, SPARQL query files, query result exports, and inference output files.
+- IndexedDB remains authoritative for the active workspace index, graph records, quad rows used by Comunica, settings, run records, folder handle registry, and sync status.
+- `quadRows` are the working/query cache. Folder RDF files are durable source artifacts. These two layers should not be collapsed.
+
+Recommended folder-backed artifacts:
+
+|Folder file|Artifact kind|Role|Handling|
+|:---|:---|:---|:---|
+|Turtle/JSON-LD/RDF/XML/N-Quads source|`rdf-file` or `rdf-dataset`|`source` or `loaded`|Register after review; parse/materialize into `quadRows` only by explicit import/reload action.|
+|Named graph export|`rdf-dataset` or `quad-rows`|`export` or `transformed`|Written from explicit export operation; preserves graph identity in manifest/run provenance.|
+|SPARQL query `.rq`|`sparql-query`|`query`|Register as saved query artifact; list from IndexedDB metadata for UI performance.|
+|SPARQL update `.ru`|`sparql-update`|`query` or `operation`|Register as artifact; execution remains explicit.|
+|Inference overlay output|`rdf-dataset`|`inferred` or `transformed`|Store as separate artifact and graph record; do not mix indistinguishably with uploaded source graph.|
+
+Folder scan behavior:
+
+1. On startup, project open, or user-triggered refresh, scan the selected Axiolotl project folder.
+2. Files not present in the manifest become `discovered` scan results.
+3. Show a "new files found" review panel for discovered RDF/query files.
+4. Register approved files as artifacts; do not immediately load them into the active query workspace unless the user selects import/reload.
+5. If a registered RDF file changes in the folder, mark it `folder-newer` and mark any graph materialization derived from it as stale.
+6. Do not automatically replace `quadRows` after a folder RDF file changes. The user must explicitly reload/materialize the graph.
+7. If a saved `.rq` query file changes in the folder, update the query artifact metadata and show it as `folder-newer`; applying it to the query editor is a UI action.
+
+Conflict handling:
+
+- If Axiolotl updated an artifact in IndexedDB and the corresponding folder file also changed since the last sync, mark `conflict`.
+- Do not use newest timestamp to resolve true two-sided changes silently.
+- Offer user actions: use folder version, use IndexedDB version, keep both, export IndexedDB copy, or ignore.
+- For one-sided changes, newest modified timestamp can determine `folder-newer` or `indexeddb-newer`.
+
 ## Migration Mapping
 
 |Legacy data|Shared conversion|Target write|
@@ -114,6 +152,10 @@ Minimum Jest coverage before rewiring:
   - saved query deletion,
   - settings clearing.
 - Migration report includes counts for migrated rows, skipped rows, warnings, and target project id.
+- Folder-backed RDF files can be discovered without immediately mutating `quadRows`.
+- Changed RDF source files mark derived graph materialization stale instead of replacing the active Comunica query cache.
+- Saved SPARQL query files can be registered as project artifacts and listed from IndexedDB metadata.
+- FSA conflict scenarios produce reviewable sync statuses and do not overwrite either side silently.
 
 Manual browser validation before old DB deletion:
 
@@ -124,6 +166,9 @@ Manual browser validation before old DB deletion:
 - Clear one named graph without clearing other graphs.
 - Save, reload, rename/delete a saved SPARQL query.
 - Export project archive and verify `project-manifest.json`.
+- Grant an Axiolotl project folder, drop an RDF file and `.rq` file into it, refresh, and confirm both appear in the "new files found" review flow.
+- Register a folder RDF file, then explicitly import/materialize it and confirm Comunica queries read from shared `quadRows`.
+- Edit the folder RDF file outside Axiolotl and confirm the graph materialization is marked stale without silently replacing query rows.
 
 ## Risks And Open Decisions
 
@@ -131,6 +176,7 @@ Manual browser validation before old DB deletion:
 - Axiolotl has app-level hard reset behavior. The shared package should expose precise deletion primitives; the app should own the destructive UI confirmation.
 - Inference overlays should be stored as graph records with role `inferred`, not mixed indistinguishably into uploaded source graphs.
 - Query artifacts should be project-scoped by default. App-global query snippets can be added later only if there is a real cross-project use case.
+- Folder-backed Axiolotl support requires a shared folder scan/reconcile layer before rollout. Low-level FSA read/write/list exists, but automatic manifest reconciliation and graph-staleness propagation are not complete yet.
 
 ## Success Criteria
 
@@ -138,4 +184,5 @@ Manual browser validation before old DB deletion:
 - New graph imports write only to shared project portfolio stores.
 - Saved queries and settings no longer use app-local IndexedDB stores.
 - Existing users can migrate or export old local data before deletion.
+- Folder-backed RDF/query artifacts can be scanned, reviewed, registered, and synced without silently mutating active graph rows.
 - Old local storage functions are removed after tests and manual validation prove they are unused.

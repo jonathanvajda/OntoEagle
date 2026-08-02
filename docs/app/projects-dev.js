@@ -10,12 +10,18 @@ import {
   convertRunRecordToJsonLd,
   convertSettingRecordToJsonLd,
   convertWorkspaceInclusionRecordToJsonLd,
+  createArtifactRecordFromProjectFolderFile,
+  createProjectFolderStore,
   detectFileSystemAccessSupport,
   ensureProjectPortfolioProject,
   openProjectPortfolioDatabase,
   createProjectPortfolioStores,
   inspectLegacyIndexedDbDatabase,
-  readLegacyObjectStoreRows
+  readLegacyObjectStoreRows,
+  readProjectManifestFromFolder,
+  reconcileProjectFolderScan,
+  scanProjectFolder,
+  selectProjectFolder
 } from './shared/indexeddb-data-management/index.js';
 
 const ONTOEAGLE_DB_NAME = 'OntoEagleDB';
@@ -23,6 +29,14 @@ const PORTFOLIO_DB_NAME = 'OntologyWorkbenchProjects';
 const root = document.getElementById('app');
 const statusEl = document.getElementById('projectStatus');
 const refreshBtn = document.getElementById('refreshProjectsBtn');
+const selectFolderBtn = document.getElementById('selectProjectFolderBtn');
+const scanFolderBtn = document.getElementById('scanProjectFolderBtn');
+const fsaState = {
+  handle: null,
+  folderStore: null,
+  folderName: '',
+  lastScan: null
+};
 
 function setStatus(message, kind = 'info') {
   if (!statusEl) return;
@@ -159,18 +173,38 @@ function renderOntoEagleDb(appDb) {
   ]);
 }
 
-function renderLocalFolderCapability() {
+function renderFolderScan(scanState) {
+  if (!scanState) return el('p', { className: 'project-dev__empty', text: 'No project folder scan has been run in this page session.' });
+  const discovered = scanState.reconciliation.results
+    .filter((result) => result.status === 'discovered')
+    .map((result) => createArtifactRecordFromProjectFolderFile(DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID, result.folderEntry));
+  return el('div', {}, [
+    el('div', { className: 'project-dev__metrics' }, [
+      metric('folder', scanState.folderName || 'selected'),
+      metric('entries', scanState.entries.length),
+      metric('manifest', scanState.manifest ? 'found' : 'missing'),
+      metric('issues', scanState.reconciliation.results.filter((result) => result.status !== 'synced').length)
+    ]),
+    recordList(scanState.reconciliation.results, 'path', 'No folder sync results found.'),
+    recordList(discovered, 'label', 'No discovered file candidates found.', convertArtifactRecordToJsonLd)
+  ]);
+}
+
+function renderLocalFolderCapability(portfolio) {
   const support = detectFileSystemAccessSupport();
   return section('Local Folder Capability', [
     el('div', { className: 'project-dev__metrics' }, [
-      metric('FSA support', support.ok ? 'available' : 'unavailable')
+      metric('FSA support', support.ok ? 'available' : 'unavailable'),
+      metric('folder', fsaState.folderName || 'none')
     ]),
     el('p', {
       className: 'project-dev__note',
       text: support.ok
-        ? 'This browser can use a user-designated local folder once a project-folder adapter is wired into an app.'
+        ? 'Choose a local folder to scan it against the shared project manifest and current IndexedDB artifacts. Scanning is read-only.'
         : 'This browser does not expose showDirectoryPicker. IndexedDB and ZIP export remain the fallback.'
-    })
+    }),
+    renderFolderScan(fsaState.lastScan),
+    portfolio ? codeBlock({ activeProjectId: DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID }) : el('span')
   ]);
 }
 
@@ -185,7 +219,7 @@ async function render() {
     root.replaceChildren(
       renderPortfolio(portfolio),
       renderOntoEagleDb(appDb),
-      renderLocalFolderCapability()
+      renderLocalFolderCapability(portfolio)
     );
     setStatus(`Loaded ${portfolio.projects.length} shared project(s) and ${appDb.datasets.length} OntoEagle dataset record(s).`, 'ok');
   } catch (error) {
@@ -196,4 +230,42 @@ async function render() {
 }
 
 refreshBtn?.addEventListener('click', render);
+selectFolderBtn?.addEventListener('click', async () => {
+  setStatus('Opening project folder picker...');
+  const selected = await selectProjectFolder();
+  if (!selected.ok) {
+    setStatus('No project folder selected.', 'error');
+    return;
+  }
+  fsaState.handle = selected.value;
+  fsaState.folderName = selected.value.name || 'selected folder';
+  fsaState.folderStore = await createProjectFolderStore(selected.value, { dataPath: 'ontology-workbench' }).initialize();
+  setStatus(`Selected ${fsaState.folderName}.`, 'ok');
+  await scanActiveProjectFolder();
+});
+scanFolderBtn?.addEventListener('click', scanActiveProjectFolder);
 render();
+
+async function scanActiveProjectFolder() {
+  if (!fsaState.folderStore) {
+    setStatus('Choose a project folder before scanning.', 'error');
+    return;
+  }
+  setStatus('Scanning selected project folder...');
+  const portfolio = await readPortfolio();
+  const [entries, manifest] = await Promise.all([
+    scanProjectFolder(fsaState.folderStore),
+    readProjectManifestFromFolder(fsaState.folderStore)
+  ]);
+  fsaState.lastScan = {
+    folderName: fsaState.folderName,
+    entries,
+    manifest,
+    reconciliation: reconcileProjectFolderScan({
+      manifest,
+      artifacts: portfolio.artifacts,
+      folderEntries: entries
+    })
+  };
+  await render();
+}

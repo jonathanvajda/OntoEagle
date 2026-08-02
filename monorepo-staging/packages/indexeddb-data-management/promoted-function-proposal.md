@@ -18,7 +18,7 @@
 |Logging|Several apps log from storage functions; Axiolotl dispatches DOM events from storage.|No logging in core package. Callers can wrap with logging or event callbacks.|
 |Side effects|Storage, DOM, localStorage, parsing, serialization, and UI refresh are frequently mixed.|Pure helpers are side-effect free. IndexedDB helpers perform only storage effects. Store factories depend on injected adapters.|
 |RDF graph model|Axiolotl uses triples/quads with empty-string default graph; other apps often store RDF as strings or documents.|Canonical quad row uses `graph: null` for default graph. Named graphs remain explicit strings.|
-|Record vocabulary|Current app records use local keys such as `label`, `createdAt`, `updatedAt`, `mediaType`, and `value`.|Use compact JSON-LD at storage/import-export boundaries. Prefer BFO/CCO for ontological typing and DCTERMS/SKOS/RDFS for metadata where they cover the meaning; use `okea:` only for uncovered knowledge-engineering/project terms. DTO aliases remain migration inputs only.|
+|Record vocabulary|Current app records use local keys such as `label`, `createdAt`, `updatedAt`, `mediaType`, and `value`.|Use JSON-LD with full IRI keys at storage/import-export boundaries. Prefer BFO/CCO for ontological typing and DCTERMS/SKOS/RDFS for metadata where they cover the meaning; use `okea:` only for uncovered knowledge-engineering/project terms. DTO aliases remain migration inputs only.|
 |Project model|Mermaid has explicit projects and diagrams; TOM has one implicit ontology project; others store run history.|Canonical model supports cross-app project portfolios and project-scoped artifacts, datasets, runs, and quad rows. App-local caches can remain app-local, but user project records must use the shared portfolio boundary.|
 |Deletion model|Axiolotl has granular deletion; Mermaid has project/diagram deletion; IRI/Table Nova have run deletion.|Expose exact record deletion and filtered clearing. Destructive app confirmation remains in the app layer.|
 |Vendor dependencies|Axiolotl uses `idb`; others use native IndexedDB wrappers; Mermaid uses native IDB/FSA.|Core package has no vendor dependency. Native IndexedDB adapters are small and injectable.|
@@ -134,9 +134,15 @@ deleteProjectFileEntry(folderStore, path, options)
 writeProjectManifestToFolder(folderStore, manifest, options)
 writeProjectArtifactToFolder(folderStore, artifact, payload, options)
 readProjectManifestFromFolder(folderStore, options)
+createProjectFolderManifest(projectExport, options)
+createProjectArtifactFolderPath(artifact, options)
+scanProjectFolder(folderStore, options)
+reconcileProjectFolderScan(input)
+createArtifactRecordFromProjectFolderFile(projectId, folderEntry, options)
+markDerivedProjectArtifactsStale(artifacts, changedArtifactIds)
 ```
 
-These should be promoted from Mermaid's File System Access implementation after removing Mermaid-specific branding, `.mmd` assumptions, and UI routing. IndexedDB remains the default browser persistence and the handle registry; FSA becomes an optional local-folder backend for durable project files.
+These have been promoted from Mermaid's File System Access implementation into app-neutral package functions. IndexedDB remains the default browser persistence and the handle registry; FSA is an optional local-folder backend for durable project files. Folder scans are intentionally read-only and produce reviewable discovered/conflict/stale statuses before app code mutates IndexedDB records or materialized graph/table caches.
 
 ## Why This Is Not a Frankenstein Function
 
@@ -221,8 +227,9 @@ The new suite covers:
 
 ## Remaining Work Before App Rollout
 
-- Add a browser IndexedDB object-store adapter that implements the minimal `get`, `put`, `delete`, `list`, and `clear` interface.
-- Plan the IndexedDB schema migration required for storing pure compact JSON-LD records directly rather than DTO records with `projectId`/`artifactId` keyPaths.
+- Plan the IndexedDB schema migration required for storing JSON-LD records with full IRI keys directly rather than DTO records with `projectId`/`artifactId` keyPaths.
 - Add fixtures for OntoEagle built-in/user datasets and Axiolotl named/default graph migrations.
 - Decide whether project deletion cascades, blocks, or archives artifacts per app.
 - Add app-specific migration notes before deleting local duplicates.
+- Add manifest-last batch write and recovery/audit helpers for multi-file folder saves.
+- Pilot folder-backed storage in TOM first, then Axiolotl.

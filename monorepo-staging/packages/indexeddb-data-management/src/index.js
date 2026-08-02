@@ -62,6 +62,19 @@ export {
 } from './project-manifest.js';
 
 export {
+  PROJECT_FOLDER_SYNC_STATUSES,
+  createProjectArtifactFolderPath,
+  createProjectFolderManifest,
+  writeProjectManifestToFolder,
+  readProjectManifestFromFolder,
+  writeProjectArtifactToFolder,
+  scanProjectFolder,
+  reconcileProjectFolderScan,
+  createArtifactRecordFromProjectFolderFile,
+  markDerivedProjectArtifactsStale
+} from './project-folder-sync.js';
+
+export {
   createActiveWorkspaceGraphPlan,
   readActiveWorkspaceGraphPlan,
   storeGraphQuadRows,

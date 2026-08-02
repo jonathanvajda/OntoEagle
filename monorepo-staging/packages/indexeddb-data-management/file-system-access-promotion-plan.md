@@ -5,7 +5,7 @@
 - **Source reference app:** Mermaid (`D:\GitHub\mermaid`)
 - **Capability family:** IndexedDB and app data management
 - **Target package:** `@ontoeagle/indexeddb-data-management`
-- **Status:** Promotion planning. No app rewiring yet.
+- **Status:** Shared package implementation in progress. No app rewiring yet.
 
 The File System Access capability should let any app save durable project work to a user-designated local folder while preserving the same project/artifact/run/settings model used by IndexedDB.
 
@@ -301,8 +301,8 @@ Promoted FSA package tests should cover:
 |Path sanitization|4|5|Mermaid has tests and pure functions; needs package naming and cross-app import.|
 |Low-level FSA read/write/list/mutation|4|5|Implementation is strong but needs app-neutral constants and package integration.|
 |Handle registry|4|5|Pattern is correct; needs generic record names and shared IndexedDB adapter.|
-|Project folder manifest/artifact layout|2|5|Concept exists in project export work, but folder-backed layout helpers are not implemented.|
-|Batch project save/recovery|1|4|Needed for ontology projects; Mermaid single-file writes do not fully cover it.|
+|Project folder manifest/artifact layout|4|5|Folder-backed path planning, manifest read/write, artifact writes, scans, reconciliation, discovered file staging, conflict statuses, and stale-output helpers are implemented with Jest coverage.|
+|Batch project save/recovery|2|4|Manifest-last policy is documented; multi-file write planning, recovery state, and audit records still need implementation before app rollout depends on them.|
 |Cross-app FSA adoption|1|5|No ontology app is wired yet.|
 
 ## Decision
