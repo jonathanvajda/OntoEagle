@@ -10,6 +10,8 @@ import {
   parseRdfTextWithAdapters,
   quad,
   rdfDatasetToJsonLdGraph,
+  selectRdfGraphExportQuads,
+  serializeRdfGraphExport,
   serializeRdfDataset,
   serializeRdfDatasetWithAdapters,
   serializeRdfDatasetToNQuads
@@ -196,6 +198,73 @@ describe('JSON-LD projection depends on RDF quads', () => {
   });
 });
 
+describe('RDF graph export scopes', () => {
+  test('selects default, named, and all graph scopes from a mixed dataset', () => {
+    const runtime = { N3: createGraphAwareMockN3Runtime() };
+    const dataset = createMixedGraphDataset(runtime);
+
+    expect(selectRdfGraphExportQuads(dataset, {
+      scope: 'default',
+      defaultGraphTerm: runtime.N3.DataFactory.defaultGraph()
+    }).map((item) => item.subject.value)).toEqual(['http://ex/default']);
+    expect(selectRdfGraphExportQuads(dataset, { scope: 'named' }).map((item) => item.subject.value)).toEqual(['http://ex/named']);
+    expect(selectRdfGraphExportQuads(dataset, { scope: 'all' })).toHaveLength(2);
+  });
+
+  test('serializes default graph export as Turtle', async () => {
+    const runtime = { N3: createGraphAwareMockN3Runtime() };
+    const result = await serializeRdfGraphExport(createMixedGraphDataset(runtime), {
+      scope: 'default',
+      format: 'text/turtle',
+      runtime
+    });
+
+    expect(result.count).toBe(1);
+    expect(result.text).toContain('<http://ex/default>');
+    expect(result.text).not.toContain('<http://ex/named>');
+  });
+
+  test('serializes named graph export as TriG with graph names', async () => {
+    const runtime = { N3: createGraphAwareMockN3Runtime() };
+    const result = await serializeRdfGraphExport(createMixedGraphDataset(runtime), {
+      scope: 'named',
+      format: 'application/trig',
+      runtime
+    });
+
+    expect(result.count).toBe(1);
+    expect(result.text).toContain('<http://ex/named>');
+    expect(result.text).toContain('<http://ex/graph>');
+  });
+
+  test('serializes named graph export as Turtle by flattening graph names', async () => {
+    const runtime = { N3: createGraphAwareMockN3Runtime() };
+    const result = await serializeRdfGraphExport(createMixedGraphDataset(runtime), {
+      scope: 'named',
+      format: 'text/turtle',
+      runtime
+    });
+
+    expect(result.count).toBe(1);
+    expect(result.text).toContain('<http://ex/named>');
+    expect(result.text).not.toContain('<http://ex/graph>');
+  });
+
+  test('serializes combined graph export as N-Quads', async () => {
+    const runtime = { N3: createGraphAwareMockN3Runtime() };
+    const result = await serializeRdfGraphExport(createMixedGraphDataset(runtime), {
+      scope: 'all',
+      format: 'application/n-quads',
+      runtime
+    });
+
+    expect(result.count).toBe(2);
+    expect(result.text).toContain('<http://ex/default>');
+    expect(result.text).toContain('<http://ex/named>');
+    expect(result.text).toContain('<http://ex/graph>');
+  });
+});
+
 describe('vendor adapter layer', () => {
   test('parses and serializes N3-backed formats through an injected N3 runtime', async () => {
     const runtime = { N3: createMockN3Runtime() };
@@ -236,6 +305,59 @@ describe('vendor adapter layer', () => {
     });
 
     expect(serialized.text).toBe('<http://ex/s> <http://ex/p> "v" .\n');
+  });
+
+  test('converts normalized RDF/JS quads through an N3 DataFactory before writer serialization', async () => {
+    const serialized = await serializeRdfDatasetWithAdapters([
+      quad('http://ex/s', 'http://ex/p', 'v')
+    ], {
+      format: 'text/turtle',
+      runtime: { N3: createStrictMockN3Runtime() }
+    });
+
+    expect(serialized.text).toBe('<http://ex/s> <http://ex/p> "v" .\n');
+  });
+
+  test('serializes Turtle default graph output without graph names', async () => {
+    const serialized = await serializeRdfDatasetWithAdapters([
+      quad('http://ex/s', 'http://ex/p', 'v')
+    ], {
+      format: 'text/turtle',
+      runtime: { N3: createGraphAwareMockN3Runtime() }
+    });
+
+    expect(serialized.text).toBe('<http://ex/s> <http://ex/p> "v" .\n');
+  });
+
+  test('serializes TriG named graph output with graph names preserved', async () => {
+    const serialized = await serializeRdfDatasetWithAdapters([
+      quad('http://ex/s', 'http://ex/p', 'v', 'http://ex/g')
+    ], {
+      format: 'application/trig',
+      runtime: { N3: createGraphAwareMockN3Runtime() }
+    });
+
+    expect(serialized.text).toBe('<http://ex/s> <http://ex/p> "v" <http://ex/g> .\n');
+  });
+
+  test('serializes N-Triples by dropping graph names intentionally', () => {
+    const serialized = serializeRdfDataset([
+      quad('http://ex/s', 'http://ex/p', 'v', 'http://ex/g')
+    ], {
+      format: 'application/n-triples'
+    });
+
+    expect(serialized.text).toBe('<http://ex/s> <http://ex/p> "v" .\n');
+  });
+
+  test('serializes N-Quads by preserving graph names', () => {
+    const serialized = serializeRdfDataset([
+      quad('http://ex/s', 'http://ex/p', 'v', 'http://ex/g')
+    ], {
+      format: 'application/n-quads'
+    });
+
+    expect(serialized.text).toBe('<http://ex/s> <http://ex/p> "v" <http://ex/g> .\n');
   });
 
   test('parses line-based RDF without requiring N3 Parser from a partial runtime', async () => {
@@ -442,6 +564,136 @@ function createMockN3Runtime() {
       }
     }
   };
+}
+
+function createStrictMockN3Runtime() {
+  const dataFactory = {
+    fromQuad: () => {
+      throw new Error('fromQuad should not be used for plain normalized RDF/JS quads');
+    },
+    namedNode: (value) => ({ termType: 'NamedNode', value, __n3Term: true }),
+    blankNode: (value) => ({ termType: 'BlankNode', value, __n3Term: true }),
+    defaultGraph: () => ({ termType: 'DefaultGraph', value: '', __n3Term: true }),
+    literal: (value, languageOrDatatype) => ({
+      termType: 'Literal',
+      value,
+      language: typeof languageOrDatatype === 'string' ? languageOrDatatype : '',
+      datatype: typeof languageOrDatatype === 'object' ? languageOrDatatype : undefined,
+      __n3Term: true
+    }),
+    quad: (subject, predicate, object, graph) => ({
+      subject,
+      predicate,
+      object,
+      graph,
+      __n3Quad: true
+    })
+  };
+
+  return {
+    DataFactory: dataFactory,
+    Store: class {
+      constructor(items = []) {
+        this.items = [...items];
+      }
+      addQuads(items) {
+        this.items.push(...items);
+      }
+      getQuads(_subject, _predicate, _object, graph) {
+        if (!graph) return [...this.items];
+        return this.items.filter((item) =>
+          item.graph?.termType === graph.termType
+          && item.graph?.value === graph.value
+        );
+      }
+    },
+    Writer: class {
+      constructor() {
+        this.items = [];
+      }
+      addQuads(items) {
+        this.items.push(...items);
+      }
+      end(callback) {
+        const allConverted = this.items.every((item) =>
+          item.__n3Quad
+          && item.subject.__n3Term
+          && item.predicate.__n3Term
+          && item.object.__n3Term
+          && item.graph.__n3Term
+        );
+        callback(null, allConverted ? '<http://ex/s> <http://ex/p> "v" .\n' : '');
+      }
+    }
+  };
+}
+
+function createGraphAwareMockN3Runtime() {
+  const dataFactory = {
+    namedNode: (value) => ({ termType: 'NamedNode', value }),
+    blankNode: (value) => ({ termType: 'BlankNode', value }),
+    defaultGraph: () => ({ termType: 'DefaultGraph', value: '' }),
+    literal: (value, languageOrDatatype) => ({
+      termType: 'Literal',
+      value,
+      language: typeof languageOrDatatype === 'string' ? languageOrDatatype : '',
+      datatype: typeof languageOrDatatype === 'object' ? languageOrDatatype : undefined
+    }),
+    quad: (subject, predicate, object, graph) => ({
+      subject,
+      predicate,
+      object,
+      graph
+    })
+  };
+
+  return {
+    DataFactory: dataFactory,
+    Store: class {
+      constructor(items = []) {
+        this.items = [...items];
+      }
+      addQuads(items) {
+        this.items.push(...items);
+      }
+      getQuads(_subject, _predicate, _object, graph) {
+        if (!graph) return [...this.items];
+        return this.items.filter((item) =>
+          item.graph?.termType === graph.termType
+          && item.graph?.value === graph.value
+        );
+      }
+    },
+    Writer: class {
+      constructor() {
+        this.items = [];
+      }
+      addQuads(items) {
+        this.items.push(...items);
+      }
+      end(callback) {
+        const lines = this.items.map((item) => {
+          const graph = item.graph?.termType && item.graph.termType !== 'DefaultGraph'
+            ? ` ${termToGraphAwareText(item.graph)}`
+            : '';
+          return `${termToGraphAwareText(item.subject)} ${termToGraphAwareText(item.predicate)} ${termToGraphAwareText(item.object)}${graph} .`;
+        });
+        callback(null, `${lines.join('\n')}${lines.length ? '\n' : ''}`);
+      }
+    }
+  };
+}
+
+function createMixedGraphDataset(runtime) {
+  return new runtime.N3.Store([
+    quad('http://ex/default', 'http://ex/p', 'default'),
+    quad('http://ex/named', 'http://ex/p', namedNode('http://ex/o'), 'http://ex/graph')
+  ]);
+}
+
+function termToGraphAwareText(term) {
+  if (term.termType === 'Literal') return `"${term.value}"`;
+  return `<${term.value}>`;
 }
 
 function createMockRdflibRuntime() {

@@ -157,6 +157,20 @@ Minimum Jest coverage before rewiring:
 - Saved SPARQL query files can be registered as project artifacts and listed from IndexedDB metadata.
 - FSA conflict scenarios produce reviewable sync statuses and do not overwrite either side silently.
 
+Performance observation to validate after rewiring:
+
+- Early manual use suggested Axiolotl may run faster after replacing app-local `idb` wrapper usage and direct object-store code with the shared project storage path.
+- Treat this as an implementation hypothesis until measured. The likely causes are fewer IndexedDB round trips, more predictable quad-row normalization, less wrapper overhead, and fewer stale compatibility branches in graph/workspace operations.
+- Add a lightweight repeatable benchmark before claiming an optimization:
+  - load N RDF quads into a named graph,
+  - count all triples,
+  - list graph names,
+  - run one representative SELECT query,
+  - run one representative CONSTRUCT query,
+  - clear a named graph,
+  - clear the active workspace.
+- Record old local-store timings and shared project-store timings with the same fixture sizes. If outputs differ, document whether the difference is an intentional normalization change or a regression.
+
 Manual browser validation before old DB deletion:
 
 - Load existing local Axiolotl data.

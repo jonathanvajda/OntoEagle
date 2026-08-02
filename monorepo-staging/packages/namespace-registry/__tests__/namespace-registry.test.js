@@ -23,6 +23,7 @@ import {
   namespaceToPrefixMap,
   normalizePrefixMap,
   prependSparqlPrefixes,
+  selectPrefixesUsedByRdfTerms,
   saveProjectPrefixes
 } from '../src/index.js';
 
@@ -418,6 +419,43 @@ describe('namespace-registry package', () => {
     expect(applyPrefixesToRdflibStore({}, { ex: 'https://example.org/' })).toMatchObject({
       ok: false,
       error: 'unsupported prefix target'
+    });
+  });
+
+  test('RDF serialization prefix adapters select only prefixes used by RDF terms', () => {
+    const result = selectPrefixesUsedByRdfTerms({
+      ex: 'http://example.org/',
+      owl: COMMON_NAMESPACE_REGISTRY.owl.namespaceIri,
+      rdfs: COMMON_NAMESPACE_REGISTRY.rdfs.namespaceIri,
+      skos: COMMON_NAMESPACE_REGISTRY.skos.namespaceIri,
+      xsd: COMMON_NAMESPACE_REGISTRY.xsd.namespaceIri
+    }, [
+      {
+        subject: { termType: 'NamedNode', value: 'http://example.org/ont000001' },
+        predicate: { termType: 'NamedNode', value: COMMON_NAMESPACE_IRIS.rdf.type },
+        object: { termType: 'NamedNode', value: COMMON_NAMESPACE_IRIS.owl.Class },
+        graph: { termType: 'DefaultGraph', value: '' }
+      },
+      {
+        subject: { termType: 'NamedNode', value: 'http://example.org/ont000001' },
+        predicate: { termType: 'NamedNode', value: COMMON_NAMESPACE_IRIS.rdfs.label },
+        object: {
+          termType: 'Literal',
+          value: 'Doctor',
+          datatype: { termType: 'NamedNode', value: COMMON_NAMESPACE_IRIS.xsd.string }
+        },
+        graph: { termType: 'DefaultGraph', value: '' }
+      }
+    ]);
+
+    expect(result).toEqual({
+      ok: true,
+      value: Object.freeze({
+        ex: 'http://example.org/',
+        owl: COMMON_NAMESPACE_REGISTRY.owl.namespaceIri,
+        rdfs: COMMON_NAMESPACE_REGISTRY.rdfs.namespaceIri
+      }),
+      warnings: []
     });
   });
 

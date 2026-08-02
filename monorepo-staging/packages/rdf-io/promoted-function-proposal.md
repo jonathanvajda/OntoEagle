@@ -18,6 +18,7 @@ GRP-008 and GRP-009 are promoted into the first layer instead of being deferred.
 |App object to RDF|TOM row-to-quads, Table Nova schema-to-ontology, OntoEagle/CQ JSON-LD graph builders|Promote `createRdfQuadsFromObjects(objects, mapping)`. Apps keep their object models and provide declarative mappings.|
 |JSON-LD graph projection|OntoEagle JSON-LD graph extraction, CQ-style JSON-LD exports, Table Nova JSON-LD export|Promote `rdfDatasetToJsonLdGraph(dataset, options)` and `serializeRdfDatasetToJsonLd(dataset, options)`. JSON-LD depends on RDF quads.|
 |JSON-LD graph ingest|OntoEagle graph extraction and app-local JSON-LD records|Promote `createRdfQuadsFromJsonLdGraph(graph, options)` for simple JSON-LD-like app objects. Full JSON-LD parsing remains a jsonld adapter.|
+|Graph export scope selection|Axiolotl active workspace export; expected TOM, Table Nova, DocxHund, OCD, and Graphite exports|Promote `selectRdfGraphExportQuads()`, `createRdfGraphExportDataset()`, and `serializeRdfGraphExport()`. Default graph, named graphs, and combined dataset export are generic RDF dataset concerns, not app-local UI concerns.|
 |Named graph assignment|IRI Swapper and Axiolotl named graph workflows|Keep as app/graph adapter. It can call `parseRdfText` first, then assign graph names.|
 |Domain ontology modeling|TOM ontology row rules and Table Nova column schema rules|Keep domain-specific mapping decisions local, but express final mapping through `createRdfQuadsFromObjects` where practical.|
 
@@ -80,19 +81,41 @@ Converts simple JSON-LD-like app graph objects into quads.
 - **Side effects:** none.
 - **Limit:** not a full JSON-LD parser. Full expansion belongs to the jsonld adapter.
 
+### `serializeRdfGraphExport(dataset, options)`
+
+Serializes a graph export scope from a dataset-like object.
+
+- **Input domain:** RDF/JS dataset-like value with `getQuads()`, graph export scope `default`, `named`, or `all`, target RDF format/MIME, and optional adapter runtime.
+- **Output range:** `{ text, count, format, mimeType, warnings }`.
+- **Error model:** throws for invalid dataset, unsupported scope, missing runtime for scoped N3-backed exports, unsupported output format, and non-empty graph selections that serialize to empty text.
+- **Logging:** none.
+- **Side effects:** none.
+- **Promotion use:** Axiolotl workspace export, TOM ontology artifact export, Table Nova RDF output export, OCD inspection export, DocxHund RDF export, and future Graphite graph export.
+- **Important constraint:** Turtle and N-Triples are triple syntaxes. Named graph exports should use TriG, N-Quads, or JSON-LD if graph names must be preserved.
+- **Triple-syntax behavior:** When a selected graph export is serialized to Turtle or N-Triples, graph names are intentionally flattened to the default graph before serialization. This prevents TriG-like graph syntax from leaking into Turtle output. TriG, N-Quads, and JSON-LD remain the graph-preserving choices.
+
+Supporting helpers:
+
+- `selectRdfGraphExportQuads(dataset, { scope, defaultGraphTerm })` selects only default graph triples, only named graph quads, or all quads.
+- `createRdfGraphExportDataset(dataset, { scope, runtime })` creates a runtime-native scoped dataset/store for serialization.
+- `assertNonEmptyRdfGraphExport(text, { count, mimeType })` prevents silent zero-byte downloads when a non-empty graph selection serializes incorrectly.
+- `flattenRdfQuadsToDefaultGraph(quads, dataFactory)` supports explicit flattening when apps need triples-only output from graph-scoped data.
+
 ## Conditional App Changes
 
 |App|Change if promoted package is adopted|
 |:---|:---|
 |OntoEagle|Replace local parse dispatch with `parseRdfText` once vendor adapters land. Convert app JSON-LD graph exports/projections to build quads first, then call `serializeRdfDataset(..., { format: 'jsonld' })` where the output is RDF data rather than search-specific metadata.|
 |CQ Ferret|Use `createRdfQuadsFromObjects` for competency question records and metadata. JSON-LD export should serialize those quads instead of maintaining a separate JSON-LD construction path.|
-|tabular-ontology-maker|Keep TOM row interpretation and axiom rules local. Use `createRdfQuadsFromObjects` for straightforward row-to-triple mappings where possible, then use `serializeRdfDataset`; remove local `serializeQuads`/JSON-LD conversion after adapter parity is reached.|
-|axiolotl|Keep IndexedDB, Comunica, workspace, and named graph orchestration local. Use shared parser/serializer for pure RDF text boundaries.|
+|tabular-ontology-maker|Keep TOM row interpretation and axiom rules local. Use `createRdfQuadsFromObjects` for straightforward row-to-triple mappings where possible, then use `serializeRdfGraphExport`/`serializeRdfDataset`; remove local `serializeQuads`/JSON-LD conversion after adapter parity is reached.|
+|axiolotl|Keep IndexedDB, Comunica, workspace, and named graph orchestration local. Use shared parser/serializer and `serializeRdfGraphExport` for pure RDF text boundaries.|
 |visual-lynx|Replace transformer internals with shared parse/serialize plus adapter hooks. Keep D3 and Mermaid projections outside RDF I/O.|
 |ontology-curation-manager|Likely source/pilot. Move `rdf-io.js` behavior into adapters and keep compatibility exports.|
 |ontology-tabulator|Replace parse core with `parseRdfText`; keep table extraction local.|
 |iri-swapper|Parse uploaded ontology through shared parser, then apply named graph/run mapping locally. Serialize filtered run quads through shared serializer.|
-|table-nova|Use `createRdfQuadsFromObjects` or local dataset builders for schema/instance data, then use `serializeRdfDataset`; JSON-LD comes from the same quads.|
+|table-nova|Use `createRdfQuadsFromObjects` or local dataset builders for schema/instance data, then use `serializeRdfGraphExport`/`serializeRdfDataset`; JSON-LD comes from the same quads.|
+|DocxHund|Use `serializeRdfGraphExport` for any RDF-backed document/project graph export. Keep DOCX rendering local.|
+|Graphite|Use `selectRdfGraphExportQuads` for graph-scope UI controls and `serializeRdfGraphExport` for download/export surfaces. Keep graph editing and visualization local.|
 
 ## File Structure Created
 
@@ -100,6 +123,7 @@ Converts simple JSON-LD-like app graph objects into quads.
 packages/rdf-io/
   src/
     index.js
+    graph-export.js
     jsonld-adapter.js
     n3-adapter.js
     object-to-rdf.js

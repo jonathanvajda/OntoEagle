@@ -4,7 +4,7 @@
 
 - **Source app:** Tabular Ontology Maker (`D:\GitHub\tabular-ontology-maker`)
 - **Capability family:** IndexedDB and app data management
-- **Status:** Planning documentation only. No app code should be rewired from this file alone.
+- **Status:** Initial TOM rewiring complete for shared IndexedDB project storage. Folder-sync UI remains deferred.
 - **Target package:** `@ontoeagle/indexeddb-data-management`
 
 This plan moves TOM from a single app-local session database to the shared project portfolio model while preserving existing user sessions long enough for export or migration.
@@ -166,3 +166,24 @@ Manual browser validation before old DB deletion:
 - Generated ontology RDF is stored as a project artifact and can be downloaded through shared file/export utilities.
 - Folder-backed source and generated artifacts can be scanned, reviewed, registered, and synced without silently overwriting TOM workspace state.
 - App-local persistence code is removed after tests and manual validation prove the shared stores cover the old inputs and outputs.
+
+## Implementation Notes
+
+Completed in TOM:
+
+- TOM opens `OntologyWorkbenchProjects` and ensures the shared default cross-app project exists before storing project data.
+- Ontology settings now read/write/delete through the shared project-scoped settings store.
+- Current workspace saves now store a staged `tom-workspace-snapshot` artifact, a generated `ontology-rdf` artifact, and a migration/save `RunRecord`.
+- The old app action `saveRDFtoIndexedDB()` was replaced with `storeTomWorkspaceProjectState()` in TOM's JS API and button wiring.
+- Legacy `TabularOntologyDB` session rows are copied forward into shared project storage on first restore when no shared TOM session exists.
+- Legacy database deletion is intentionally not automatic; it still requires explicit user confirmation after manual validation.
+- RDF artifact MIME type and extension assignment now uses the shared format registry rather than TOM-local switch tables.
+- TOM's service worker precache manifest now includes the piecemeal shared `indexeddb-data-management`, `tabular-io`, `browser-file-io`, `format-registry`, and `rdf-io` modules required by the migrated app.
+- TOM Jest coverage now includes shared settings persistence, project artifact session persistence, deterministic latest legacy session migration, and RDF format metadata preservation for N-Quads.
+
+Deferred:
+
+- Folder-backed File System Access project sync UI.
+- Explicit "new files found" review panel for dropped folder files.
+- User-confirmed deletion/export flow for the legacy `TabularOntologyDB`.
+- Optional RDF materialization into graph rows from TOM-generated ontology artifacts.

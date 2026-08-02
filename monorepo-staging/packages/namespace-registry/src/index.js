@@ -37,6 +37,7 @@ export {
 
 export {
   createN3WriterOptionsWithPrefixes,
+  selectPrefixesUsedByRdfTerms,
   applyPrefixesToRdflibStore
 } from './rdf-serialization-prefixes.js';
 
