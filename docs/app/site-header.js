@@ -1,5 +1,11 @@
 // ./app/site-header.js
-import { inspectIndexedDbDatabase } from './shared/indexeddb-data-management/index.js';
+import {
+  DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID,
+  createProjectPortfolioStores,
+  ensureProjectPortfolioProject,
+  inspectIndexedDbDatabase,
+  openProjectPortfolioDatabase
+} from './shared/indexeddb-data-management/index.js';
 
 (() => {
   "use strict";
@@ -391,9 +397,10 @@ import { inspectIndexedDbDatabase } from './shared/indexeddb-data-management/ind
 
 // Theme toggle: sets <html data-theme="light|dark"> and persists choice.
   (() => {
-    const STORAGE_KEY = 'ont-theme'; // 'light' | 'dark'
+    const SETTING_KEY = 'ui.theme'; // 'light' | 'dark'
     const root = document.documentElement;
     const btn = document.getElementById('themeToggle');
+    let settingsStorePromise = null;
 
     if (!btn) return;
 
@@ -403,9 +410,28 @@ import { inspectIndexedDbDatabase } from './shared/indexeddb-data-management/ind
         : 'light';
     };
 
-    const getSavedTheme = () => {
-      const v = localStorage.getItem(STORAGE_KEY);
+    const getSettingsStore = async () => {
+      if (!settingsStorePromise) {
+        settingsStorePromise = openProjectPortfolioDatabase()
+          .then((db) => {
+            const stores = createProjectPortfolioStores(db, {
+              projectId: DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID
+            });
+            return ensureProjectPortfolioProject(stores).then(() => stores.settings);
+          });
+      }
+      return settingsStorePromise;
+    };
+
+    const getSavedTheme = async () => {
+      const settings = await getSettingsStore();
+      const v = await settings.readSettingValue(SETTING_KEY, null);
       return (v === 'light' || v === 'dark') ? v : null;
+    };
+
+    const saveTheme = async (theme) => {
+      const settings = await getSettingsStore();
+      await settings.writeSettingValue(SETTING_KEY, theme);
     };
 
     const applyTheme = (theme) => {
@@ -415,17 +441,25 @@ import { inspectIndexedDbDatabase } from './shared/indexeddb-data-management/ind
       btn.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
     };
 
-    const initTheme = () => {
-      const saved = getSavedTheme();
-      const theme = saved || getSystemTheme();
-      applyTheme(theme);
+    const initTheme = async () => {
+      applyTheme(getSystemTheme());
+      try {
+        const saved = await getSavedTheme();
+        if (saved) applyTheme(saved);
+      } catch (_err) {
+        applyTheme(getSystemTheme());
+      }
     };
 
-    const toggleTheme = () => {
+    const toggleTheme = async () => {
       const current = root.getAttribute('data-theme') || getSystemTheme();
       const next = current === 'dark' ? 'light' : 'dark';
-      localStorage.setItem(STORAGE_KEY, next);
       applyTheme(next);
+      try {
+        await saveTheme(next);
+      } catch (_err) {
+        applyTheme(next);
+      }
     };
 
     // Initialize once on load
@@ -437,8 +471,12 @@ import { inspectIndexedDbDatabase } from './shared/indexeddb-data-management/ind
     // Optional: If no saved preference, follow system changes live
     const mql = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
     if (mql) {
-      mql.addEventListener('change', () => {
-        if (!getSavedTheme()) applyTheme(getSystemTheme());
+      mql.addEventListener('change', async () => {
+        try {
+          if (!await getSavedTheme()) applyTheme(getSystemTheme());
+        } catch (_err) {
+          applyTheme(getSystemTheme());
+        }
       });
     }
   })();
