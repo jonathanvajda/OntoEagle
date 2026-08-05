@@ -10,6 +10,9 @@ import {
   parseRdfTextWithAdapters,
   quad,
   rdfDatasetToJsonLdGraph,
+  getRdfGraphExportGraphShape,
+  isSupportedRdfGraphExportMimeType,
+  RDF_GRAPH_EXPORT_MIME_TYPES,
   selectRdfGraphExportQuads,
   serializeRdfGraphExport,
   serializeRdfDataset,
@@ -199,6 +202,26 @@ describe('JSON-LD projection depends on RDF quads', () => {
 });
 
 describe('RDF graph export scopes', () => {
+  test('defines promoted RDF export formats and graph-shape policy', () => {
+    expect(RDF_GRAPH_EXPORT_MIME_TYPES).toEqual([
+      'text/turtle',
+      'application/n-triples',
+      'application/n-quads',
+      'application/trig',
+      'application/rdf+xml',
+      'application/ld+json'
+    ]);
+    expect(isSupportedRdfGraphExportMimeType('application/trig')).toBe(true);
+    expect(isSupportedRdfGraphExportMimeType('text/plain')).toBe(false);
+    expect(getRdfGraphExportGraphShape('text/turtle')).toBe('triples');
+    expect(getRdfGraphExportGraphShape('application/n-triples')).toBe('triples');
+    expect(getRdfGraphExportGraphShape('application/rdf+xml')).toBe('triples');
+    expect(getRdfGraphExportGraphShape('application/n-quads')).toBe('quads');
+    expect(getRdfGraphExportGraphShape('application/trig')).toBe('quads');
+    expect(getRdfGraphExportGraphShape('application/ld+json')).toBe('quads');
+    expect(() => getRdfGraphExportGraphShape('text/plain')).toThrow('Unsupported RDF graph export MIME type');
+  });
+
   test('selects default, named, and all graph scopes from a mixed dataset', () => {
     const runtime = { N3: createGraphAwareMockN3Runtime() };
     const dataset = createMixedGraphDataset(runtime);

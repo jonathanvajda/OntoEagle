@@ -55,8 +55,11 @@ import {
   convertLegacySettingsToSettingRecords,
   convertQuadRowsToRdfJsQuads,
   resolveArtifactDownloadFormat,
+  resolveOutputRunForExport,
   replaceGraphQuadRows,
   convertRdfJsQuadsToQuadRows,
+  downloadRunOutputForExport,
+  serializeRunOutputForExport,
   storeGraphQuadRows,
   storeProjectArtifactData,
   storeProjectRunData,
@@ -227,6 +230,34 @@ class TestRdfJsStore {
   getQuads() {
     return this.quads;
   }
+}
+
+function createGraphAwareMockN3Runtime() {
+  return {
+    DataFactory: TestDataFactory,
+    Store: TestRdfJsStore,
+    Writer: class {
+      constructor() {
+        this.quads = [];
+      }
+
+      addQuads(quads) {
+        this.quads.push(...quads);
+      }
+
+      end(callback) {
+        callback(null, this.quads.map((item) => {
+          const graph = item.graph && item.graph.termType !== 'DefaultGraph'
+            ? ` <${item.graph.value}>`
+            : '';
+          const object = item.object.termType === 'Literal'
+            ? `"${item.object.value}"`
+            : `<${item.object.value}>`;
+          return `<${item.subject.value}> <${item.predicate.value}> ${object}${graph} .`;
+        }).join('\n') + (this.quads.length ? '\n' : ''));
+      }
+    }
+  };
 }
 
 describe('record id helpers', () => {
@@ -1251,6 +1282,93 @@ describe('project artifact and archive export helpers', () => {
     expect(createArtifactDownloadFileName(artifact)).toBe('Bad - Report.json');
     const blob = createArtifactDownloadBlob(artifact);
     await expect(blob.text()).resolves.toBe('{\n  "status": "ok"\n}');
+  });
+});
+
+describe('run output export orchestration', () => {
+  test('resolves the latest output child when the active output pointer was lost', async () => {
+    const runs = [
+      {
+        runId: 'run:input',
+        kind: 'input',
+        createdAt: '2026-07-29T10:00:00.000Z',
+        fileName: 'source.ttl'
+      },
+      {
+        runId: 'run:output-old',
+        kind: 'output',
+        parentRunId: 'run:input',
+        createdAt: '2026-07-29T11:00:00.000Z',
+        fileName: 'source.mapped.ttl'
+      },
+      {
+        runId: 'run:output-new',
+        kind: 'output',
+        parentRunId: 'run:input',
+        createdAt: '2026-07-29T12:00:00.000Z',
+        fileName: 'source.mapped.ttl'
+      }
+    ];
+    const byId = new Map(runs.map((run) => [run.runId, run]));
+
+    await expect(resolveOutputRunForExport({
+      selectedRunId: 'run:input',
+      readRun: async (runId) => byId.get(runId) || null,
+      listRuns: async () => runs
+    })).resolves.toMatchObject({
+      runId: 'run:output-new',
+      parentRunId: 'run:input',
+      source: 'latest-child'
+    });
+  });
+
+  test('serializes and downloads text run outputs with selected MIME and extension', async () => {
+    const downloads = [];
+    const result = await downloadRunOutputForExport({
+      runId: 'run:query-output',
+      kind: 'output',
+      fileName: 'query.rq',
+      queryText: 'SELECT * WHERE {}'
+    }, {
+      mimeType: 'application/sparql-query',
+      downloadTextFile(fileName, text, options) {
+        downloads.push({ fileName, text, options });
+        return { fileName };
+      }
+    });
+
+    expect(result.serialized).toMatchObject({
+      text: 'SELECT * WHERE {}',
+      mimeType: 'application/sparql-query',
+      extension: 'rq',
+      fileName: 'query.rq'
+    });
+    expect(downloads).toEqual([{
+      fileName: 'query.rq',
+      text: 'SELECT * WHERE {}',
+      options: { mimeType: 'application/sparql-query' }
+    }]);
+  });
+
+  test('serializes canonical N-Quads run outputs through RDF graph export policy', async () => {
+    const runtime = { N3: createGraphAwareMockN3Runtime() };
+    const serialized = await serializeRunOutputForExport({
+      runId: 'run:rdf-output',
+      kind: 'output',
+      fileName: 'ontology.mapped.ttl',
+      nquads: '<http://ex/s> <http://ex/p> "v" <http://ex/g> .\n'
+    }, {
+      mimeType: 'text/turtle',
+      runtime
+    });
+
+    expect(serialized).toMatchObject({
+      mimeType: 'text/turtle',
+      extension: 'ttl',
+      fileName: 'ontology.mapped.ttl'
+    });
+    expect(serialized.text).toContain('<http://ex/s>');
+    expect(serialized.text).not.toContain('<http://ex/g>');
   });
 });
 
