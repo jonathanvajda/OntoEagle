@@ -2,6 +2,7 @@
 import {
   loadDoc,
   saveDoc,
+  clearDoc,
   listBundles,
   nodeById,
   getMembers,
@@ -111,7 +112,10 @@ if (!hasBundlerUI()) {
   // You can console.info if you want:
   // console.info('[bundler-ui] UI not present; skipping init');
 } else {
-  bundlerInit();
+  bundlerInit().catch((error) => {
+    console.error('[bundler-ui] initialization failed:', error);
+    setStatus(`Bundler failed to initialize: ${error?.message || error}`);
+  });
 }
 
 /* ---------- UI helpers ---------- */
@@ -297,16 +301,16 @@ async function registerServiceWorker() {
   }
 }
 
-function bundlerInit() {
-  btnCreateBundle?.addEventListener('click', () => {
-    const doc = loadDoc();
+async function bundlerInit() {
+  btnCreateBundle?.addEventListener('click', async () => {
+    const doc = await loadDoc();
     createBundle(doc);
-    saveDoc(doc);
-    render();
+    await saveDoc(doc);
+    await render();
   });
 
-  btnSeedExample?.addEventListener('click', () => {
-    const doc = loadDoc();
+  btnSeedExample?.addEventListener('click', async () => {
+    const doc = await loadDoc();
     if (listBundles(doc).length === 0) createBundle(doc);
     const b0 = listBundles(doc)[0];
     upsertNode(doc, EX_ITEM_NODE);
@@ -326,13 +330,13 @@ function bundlerInit() {
       // Recommended: import addMember. (See note below.)
     }
 
-    saveDoc(doc);
-    render();
+    await saveDoc(doc);
+    await render();
   });
 
-  btnExportSeed?.addEventListener('click', () => {
+  btnExportSeed?.addEventListener('click', async () => {
     console.info('Exporting bundle seed text…');
-    const doc = loadDoc();
+    const doc = await loadDoc();
     const bundleId = selExportBundle?.value || '';
     if (!bundleId) return;
 
@@ -359,9 +363,9 @@ function bundlerInit() {
     }
   });
 
-  btnLoadBundleSeeds?.addEventListener('click', () => {
+  btnLoadBundleSeeds?.addEventListener('click', async () => {
     if (!txtSeedInput) return;
-    const doc = loadDoc();
+    const doc = await loadDoc();
     const bundleId = selExportBundle?.value || '';
     if (!bundleId) return;
     txtSeedInput.value = getMembers(doc, bundleId).join('\n') + '\n';
@@ -388,22 +392,22 @@ function bundlerInit() {
     });
   });
 
-  btnMerge?.addEventListener('click', () => {
+  btnMerge?.addEventListener('click', async () => {
     const a = selMergeA?.value || '';
     const b = selMergeB?.value || '';
     if (!a || !b || a === b) return;
-    const doc = loadDoc();
+    const doc = await loadDoc();
     mergeBundles(doc, [a, b]);
-    saveDoc(doc);
-    render();
+    await saveDoc(doc);
+    await render();
   });
 
-  btnClear?.addEventListener('click', () => {
-    localStorage.removeItem('onto.bundles.jsonld');
-    render();
+  btnClear?.addEventListener('click', async () => {
+    await clearDoc();
+    await render();
   });
 
-  render();
+  await render();
 }
 
 /* ---------- render ---------- */
@@ -498,7 +502,7 @@ async function buildFromGraphAndPersist(graphText, fingerprint) {
 }
 
 async function render() {
-  const doc = loadDoc();
+  const doc = await loadDoc();
   const bundles = listBundles(doc);
   const idx = nodeById(doc);
 
@@ -538,25 +542,25 @@ async function render() {
     const btnDump = document.createElement('button');
     btnDump.type = 'button';
     btnDump.textContent = 'Dump bundle';
-    btnDump.addEventListener('click', () => {
-      const d = loadDoc();
+    btnDump.addEventListener('click', async () => {
+      const d = await loadDoc();
       // delete bundle node; items remain
       d['@graph'] = d['@graph'].filter(n => !(n && n['@id'] === bundleId));
-      saveDoc(d);
-      render();
+      await saveDoc(d);
+      await render();
     });
 
     const btnSplitHalf = document.createElement('button');
     btnSplitHalf.type = 'button';
     btnSplitHalf.textContent = 'Split ~half';
-    btnSplitHalf.addEventListener('click', () => {
-      const d = loadDoc();
+    btnSplitHalf.addEventListener('click', async () => {
+      const d = await loadDoc();
       const m = getMembers(d, bundleId);
       const half = m.slice(0, Math.floor(m.length / 2));
       if (half.length === 0) return;
       splitBundle(d, bundleId, half);
-      saveDoc(d);
-      render();
+      await saveDoc(d);
+      await render();
     });
 
     actions.appendChild(btnSplitHalf);
@@ -595,11 +599,11 @@ async function render() {
       const btnRemoveItem = document.createElement('button');
       btnRemoveItem.type = 'button';
       btnRemoveItem.textContent = 'Remove';
-      btnRemoveItem.addEventListener('click', () => {
-        const d = loadDoc();
+      btnRemoveItem.addEventListener('click', async () => {
+        const d = await loadDoc();
         removeMember(d, bundleId, itemId);
-        saveDoc(d);
-        render();
+        await saveDoc(d);
+        await render();
       });
 
       const selMove = document.createElement('select');
@@ -611,25 +615,25 @@ async function render() {
       const btnMove = document.createElement('button');
       btnMove.type = 'button';
       btnMove.textContent = 'Move';
-      btnMove.addEventListener('click', () => {
+      btnMove.addEventListener('click', async () => {
         const to = selMove.value;
         if (!to) return;
-        const d = loadDoc();
+        const d = await loadDoc();
         moveMember(d, bundleId, to, itemId);
-        saveDoc(d);
-        render();
+        await saveDoc(d);
+        await render();
       });
 
       const btnCopy = document.createElement('button');
       btnCopy.type = 'button';
       btnCopy.textContent = 'Copy';
-      btnCopy.addEventListener('click', () => {
+      btnCopy.addEventListener('click', async () => {
         const to = selMove.value;
         if (!to) return;
-        const d = loadDoc();
+        const d = await loadDoc();
         copyMember(d, bundleId, to, itemId);
-        saveDoc(d);
-        render();
+        await saveDoc(d);
+        await render();
       });
 
       row.appendChild(btnRemoveItem);
@@ -684,6 +688,6 @@ async function render() {
     await buildFromGraphAndPersist(text, fingerprint);
   }
 
-  setShoppingCartCount(getShoppingCartCountFromStorage());
+  setShoppingCartCount(await getShoppingCartCountFromStorage());
   setStatus('Ready.');
 }

@@ -92,14 +92,14 @@ function ensureModal() {
 
   modal.querySelector('[data-manager-action="refresh"]')?.addEventListener('click', async () => {
     setDbStatus('writing', 'DB writing');
-    clearOntologyMetadataSnapshot();
+    await clearOntologyMetadataSnapshot();
     setManagerStatus('Local catalog snapshot cleared.');
     setDbStatus('ready', 'DB ready');
     emitUpdated();
   });
 
   modal.querySelector('[data-manager-action="export"]')?.addEventListener('click', async () => {
-    const registry = mergeRegistryEntries(await loadDefaultRegistry(), loadRegistryOverrides());
+    const registry = mergeRegistryEntries(await loadDefaultRegistry(), await loadRegistryOverrides());
     downloadTextFile('ontology-registry.json', exportRegistryJson(registry), {
       mimeType: SUPPORTED_MIME_DESCRIPTORS.json.mimeType
     });
@@ -172,7 +172,7 @@ async function renderUserDatasets() {
     toggle.addEventListener('change', async () => {
       setDbStatus('writing', 'DB writing');
       await setOntologyDatasetEnabled(toggle.getAttribute('data-dataset-toggle'), toggle.checked);
-      clearOntologyMetadataSnapshot();
+      await clearOntologyMetadataSnapshot();
       setManagerStatus(toggle.checked ? 'User ontology enabled.' : 'User ontology disabled.');
       setDbStatus('ready', 'DB ready');
       emitUpdated();
@@ -184,7 +184,7 @@ async function renderUserDatasets() {
       const datasetId = button.getAttribute('data-dataset-remove');
       setDbStatus('writing', 'DB writing');
       await deleteOntologyDataset(datasetId);
-      removeStoredUserOntologyRecordsForDataset(datasetId);
+      await removeStoredUserOntologyRecordsForDataset(datasetId);
       await renderUserDatasets();
       setManagerStatus('User ontology removed.');
       setDbStatus('ready', 'DB ready');

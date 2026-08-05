@@ -20,8 +20,11 @@ import {
 import {
   listOntologyDatasetMeta,
   getOntologyDatasetMeta,
+  deleteOntoEagleAppSetting,
+  getOntoEagleAppSetting,
   listEnabledOntologyDocuments,
   openOntoEagleProjectDatabase,
+  setOntoEagleAppSetting,
   storeOntologyDatasetMeta,
   storeOntologyDatasetDocuments,
   storeOntoEagleRunRecord
@@ -247,45 +250,32 @@ async function parseOntologyRdfTextToJsonLd(text, fileName, options = {}) {
   };
 }
 
-function loadStoredUserOntologyRecords() {
-  try {
-    const raw = globalThis.localStorage?.getItem(USER_ONTOLOGY_RECORDS_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (_err) {
-    return [];
-  }
+async function loadStoredUserOntologyRecords() {
+  const records = await getOntoEagleAppSetting(USER_ONTOLOGY_RECORDS_KEY, []);
+  return Array.isArray(records) ? records : [];
 }
 
-function saveStoredUserOntologyRecords(records) {
-  try {
-    globalThis.localStorage?.setItem(USER_ONTOLOGY_RECORDS_KEY, JSON.stringify(records || []));
-  } catch (_err) {
-    // Best-effort companion metadata for user ontologies.
-  }
+async function saveStoredUserOntologyRecords(records) {
+  await setOntoEagleAppSetting(USER_ONTOLOGY_RECORDS_KEY, Array.isArray(records) ? records : []);
 }
 
-function upsertStoredUserOntologyRecords(datasetId, records) {
-  const existing = loadStoredUserOntologyRecords().filter((record) => record.datasetId !== datasetId);
+async function upsertStoredUserOntologyRecords(datasetId, records) {
+  const existing = (await loadStoredUserOntologyRecords()).filter((record) => record.datasetId !== datasetId);
   const next = [
     ...existing,
     ...records.map((record) => ({ ...record, datasetId, source: 'user', addedByUser: true }))
   ];
-  saveStoredUserOntologyRecords(next);
+  await saveStoredUserOntologyRecords(next);
 }
 
-export function removeStoredUserOntologyRecordsForDataset(datasetId) {
-  const next = loadStoredUserOntologyRecords().filter((record) => record.datasetId !== datasetId);
-  saveStoredUserOntologyRecords(next);
-  clearOntologyMetadataSnapshot();
+export async function removeStoredUserOntologyRecordsForDataset(datasetId) {
+  const next = (await loadStoredUserOntologyRecords()).filter((record) => record.datasetId !== datasetId);
+  await saveStoredUserOntologyRecords(next);
+  await clearOntologyMetadataSnapshot();
 }
 
-export function clearOntologyMetadataSnapshot() {
-  try {
-    globalThis.localStorage?.removeItem(ONTOLOGY_SNAPSHOT_KEY);
-  } catch (_err) {
-    // No-op.
-  }
+export async function clearOntologyMetadataSnapshot() {
+  await deleteOntoEagleAppSetting(ONTOLOGY_SNAPSHOT_KEY);
 }
 
 export async function fetchGraphJsonLd() {
@@ -382,44 +372,34 @@ export async function importUserOntologyFile(file) {
       fingerprint
     }
   });
-  upsertStoredUserOntologyRecords(datasetId, ontologyRecords);
-  clearOntologyMetadataSnapshot();
+  await upsertStoredUserOntologyRecords(datasetId, ontologyRecords);
+  await clearOntologyMetadataSnapshot();
   return { datasetId, docs, ontologyRecords, documentCount: docs.length };
 }
 
-function loadOntologySnapshot() {
-  try {
-    const raw = globalThis.localStorage?.getItem(ONTOLOGY_SNAPSHOT_KEY);
-    if (!raw) return null;
-    const snapshot = JSON.parse(raw);
-    if (!snapshot || !Array.isArray(snapshot.records)) return null;
-    if (Date.now() - Number(snapshot.updatedAt || 0) > ONTOLOGY_SNAPSHOT_MAX_AGE_MS) return null;
-    const records = snapshot.records;
-    return {
-      records,
-      byIri: new Map(records.map((record) => [record.iri, record])),
-      versionToOntologyIri: new Map(Object.entries(snapshot.versionToOntologyIri || {})),
-      fromSnapshot: true
-    };
-  } catch (_err) {
-    return null;
-  }
+async function loadOntologySnapshot() {
+  const snapshot = await getOntoEagleAppSetting(ONTOLOGY_SNAPSHOT_KEY, null);
+  if (!snapshot || !Array.isArray(snapshot.records)) return null;
+  if (Date.now() - Number(snapshot.updatedAt || 0) > ONTOLOGY_SNAPSHOT_MAX_AGE_MS) return null;
+  const records = snapshot.records;
+  return {
+    records,
+    byIri: new Map(records.map((record) => [record.iri, record])),
+    versionToOntologyIri: new Map(Object.entries(snapshot.versionToOntologyIri || {})),
+    fromSnapshot: true
+  };
 }
 
-function saveOntologySnapshot(ontologyIndex) {
-  try {
-    const versionToOntologyIri = {};
-    for (const [versionIri, ontologyIri] of ontologyIndex.versionToOntologyIri.entries()) {
-      versionToOntologyIri[versionIri] = ontologyIri;
-    }
-    globalThis.localStorage?.setItem(ONTOLOGY_SNAPSHOT_KEY, JSON.stringify({
-      updatedAt: Date.now(),
-      records: ontologyIndex.records,
-      versionToOntologyIri
-    }));
-  } catch (_err) {
-    // Snapshot caching is opportunistic.
+async function saveOntologySnapshot(ontologyIndex) {
+  const versionToOntologyIri = {};
+  for (const [versionIri, ontologyIri] of ontologyIndex.versionToOntologyIri.entries()) {
+    versionToOntologyIri[versionIri] = ontologyIri;
   }
+  await setOntoEagleAppSetting(ONTOLOGY_SNAPSHOT_KEY, {
+    updatedAt: Date.now(),
+    records: ontologyIndex.records,
+    versionToOntologyIri
+  });
 }
 
 export function extractOntologyRecordsFromJsonLd(jsonld) {
@@ -466,22 +446,17 @@ export function extractOntologyRecordsFromJsonLd(jsonld) {
   return { records, byIri: new Map(records.map((record) => [record.iri, record])), versionToOntologyIri };
 }
 
-export function loadRegistryOverrides() {
-  try {
-    const raw = globalThis.localStorage?.getItem(REGISTRY_STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed.map(normalizeRegistryEntry).filter(Boolean) : [];
-  } catch (_err) {
-    return [];
-  }
+export async function loadRegistryOverrides() {
+  const parsed = await getOntoEagleAppSetting(REGISTRY_STORAGE_KEY, []);
+  return Array.isArray(parsed) ? parsed.map(normalizeRegistryEntry).filter(Boolean) : [];
 }
 
-export function saveRegistryOverride(entry) {
+export async function saveRegistryOverride(entry) {
   const normalized = normalizeRegistryEntry(entry);
   if (!normalized) return [];
-  const existing = loadRegistryOverrides().filter((item) => item.iri !== normalized.iri);
+  const existing = (await loadRegistryOverrides()).filter((item) => item.iri !== normalized.iri);
   const next = [...existing, normalized].sort((a, b) => a.iri.localeCompare(b.iri));
-  globalThis.localStorage?.setItem(REGISTRY_STORAGE_KEY, JSON.stringify(next, null, 2));
+  await setOntoEagleAppSetting(REGISTRY_STORAGE_KEY, next);
   return next;
 }
 
@@ -589,7 +564,7 @@ export async function loadOntologyWorkspace(options = {}) {
   const includeDocs = options.includeDocs !== false;
   const includeUserOntologies = options.includeUserOntologies === true;
   let docs = includeDocs ? await listEnabledOntologyDocuments() : [];
-  const snapshot = options.preferSnapshot ? loadOntologySnapshot() : null;
+  const snapshot = options.preferSnapshot ? await loadOntologySnapshot() : null;
   let ontologyIndex = snapshot;
 
   if (includeDocs && !docs.length) {
@@ -600,14 +575,14 @@ export async function loadOntologyWorkspace(options = {}) {
   if (!ontologyIndex) {
     const { jsonld } = await ensureBuiltinDataset();
     ontologyIndex = extractOntologyRecordsFromJsonLd(jsonld);
-    saveOntologySnapshot(ontologyIndex);
+    await saveOntologySnapshot(ontologyIndex);
   }
 
   const docsByIri = mapByIri(docs);
   const existingIris = new Set(ontologyIndex.records.map((record) => record.iri));
 
   if (includeUserOntologies) {
-    for (const record of loadStoredUserOntologyRecords()) {
+    for (const record of await loadStoredUserOntologyRecords()) {
       if (record?.iri && !existingIris.has(record.iri)) {
         ontologyIndex.records.push({ ...record, registered: false, ontology_level: 'unsorted' });
         existingIris.add(record.iri);
@@ -672,7 +647,7 @@ export async function loadOntologyWorkspace(options = {}) {
     }
   }
 
-  const registry = mergeRegistryEntries(await loadDefaultRegistry(), loadRegistryOverrides());
+  const registry = mergeRegistryEntries(await loadDefaultRegistry(), await loadRegistryOverrides());
   const records = mergeOntologyRecordsWithRegistry(ontologyIndex.records, registry);
   ontologyIndex.records = records;
   ontologyIndex.byIri = new Map(records.map((record) => [record.iri, record]));

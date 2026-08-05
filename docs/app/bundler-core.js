@@ -4,14 +4,19 @@ import {
   COMMON_NAMESPACE_IRIS,
   namespacePrefixMapFromRegistry
 } from './shared/namespace-registry/index.js';
+import {
+  deleteOntoEagleAppSetting,
+  getOntoEagleAppSetting,
+  setOntoEagleAppSetting
+} from './ontoeagle-indexeddb-store.js';
 
 /**
- * Bundles are stored as JSON-LD in localStorage:
+ * Bundles are stored as JSON-LD in IndexedDB-backed project settings:
  * - Bundles are skos:Collection nodes with skos:member [{@id: ...}]
  * - Items are nodes keyed by @id with rdfs:label / skos:definition etc.
  */
 
-export const BUNDLE_LS_KEY = 'onto.bundles.jsonld';
+export const BUNDLE_SETTING_KEY = 'onto.bundles.jsonld';
 
 const COMMON_PREFIXES = namespacePrefixMapFromRegistry();
 const NS = COMMON_NAMESPACE_IRIS;
@@ -31,23 +36,29 @@ export function safeParseJson(text, fallback) {
   try { return JSON.parse(text); } catch { return fallback; }
 }
 
-export function loadDoc() {
-  const raw = localStorage.getItem(BUNDLE_LS_KEY);
-  if (!raw) return emptyDoc();
-  const doc = safeParseJson(raw, emptyDoc());
+function normalizeBundleDoc(doc) {
   if (!doc || typeof doc !== 'object') return emptyDoc();
   if (!Array.isArray(doc['@graph'])) doc['@graph'] = [];
   if (!doc['@context']) doc['@context'] = { ...CONTEXT };
   return doc;
 }
 
+export async function loadDoc() {
+  const stored = await getOntoEagleAppSetting(BUNDLE_SETTING_KEY, null);
+  const doc = typeof stored === 'string'
+    ? safeParseJson(stored, emptyDoc())
+    : stored;
+  return normalizeBundleDoc(doc);
+}
+
 /**
- * Read current member count from localStorage (safe).
- * @returns {number}
+ * Reads current member count from IndexedDB-backed bundle storage.
+ *
+ * @returns {Promise<number>} Current bundle member count.
  */
-export function getShoppingCartCountFromStorage() {
+export async function getShoppingCartCountFromStorage() {
   try {
-    const doc = loadSlimBundleDoc();
+    const doc = await loadSlimBundleDoc();
     const col = doc['@graph']?.find((n) => n && n['@type'] === 'skos:Collection');
     const members = col?.['skos:member'];
     return Array.isArray(members) ? members.length : 0;
@@ -70,21 +81,18 @@ export function setShoppingCartCount(n) {
 }
 
 /**
- * @returns {any} JSON-LD object with @context + @graph
+ * @returns {Promise<any>} JSON-LD object with @context + @graph
  */
-export function loadSlimBundleDoc() {
-  const raw = localStorage.getItem(BUNDLE_LS_KEY);
-  if (raw) {
-    try { return JSON.parse(raw); } catch (_) { /* fall through */ }
-  }
-  return {
-    "@context": { ...CONTEXT },
-    "@graph": []
-  };
+export async function loadSlimBundleDoc() {
+  return loadDoc();
 }
 
-export function saveDoc(doc) {
-  localStorage.setItem(BUNDLE_LS_KEY, JSON.stringify(doc, null, 2));
+export async function saveDoc(doc) {
+  return setOntoEagleAppSetting(BUNDLE_SETTING_KEY, normalizeBundleDoc(doc));
+}
+
+export async function clearDoc() {
+  await deleteOntoEagleAppSetting(BUNDLE_SETTING_KEY);
 }
 
 export function graph(doc) {

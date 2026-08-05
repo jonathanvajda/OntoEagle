@@ -156,7 +156,7 @@ form?.addEventListener('submit', async (event) => {
   event.preventDefault();
   const entry = Object.fromEntries(new FormData(form).entries());
   entry.iri = editingIri || entry.iri;
-  saveRegistryOverride(entry);
+  await saveRegistryOverride(entry);
   modal?.close();
   await refresh();
   setStatus('Registry entry saved in this browser.');

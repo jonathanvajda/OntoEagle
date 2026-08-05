@@ -258,7 +258,7 @@ function openRegistryModal() {
 
 form?.addEventListener('submit', async (event) => {
   event.preventDefault();
-  saveRegistryOverride(Object.fromEntries(new FormData(form).entries()));
+  await saveRegistryOverride(Object.fromEntries(new FormData(form).entries()));
   modal?.close();
   await init();
   setStatus('Registry entry saved in this browser.');

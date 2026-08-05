@@ -18,7 +18,7 @@
 import { extractDocumentsFromJsonLd, mapByIri, parseGraphJsonLdText } from './rdf_extract.js';
 import { searchDocuments } from './search.js';
 import { defaultSearchOptions } from './types.js';
-import { mintBundleIri, BUNDLE_LS_KEY, setShoppingCartCount, loadSlimBundleDoc, getShoppingCartCountFromStorage} from './bundler-core.js';
+import { mintBundleIri, setShoppingCartCount, loadSlimBundleDoc, saveDoc, getShoppingCartCountFromStorage} from './bundler-core.js';
 import { importUserOntologyFile as importUserOntologyFileToIdb } from './ontology-meta.js';
 import {
   COMMON_NAMESPACE_IRIS,
@@ -399,13 +399,6 @@ function renderTaxonomy(doc) {
 }
 
 /**
- * @param {any} doc
- */
-function saveSlimBundleDoc(doc) {
-  localStorage.setItem(BUNDLE_LS_KEY, JSON.stringify(doc, null, 2));
-}
-
-/**
  * Find or create the bundle (skos:Collection) in @graph.
  * @param {any} bundleDoc
  * @returns {any} the collection node
@@ -716,12 +709,12 @@ function renderDetails(doc) {
   {const btn = document.getElementById('ontAddToSlimBundleBtn');
 
   if (btn) {
-    btn.onclick = () => {
+    btn.onclick = async () => {
       const itemNode = createSlimBundleItemNode(doc);
 
-      const bundleDoc = loadSlimBundleDoc();
+      const bundleDoc = await loadSlimBundleDoc();
       const { memberCount } = addItemToSlimBundle(bundleDoc, itemNode);
-      saveSlimBundleDoc(bundleDoc);
+      await saveDoc(bundleDoc);
       setShoppingCartCount(memberCount);
 
       // Optional: give the user feedback
@@ -988,7 +981,7 @@ async function ontoEagleInit() {
   setStatus('Ready.');
   setDbStatus('ready', 'DB ready');
   setSearchReady(true);
-  setShoppingCartCount(getShoppingCartCountFromStorage());
+  setShoppingCartCount(await getShoppingCartCountFromStorage());
   await renderUserOntologyManager();
 
   // Initial UI state

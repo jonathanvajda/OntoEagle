@@ -20,6 +20,12 @@ const DATASETS_STORE = 'datasets';
 const DOCUMENTS_STORE = 'documents';
 const INDEX_STORE = 'index';
 const ACTIVE_SETTINGS_KEY = 'active';
+const LEGACY_LOCAL_STORAGE_SETTING_KEYS = Object.freeze([
+  'onto.bundles.jsonld',
+  'ontoeagle:ontologyRegistryOverrides',
+  'ontoeagle:ontologyMetadataSnapshot:v1',
+  'ontoeagle:userOntologyRecords:v1'
+]);
 export const ONTOEAGLE_ACTIVE_PROJECT_ID = DEFAULT_PROJECT_PORTFOLIO_PROJECT_ID;
 
 const ONTOEAGLE_DB_SCHEMA = Object.freeze({
@@ -171,10 +177,41 @@ async function migrateLegacyDatasetRecords() {
   }
 }
 
+function readLegacyLocalStorageJson(key) {
+  try {
+    const raw = globalThis.localStorage?.getItem(key);
+    if (!raw) return { found: false, value: null };
+    return { found: true, value: JSON.parse(raw) };
+  } catch (_error) {
+    return { found: false, value: null };
+  }
+}
+
+function removeLegacyLocalStorageKey(key) {
+  try {
+    globalThis.localStorage?.removeItem(key);
+  } catch (_error) {
+    // Legacy cleanup is best-effort after data has been copied to IndexedDB.
+  }
+}
+
+async function migrateLegacyLocalStorageSettings() {
+  const { settings } = await projectPortfolioStores();
+  for (const key of LEGACY_LOCAL_STORAGE_SETTING_KEYS) {
+    const existing = await settings.readSettingValue(key, undefined);
+    const legacy = readLegacyLocalStorageJson(key);
+    if (legacy.found && existing === undefined) {
+      await settings.writeSettingValue(key, legacy.value);
+    }
+    if (legacy.found) removeLegacyLocalStorageKey(key);
+  }
+}
+
 async function migrateOntoEagleProjectDatabase() {
   await ensureDefaultProject();
   await migrateLegacyActiveSettings();
   await migrateLegacyDatasetRecords();
+  await migrateLegacyLocalStorageSettings();
 }
 
 /**
@@ -197,6 +234,45 @@ export async function setActiveSearchSettings(settingsObj) {
   const { settings } = await projectPortfolioStores();
   await settings.writeSettingValue(ACTIVE_SETTINGS_KEY, settingsObj);
   return settingsObj;
+}
+
+/**
+ * Reads an OntoEagle app/project setting from the shared project portfolio.
+ *
+ * @param {string} key Setting key.
+ * @param {any} [fallbackValue=null] Value returned when no setting is stored.
+ * @returns {Promise<any>} Stored value or fallback.
+ */
+export async function getOntoEagleAppSetting(key, fallbackValue = null) {
+  await openOntoEagleProjectDatabase();
+  const { settings } = await projectPortfolioStores();
+  return settings.readSettingValue(key, fallbackValue);
+}
+
+/**
+ * Stores an OntoEagle app/project setting in the shared project portfolio.
+ *
+ * @param {string} key Setting key.
+ * @param {any} value JSON-serializable setting value.
+ * @returns {Promise<any>} Stored value.
+ */
+export async function setOntoEagleAppSetting(key, value) {
+  await openOntoEagleProjectDatabase();
+  const { settings } = await projectPortfolioStores();
+  await settings.writeSettingValue(key, value);
+  return value;
+}
+
+/**
+ * Deletes an OntoEagle app/project setting from the shared project portfolio.
+ *
+ * @param {string} key Setting key.
+ * @returns {Promise<boolean>} True when deletion completes.
+ */
+export async function deleteOntoEagleAppSetting(key) {
+  await openOntoEagleProjectDatabase();
+  const { settings } = await projectPortfolioStores();
+  return settings.deleteSettingRecord(key);
 }
 
 /**

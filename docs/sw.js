@@ -4,7 +4,7 @@
    - graph.jsonld: stale-while-revalidate
 */
 
-const SW_VERSION = '__BUILD_ID__-indexeddb-data-management-v1';
+const SW_VERSION = '__BUILD_ID__-indexeddb-data-management-v2';
 const CACHE_SHELL = `ontoeagle-shell-${SW_VERSION}`;
 const CACHE_DATA = `ontoeagle-data-${SW_VERSION}`;
 
