@@ -24,16 +24,12 @@ import {
 } from './bundler-core.js';
 
 import { extractDocumentsFromJsonLd, mapByIri, parseGraphJsonLdText } from './rdf_extract.js';
-import { buildSlimFromSeeds } from './slim-core.js';
+import { buildSlimFromSeeds, serializeSlimJsonLd } from './slim-core.js';
 import {
   downloadTextFile,
   readFileAsText
 } from './shared/browser-file-io/index.js';
 import { parseDelimitedText } from './shared/tabular-io/index.js';
-import {
-  createRdfQuadsFromJsonLdGraph,
-  serializeRdfDataset
-} from './shared/rdf-io/index.js';
 import {
   SUPPORTED_MIME_DESCRIPTORS,
   getSupportedMimeTypeForFilename,
@@ -381,13 +377,7 @@ async function bundlerInit() {
 
   btnExportSlimJsonLd?.addEventListener('click', async () => {
     const slim = await buildCurrentSlim();
-    const { quads, warnings } = createRdfQuadsFromJsonLdGraph(slim.jsonld);
-    if (warnings.length) console.warn('Slim JSON-LD export warnings:', warnings);
-    const { text } = serializeRdfDataset(quads, {
-      format: 'jsonld',
-      context: slim.jsonld?.['@context']
-    });
-    downloadTextFile(`ontoeagle-slim-${Date.now()}.jsonld`, text, {
+    downloadTextFile(`ontoeagle-slim-${Date.now()}.jsonld`, serializeSlimJsonLd(slim.jsonld), {
       mimeType: DOWNLOAD_MIME.jsonLd
     });
   });

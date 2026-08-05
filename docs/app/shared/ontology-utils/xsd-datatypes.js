@@ -3,7 +3,7 @@ import {
   COMMON_NAMESPACE_REGISTRY,
   namespacePrefixMapFromRegistry,
   compactIriToCurie
-} from '../../namespace-registry/src/index.js';
+} from '../namespace-registry/index.js';
 
 function normalizeDatatypeIri(datatypeIri) {
   return String(datatypeIri || COMMON_NAMESPACE_IRIS.xsd.string).trim();

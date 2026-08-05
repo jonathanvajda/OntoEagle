@@ -1,6 +1,7 @@
 import {
   buildSlimFromSeeds,
   parseSeedText,
+  serializeSlimJsonLd,
   serializeSlimTurtle
 } from '../docs/app/slim-core.js';
 
@@ -170,6 +171,43 @@ describe('slim-core.js', () => {
 
     expect(slim.turtle).toContain('<http://www.w3.org/2002/07/owl#unionOf> ( <http://example.org/A> <http://example.org/B> )');
     expect(slim.turtle).not.toContain('[object Object]');
+  });
+
+  test('serializeSlimJsonLd preserves JSON-LD list objects for JSON-LD export', () => {
+    const slim = buildSlimFromSeeds([{
+      iri: 'http://example.org/ListCarrier',
+      type: 'Class',
+      label: 'List Carrier',
+      altLabels: [],
+      namespace: 'http://example.org/',
+      parents: [],
+      children: [],
+      subClassOfAxioms: [{ '@id': '_:union1' }],
+      blankNodeMap: {
+        '_:union1': {
+          '@id': '_:union1',
+          '@type': ['http://www.w3.org/2002/07/owl#Class'],
+          'http://www.w3.org/2002/07/owl#unionOf': [{
+            '@list': [
+              { '@id': 'http://example.org/A' },
+              { '@id': 'http://example.org/B' }
+            ]
+          }]
+        }
+      }
+    }], 'http://example.org/ListCarrier\n', {
+      scoMode: 'maximal',
+      spoMode: 'minimal'
+    });
+
+    const parsed = JSON.parse(serializeSlimJsonLd(slim.jsonld));
+    const unionNode = parsed['@graph'].find((node) => node['@id'] === '_:union1');
+
+    expect(unionNode['http://www.w3.org/2002/07/owl#unionOf'][0]['@list']).toEqual([
+      { '@id': 'http://example.org/A' },
+      { '@id': 'http://example.org/B' }
+    ]);
+    expect(serializeSlimJsonLd(slim.jsonld)).not.toContain('[object Object]');
   });
 
   test('minimal mode does not traverse restriction blank nodes', () => {

@@ -10,7 +10,11 @@
   padding: 1rem;
 }
 
-.ont-catalog [hidden] {
+.ont-catalog [hidden],
+.ont-catalog__loading[hidden],
+.ont-catalog__tableWrap[hidden],
+.ont-catalog__modal[hidden],
+.ont-catalog__missingList[hidden] {
   display: none !important;
 }
 

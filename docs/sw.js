@@ -4,7 +4,7 @@
    - graph.jsonld: stale-while-revalidate
 */
 
-const SW_VERSION = '__BUILD_ID__-indexeddb-data-management-v2';
+const SW_VERSION = '__BUILD_ID__-ontology-utils-v1';
 const CACHE_SHELL = `ontoeagle-shell-${SW_VERSION}`;
 const CACHE_DATA = `ontoeagle-data-${SW_VERSION}`;
 
@@ -51,6 +51,7 @@ const SHELL_ASSETS = [
   './app/shared/browser-file-io/read-file-as-array-buffer.js',
   './app/shared/browser-file-io/read-file-as-text.js',
   './app/shared/format-registry/index.js',
+  './app/shared/format-registry/browser-file-actions.js',
   './app/shared/format-registry/mime-registry.js',
   './app/shared/format-registry/rdf-parser-formats.js',
   './app/shared/indexeddb-data-management/id-generation.js',
@@ -68,6 +69,13 @@ const SHELL_ASSETS = [
   './app/shared/namespace-registry/rdf-prefixes.js',
   './app/shared/namespace-registry/rdf-serialization-prefixes.js',
   './app/shared/namespace-registry/sparql-prefixes.js',
+  './app/shared/ontology-utils/identifiers.js',
+  './app/shared/ontology-utils/index.js',
+  './app/shared/ontology-utils/iri.js',
+  './app/shared/ontology-utils/ontology-input.js',
+  './app/shared/ontology-utils/ontology-namespace.js',
+  './app/shared/ontology-utils/rdf-terms.js',
+  './app/shared/ontology-utils/xsd-datatypes.js',
   './app/shared/rdf-io/index.js',
   './app/shared/rdf-io/graph-export.js',
   './app/shared/rdf-io/jsonld-adapter.js',

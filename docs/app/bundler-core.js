@@ -9,6 +9,7 @@ import {
   getOntoEagleAppSetting,
   setOntoEagleAppSetting
 } from './ontoeagle-indexeddb-store.js';
+import { createUuid } from './shared/ontology-utils/index.js';
 
 /**
  * Bundles are stored as JSON-LD in IndexedDB-backed project settings:
@@ -151,8 +152,7 @@ export function deleteNode(doc, id) {
 }
 
 export function mintBundleIri() {
-  if (globalThis.crypto?.randomUUID) return `urn:uuid:${crypto.randomUUID()}`;
-  return `urn:uuid:${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  return `urn:uuid:${createUuid()}`;
 }
 
 export function createBundle(doc) {

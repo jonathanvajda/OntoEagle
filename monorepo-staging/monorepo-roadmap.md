@@ -596,6 +596,7 @@ Tentative families to start with:
     - RDF formats, tabular formats, extensions, MIME types, labels, import/export compatibility.
 1. Namespace and Prefix Registry
     - RDF, RDFS, OWL, XSD, DCTERMS, SKOS, OBO, CCO, OKEA, app-specific defaults.
+    - Future milestone: generate vocabulary catalogs from JSON-LD/RDF source vocabularies so common classes, properties, datatypes, labels, comments, and selected axioms are not hand-maintained in JavaScript. See `packages/namespace-registry/vocabulary-jsonld-catalog-milestone.md`.
 1. Browser File I/O
     - Reading files as text/array buffer, Blob creation, downloads, file naming, extension handling.
 1. Project Storage

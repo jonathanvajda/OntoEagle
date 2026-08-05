@@ -2,6 +2,10 @@ import {
   formatIriForDisplay,
   namespacePrefixMapFromRegistry
 } from './shared/namespace-registry/index.js';
+import {
+  isAbsoluteIri,
+  isBlankNodeId
+} from './shared/ontology-utils/index.js';
 
 const COMMON_PREFIXES = namespacePrefixMapFromRegistry();
 
@@ -10,7 +14,7 @@ export function parseSeedText(text) {
     String(text || '')
       .split(/\r?\n/)
       .map((line) => line.replace(/\s+#.*$/, '').trim())
-      .filter((line) => /^(https?:|urn:)/i.test(line))
+      .filter((line) => isAbsoluteIri(line, { allowedSchemes: ['http', 'https', 'urn'] }))
   ));
 }
 
@@ -28,14 +32,6 @@ function shouldFollowParent(doc, strategy) {
 function asArray(value) {
   if (value == null) return [];
   return Array.isArray(value) ? value : [value];
-}
-
-function isNamedIri(value) {
-  return typeof value === 'string' && /^(https?:|urn:)/i.test(value);
-}
-
-function isBlankId(value) {
-  return typeof value === 'string' && value.startsWith('_:');
 }
 
 function valueId(value) {
@@ -57,9 +53,9 @@ function allBlankNodesForDocs(docsByIri) {
 function collectIrisFromValue(value, blankNodes, visited = new Set()) {
   const found = [];
   const id = valueId(value);
-  if (isNamedIri(id)) found.push(id);
+  if (isAbsoluteIri(id, { allowedSchemes: ['http', 'https', 'urn'] })) found.push(id);
 
-  if (isBlankId(id) && !visited.has(id)) {
+  if (isBlankNodeId(id) && !visited.has(id)) {
     visited.add(id);
     const blankNode = blankNodes.get(id);
     if (blankNode) found.push(...collectIrisFromObject(blankNode, blankNodes, visited));
@@ -77,7 +73,7 @@ function collectIrisFromObject(object, blankNodes, visited = new Set()) {
     if (key === '@id') continue;
     if (key === '@type') {
       for (const typeValue of asArray(raw)) {
-        if (isNamedIri(typeValue)) found.push(typeValue);
+        if (isAbsoluteIri(typeValue, { allowedSchemes: ['http', 'https', 'urn'] })) found.push(typeValue);
       }
       continue;
     }
@@ -95,12 +91,12 @@ function collectAxiomTargets(doc, strategy, mode, blankNodes, traversedBlankIds)
 
   for (const axiom of axioms) {
     const id = valueId(axiom);
-    if (isNamedIri(id)) {
+    if (isAbsoluteIri(id, { allowedSchemes: ['http', 'https', 'urn'] })) {
       targets.push(id);
       continue;
     }
     if (mode === 'maximal') {
-      if (isBlankId(id)) traversedBlankIds.add(id);
+      if (isBlankNodeId(id)) traversedBlankIds.add(id);
       targets.push(...collectIrisFromValue(axiom, blankNodes));
     }
   }
@@ -167,12 +163,12 @@ function cloneJson(value) {
 
 function axiomReferencesIncludedIri(axiom, included, blankNodes) {
   const id = valueId(axiom);
-  if (isNamedIri(id)) return included.has(id);
+  if (isAbsoluteIri(id, { allowedSchemes: ['http', 'https', 'urn'] })) return included.has(id);
   return collectIrisFromValue(axiom, blankNodes).some((iri) => included.has(iri));
 }
 
 function collectBlankNodeClosure(blankId, blankNodes, out = new Map(), seen = new Set()) {
-  if (!isBlankId(blankId) || seen.has(blankId)) return out;
+  if (!isBlankNodeId(blankId) || seen.has(blankId)) return out;
   seen.add(blankId);
   const node = blankNodes.get(blankId);
   if (!node) return out;
@@ -180,11 +176,11 @@ function collectBlankNodeClosure(blankId, blankNodes, out = new Map(), seen = ne
   for (const raw of Object.values(node)) {
     for (const value of asArray(raw)) {
       const id = valueId(value);
-      if (isBlankId(id)) collectBlankNodeClosure(id, blankNodes, out, seen);
+      if (isBlankNodeId(id)) collectBlankNodeClosure(id, blankNodes, out, seen);
       if (value && typeof value === 'object' && Array.isArray(value['@list'])) {
         for (const listValue of value['@list']) {
           const listId = valueId(listValue);
-          if (isBlankId(listId)) collectBlankNodeClosure(listId, blankNodes, out, seen);
+          if (isBlankNodeId(listId)) collectBlankNodeClosure(listId, blankNodes, out, seen);
         }
       }
     }
@@ -198,8 +194,8 @@ function includedHierarchyAxioms(doc, key, iris, mode, blankNodes, traversedBlan
   const out = [];
   for (const axiom of axioms) {
     const id = valueId(axiom);
-    if (isNamedIri(id) && included.has(id)) out.push(cloneJson(axiom));
-    if (mode === 'maximal' && isBlankId(id) && (traversedBlankIds.has(id) || axiomReferencesIncludedIri(axiom, included, blankNodes))) {
+    if (isAbsoluteIri(id, { allowedSchemes: ['http', 'https', 'urn'] }) && included.has(id)) out.push(cloneJson(axiom));
+    if (mode === 'maximal' && isBlankNodeId(id) && (traversedBlankIds.has(id) || axiomReferencesIncludedIri(axiom, included, blankNodes))) {
       out.push(cloneJson(axiom));
     }
   }
@@ -256,7 +252,7 @@ export function buildSlimJsonLd(docs, iris, options = {}) {
   for (const node of graph) {
     for (const value of [...asArray(node['rdfs:subClassOf']), ...asArray(node['rdfs:subPropertyOf'])]) {
       const id = valueId(value);
-      if (isBlankId(id)) collectBlankNodeClosure(id, blankNodes, blankClosure);
+      if (isBlankNodeId(id)) collectBlankNodeClosure(id, blankNodes, blankClosure);
     }
   }
   graph.push(...Array.from(blankClosure.values()).sort((a, b) => String(a['@id']).localeCompare(String(b['@id']))));
@@ -275,7 +271,7 @@ export function buildSlimJsonLd(docs, iris, options = {}) {
 
 function turtleTerm(value) {
   if (value && typeof value === 'object' && value['@id']) {
-    return isBlankId(value['@id']) ? value['@id'] : `<${value['@id']}>`;
+    return isBlankNodeId(value['@id']) ? value['@id'] : `<${value['@id']}>`;
   }
   if (value && typeof value === 'object' && Array.isArray(value['@list'])) {
     return `( ${value['@list'].map(turtleTerm).join(' ')} )`;
@@ -285,17 +281,17 @@ function turtleTerm(value) {
 }
 
 function turtleSubject(id) {
-  return isBlankId(id) ? id : `<${id}>`;
+  return isBlankNodeId(id) ? id : `<${id}>`;
 }
 
 function turtlePredicate(key) {
   if (key === '@type') return 'rdf:type';
-  return isNamedIri(key) ? `<${key}>` : key;
+  return isAbsoluteIri(key, { allowedSchemes: ['http', 'https', 'urn'] }) ? `<${key}>` : key;
 }
 
 function typeToTurtleTerm(value) {
   const raw = typeof value === 'string' ? value : valueId(value);
-  if (isNamedIri(raw)) return { '@id': raw };
+  if (isAbsoluteIri(raw, { allowedSchemes: ['http', 'https', 'urn'] })) return { '@id': raw };
   return { '@id': COMMON_PREFIXES.owl + String(raw).replace(/^owl:/, '') };
 }
 
@@ -326,6 +322,24 @@ export function serializeSlimTurtle(jsonld) {
   return lines.join('\n');
 }
 
+/**
+ * Serializes the slim graph document as JSON-LD without projecting it through
+ * the lightweight object-to-RDF mapper. Slim JSON-LD may contain JSON-LD
+ * structures such as `@list`; those must remain JSON-LD objects rather than
+ * becoming string literals.
+ *
+ * @param {object} jsonld - Slim JSON-LD document with `@context` and `@graph`.
+ * @param {object} [options] - Serialization options.
+ * @param {boolean} [options.pretty=true] - Pretty-print output when true.
+ * @returns {string} JSON-LD document text.
+ */
+export function serializeSlimJsonLd(jsonld, options = {}) {
+  const doc = jsonld && typeof jsonld === 'object'
+    ? jsonld
+    : { '@context': {}, '@graph': [] };
+  return JSON.stringify(doc, null, options.pretty === false ? 0 : 2);
+}
+
 export function buildSlimFromSeeds(docs, seedText, options = {}) {
   const seeds = parseSeedText(seedText);
   const expanded = expandSlimTerms(docs, seeds, options);
@@ -334,6 +348,7 @@ export function buildSlimFromSeeds(docs, seedText, options = {}) {
     seeds,
     ...expanded,
     jsonld,
+    jsonldText: serializeSlimJsonLd(jsonld),
     turtle: serializeSlimTurtle(jsonld)
   };
 }

@@ -50,6 +50,7 @@ describe('IRI token utilities', () => {
 
   test('detects blank node identifiers and normalizes namespace boundaries', () => {
     expect(isBlankNodeId('_:b1')).toBe(true);
+    expect(isBlankNodeId('_:1')).toBe(true);
     expect(isBlankNodeId('b1')).toBe(false);
     expect(normalizeNamespaceIri('http://example.org/ns')).toBe('http://example.org/ns#');
     expect(normalizeNamespaceIri('http://example.org/ns/')).toBe('http://example.org/ns/');
@@ -132,7 +133,9 @@ describe('XSD datatype helpers', () => {
 
   test('describes XSD datatypes as JSON Schema fragments', () => {
     expect(describeXsdDatatypeForJsonSchema(COMMON_NAMESPACE_IRIS.xsd.integer)).toEqual({ type: 'integer' });
+    expect(describeXsdDatatypeForJsonSchema(COMMON_NAMESPACE_IRIS.xsd.unsignedByte)).toEqual({ type: 'integer' });
     expect(describeXsdDatatypeForJsonSchema(COMMON_NAMESPACE_IRIS.xsd.decimal)).toEqual({ type: 'number' });
+    expect(describeXsdDatatypeForJsonSchema(COMMON_NAMESPACE_IRIS.xsd.float)).toEqual({ type: 'number' });
     expect(describeXsdDatatypeForJsonSchema(COMMON_NAMESPACE_IRIS.xsd.boolean)).toEqual({ type: 'boolean' });
     expect(describeXsdDatatypeForJsonSchema(COMMON_NAMESPACE_IRIS.xsd.date)).toEqual({ type: 'string', format: 'date' });
     expect(describeXsdDatatypeForJsonSchema(COMMON_NAMESPACE_IRIS.xsd.anyURI)).toEqual({ type: 'string', format: 'uri' });
@@ -153,6 +156,51 @@ describe('identifier utilities', () => {
     expect(createUuid({ uuidSource: () => uuid })).toBe(uuid);
     expect(createUuid({ uuidSource: () => uuid, removeHyphens: true })).toBe('123e4567e89b42d3a456426614174000');
     expect(isUuid(uuid)).toBe(true);
+  });
+
+  test('uses crypto.getRandomValues when randomUUID is unavailable', () => {
+    const originalCrypto = globalThis.crypto;
+    Object.defineProperty(globalThis, 'crypto', {
+      configurable: true,
+      value: {
+        getRandomValues(bytes) {
+          bytes.set(Uint8Array.from([
+            0x12, 0x3e, 0x45, 0x67,
+            0xe8, 0x9b,
+            0x02, 0xd3,
+            0x24, 0x56,
+            0x42, 0x66, 0x14, 0x17, 0x40, 0x00
+          ]));
+          return bytes;
+        }
+      }
+    });
+
+    try {
+      expect(createUuid()).toBe('123e4567-e89b-42d3-a456-426614174000');
+    } finally {
+      Object.defineProperty(globalThis, 'crypto', {
+        configurable: true,
+        value: originalCrypto
+      });
+    }
+  });
+
+  test('throws instead of using insecure RNG when Web Crypto is unavailable', () => {
+    const originalCrypto = globalThis.crypto;
+    Object.defineProperty(globalThis, 'crypto', {
+      configurable: true,
+      value: undefined
+    });
+
+    try {
+      expect(() => createUuid()).toThrow('requires crypto.randomUUID() or crypto.getRandomValues()');
+    } finally {
+      Object.defineProperty(globalThis, 'crypto', {
+        configurable: true,
+        value: originalCrypto
+      });
+    }
   });
 
   test('creates deterministic timestamped graph IRIs and rejects invalid bases', () => {
