@@ -87,17 +87,15 @@ let docsByIri = new Map();   // Map<string, OntologyDocument>
 let options = structuredClone(defaultSearchOptions);
 let searchReady = false;
 const DATASET_SCHEMA_VERSION = 2;
-const NS = COMMON_NAMESPACE_IRIS;
-const XSD_ANY_URI_IRI = NS.xsd.anyURI;
 const COMMON_PREFIXES = namespacePrefixMapFromRegistry();
 const SLIM_BUNDLE_CONTEXT = Object.freeze({
   rdf: COMMON_PREFIXES.rdf,
   rdfs: COMMON_PREFIXES.rdfs,
   skos: COMMON_PREFIXES.skos,
   owl: COMMON_PREFIXES.owl,
-  'rdfs:label': NS.rdfs.label,
-  'rdfs:isDefinedBy': NS.rdfs.isDefinedBy,
-  'skos:definition': NS.skos.definition
+  'rdfs:label': COMMON_NAMESPACE_IRIS.rdfs.label,
+  'rdfs:isDefinedBy': COMMON_NAMESPACE_IRIS.rdfs.isDefinedBy,
+  'skos:definition': COMMON_NAMESPACE_IRIS.skos.definition
 });
 const OWL_TYPE_IRIS = Object.freeze([
   'Class',
@@ -106,7 +104,7 @@ const OWL_TYPE_IRIS = Object.freeze([
   'AnnotationProperty',
   'NamedIndividual',
   'Ontology'
-].map((id) => NS.owl[id]));
+].map((id) => COMMON_NAMESPACE_IRIS.owl[id]));
 
 /* -----------------------------
  * Utilities
@@ -471,10 +469,10 @@ function createSlimBundleItemNode(doc) {
     subject: 'iri',
     type: 'type',
     properties: {
-      label: NS.rdfs.label,
-      definition: NS.skos.definition,
+      label: COMMON_NAMESPACE_IRIS.rdfs.label,
+      definition: COMMON_NAMESPACE_IRIS.skos.definition,
       curatedIn: {
-        predicate: NS.rdfs.isDefinedBy,
+        predicate: COMMON_NAMESPACE_IRIS.rdfs.isDefinedBy,
         termType: 'iri'
       }
     }
@@ -510,7 +508,7 @@ function isHttpUrl(value) {
 
 function shouldLinkDetailValue(item) {
   const value = String(item?.iri || item?.value || '');
-  return !!item?.iri || item?.datatype === XSD_ANY_URI_IRI || isHttpUrl(value);
+  return !!item?.iri || item?.datatype === COMMON_NAMESPACE_IRIS.xsd.anyURI || isHttpUrl(value);
 }
 
 function splitDetailText(text) {

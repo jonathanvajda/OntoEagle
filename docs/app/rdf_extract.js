@@ -15,31 +15,30 @@ import {
   deriveNamespaceStemFromIri,
 } from './shared/namespace-registry/index.js';
 
-const NS = COMMON_NAMESPACE_IRIS;
 export const ADDED_BY_USER_IRI = 'https://jonathanvajda.github.io/OntoEagle/added_by_user';
 
 /** Common predicate keys (full IRIs + compact forms) */
 const P = Object.freeze({
-  type: [NS.rdf.type, 'rdf:type', '@type'],
-  label: [NS.rdfs.label, 'rdfs:label', 'label'],
-  prefLabel: [NS.skos.prefLabel, 'skos:prefLabel', 'prefLabel'],
-  altLabel: [NS.skos.altLabel, 'skos:altLabel', 'altLabel'],
-  definition: [NS.skos.definition, 'skos:definition', 'definition', NS.iao.definition, 'obo:IAO_0000115', 'IAO_0000115', NS.cceo.definition],
-  citation: [NS.dcterms.bibliographicCitation, 'dcterms:bibliographicCitation'],
-  definitionSource: [NS.cceo.definitionSource, NS.cco2.definitionSource, NS.iao.definitionSource, 'cceo:definition_source', 'cco2:ont00001754', 'obo:IAO_0000119', 'IAO_0000119'],
-  example: [NS.skos.example, NS.iao.exampleOfUsage, NS.cceo.exampleOfUsage, 'skos:example', 'example', 'obo:IAO_0000112', 'IAO_0000112', 'cceo:example_of_usage'],
-  note: [NS.skos.scopeNote, NS.iao.elucidation, NS.cceo.elucidation, 'skos:scopeNote', 'scopeNote', 'obo:IAO_0000600', 'IAO_0000600', 'cceo:elucidation'],
-  comment: [NS.rdfs.comment, 'rdfs:comment', 'comment'],
-  curatorNote: [NS.iao.curatorNote, 'obo:IAO_0000232', 'IAO_0000232'],
-  curated_in: [NS.cceo.curatedIn, NS.rdfs.isDefinedBy, NS.cco2.curatedIn],
-  subClassOf: [NS.rdfs.subClassOf, 'rdfs:subClassOf'],
-  subPropertyOf: [NS.rdfs.subPropertyOf, 'rdfs:subPropertyOf'],
-  disjointWith: [NS.owl.disjointWith, 'owl:disjointWith'],
-  equivalentClass: [NS.owl.equivalentClass, 'owl:equivalentClass'],
-  domain: [NS.rdfs.domain, 'rdfs:domain'],
-  range: [NS.rdfs.range, 'rdfs:range'],
-  broader: [NS.skos.broader, 'skos:broader'],
-  narrower: [NS.skos.narrower, 'skos:narrower'],
+  type: [COMMON_NAMESPACE_IRIS.rdf.type, 'rdf:type', '@type'],
+  label: [COMMON_NAMESPACE_IRIS.rdfs.label, 'rdfs:label', 'label'],
+  prefLabel: [COMMON_NAMESPACE_IRIS.skos.prefLabel, 'skos:prefLabel', 'prefLabel'],
+  altLabel: [COMMON_NAMESPACE_IRIS.skos.altLabel, 'skos:altLabel', 'altLabel'],
+  definition: [COMMON_NAMESPACE_IRIS.skos.definition, 'skos:definition', 'definition', COMMON_NAMESPACE_IRIS.iao.definition, 'obo:IAO_0000115', 'IAO_0000115', COMMON_NAMESPACE_IRIS.cceo.definition],
+  citation: [COMMON_NAMESPACE_IRIS.dcterms.bibliographicCitation, 'dcterms:bibliographicCitation'],
+  definitionSource: [COMMON_NAMESPACE_IRIS.cceo.definitionSource, COMMON_NAMESPACE_IRIS.cco2.definitionSource, COMMON_NAMESPACE_IRIS.iao.definitionSource, 'cceo:definition_source', 'cco2:ont00001754', 'obo:IAO_0000119', 'IAO_0000119'],
+  example: [COMMON_NAMESPACE_IRIS.skos.example, COMMON_NAMESPACE_IRIS.iao.exampleOfUsage, COMMON_NAMESPACE_IRIS.cceo.exampleOfUsage, 'skos:example', 'example', 'obo:IAO_0000112', 'IAO_0000112', 'cceo:example_of_usage'],
+  note: [COMMON_NAMESPACE_IRIS.skos.scopeNote, COMMON_NAMESPACE_IRIS.iao.elucidation, COMMON_NAMESPACE_IRIS.cceo.elucidation, 'skos:scopeNote', 'scopeNote', 'obo:IAO_0000600', 'IAO_0000600', 'cceo:elucidation'],
+  comment: [COMMON_NAMESPACE_IRIS.rdfs.comment, 'rdfs:comment', 'comment'],
+  curatorNote: [COMMON_NAMESPACE_IRIS.iao.curatorNote, 'obo:IAO_0000232', 'IAO_0000232'],
+  curated_in: [COMMON_NAMESPACE_IRIS.cceo.curatedIn, COMMON_NAMESPACE_IRIS.rdfs.isDefinedBy, COMMON_NAMESPACE_IRIS.cco2.curatedIn],
+  subClassOf: [COMMON_NAMESPACE_IRIS.rdfs.subClassOf, 'rdfs:subClassOf'],
+  subPropertyOf: [COMMON_NAMESPACE_IRIS.rdfs.subPropertyOf, 'rdfs:subPropertyOf'],
+  disjointWith: [COMMON_NAMESPACE_IRIS.owl.disjointWith, 'owl:disjointWith'],
+  equivalentClass: [COMMON_NAMESPACE_IRIS.owl.equivalentClass, 'owl:equivalentClass'],
+  domain: [COMMON_NAMESPACE_IRIS.rdfs.domain, 'rdfs:domain'],
+  range: [COMMON_NAMESPACE_IRIS.rdfs.range, 'rdfs:range'],
+  broader: [COMMON_NAMESPACE_IRIS.skos.broader, 'skos:broader'],
+  narrower: [COMMON_NAMESPACE_IRIS.skos.narrower, 'skos:narrower'],
   addedByUser: [ADDED_BY_USER_IRI, 'added_by_user'],
 });
 
@@ -161,7 +160,7 @@ export function inferElementType(typeValue) {
   const types = valueToTypeIris(typeValue);
 
   // types might be CURIE-like or full IRIs.
-  const has = (t) => types.includes(t) || types.includes(`owl:${t}`) || types.includes(NS.owl[t]);
+  const has = (t) => types.includes(t) || types.includes(`owl:${t}`) || types.includes(COMMON_NAMESPACE_IRIS.owl[t]);
 
   if (has('Ontology')) return 'Ontology';
   if (has('Class')) return 'Class';
@@ -171,8 +170,8 @@ export function inferElementType(typeValue) {
   if (has('NamedIndividual')) return 'NamedIndividual';
 
   // Sometimes RDFLib JSON-LD uses full IRIs only; this still catches them.
-  if (types.some(t => t === NS.owl.Ontology)) return 'Ontology';
-  if (types.some(t => t === NS.owl.Class)) return 'Class';
+  if (types.some(t => t === COMMON_NAMESPACE_IRIS.owl.Ontology)) return 'Ontology';
+  if (types.some(t => t === COMMON_NAMESPACE_IRIS.owl.Class)) return 'Class';
 
   return 'Other';
 }
@@ -273,7 +272,7 @@ export function extractDocumentsFromJsonLd(jsonld) {
       namespace: computeNamespace(iri),
       definition,
       typeIris: typeIris.length ? typeIris : undefined,
-      additionalTypes: typeIris.length ? typeIris.filter((t) => ![`owl:${type}`, NS.owl[type]].includes(t)) : undefined,
+      additionalTypes: typeIris.length ? typeIris.filter((t) => ![`owl:${type}`, COMMON_NAMESPACE_IRIS.owl[type]].includes(t)) : undefined,
       citations: citations.length ? citations : undefined,
       definitionSources: definitionSources.length ? definitionSources : undefined,
       examples: examples.length ? examples : undefined,

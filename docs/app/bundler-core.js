@@ -20,7 +20,6 @@ import { createUuid } from './shared/ontology-utils/index.js';
 export const BUNDLE_SETTING_KEY = 'onto.bundles.jsonld';
 
 const COMMON_PREFIXES = namespacePrefixMapFromRegistry();
-const NS = COMMON_NAMESPACE_IRIS;
 
 export const CONTEXT = Object.freeze({
   rdf: COMMON_PREFIXES.rdf,
@@ -256,18 +255,18 @@ export function shortId(iri) {
 /* ---------- “loose” JSON-LD value helpers for UI ---------- */
 
 export const RDFS_IS_DEFINED_BY_KEYS = Object.freeze([
-  NS.cco2.curatedIn,
+  COMMON_NAMESPACE_IRIS.cco2.curatedIn,
   'cceo:ont00001760',
-  NS.cceo.curatedIn,
+  COMMON_NAMESPACE_IRIS.cceo.curatedIn,
   'cceo:is_curated_in_ontology',
   'rdfs:isDefinedBy',
-  NS.rdfs.isDefinedBy
+  COMMON_NAMESPACE_IRIS.rdfs.isDefinedBy
 ]);
 
 export const RDF_TYPE_KEYS = Object.freeze([
   '@type',
   'rdf:type',
-  NS.rdf.type
+  COMMON_NAMESPACE_IRIS.rdf.type
 ]);
 
 export function getAnyKey(node, keys) {

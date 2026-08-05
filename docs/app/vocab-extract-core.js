@@ -10,6 +10,7 @@
  * Exposes: window.VOCAB_EXTRACT
  */
 import { COMMON_NAMESPACE_IRIS } from './shared/namespace-registry/index.js';
+import { isAbsoluteIri } from './shared/ontology-utils/index.js';
 import { serializeDelimitedRows } from './shared/tabular-io/index.js';
 import {
   deleteCompetencyQuestionNodesByIds,
@@ -20,8 +21,6 @@ import {
 (() => {
   "use strict";
 
-  const NS = COMMON_NAMESPACE_IRIS;
-
   // ---------------------------
   // Configuration (overrideable)
   // ---------------------------
@@ -30,28 +29,9 @@ import {
     storeName: "CQStore",
     dbVersion: 1,
 
-    // Match your existing GDC defaults (keeps compatibility with what you're already generating).
-    // (These are the IDs we’ll use for vocabulary nodes.)
-    GDC_BASE_IRI: NS.bfo.genericallyDependentContinuant,
-    GDC_TYPE_IRI: NS.bfo.genericallyDependentContinuant,
-    ABOUT_LINK_IRI: NS.bfo.continuantPartOf, // used as “about / derived from” link
 
-    // Skip persons (same IRI as your CQ tool uses for Person nodes)
-    PERSON_IRI: NS.cco2.person,
 
-    // Read text from these properties across the graph
-    TEXT_PROPERTIES: [
-      NS.cco2.hasTextValue, // project convention: use CCO text value while ignoring its narrow domain axiom
-      NS.rdfs.label,
-      NS.dcterms.description,
-      NS.rdfs.comment
-    ],
 
-    // RDF-ish props for the editable table
-    RDFS_LABEL: NS.rdfs.label,
-    RDFS_IS_DEFINED_BY: NS.rdfs.isDefinedBy,
-    SKOS_DEFINITION: NS.skos.definition,
-    XSD_STRING: NS.xsd.string,
 
     // Custom props for “element type” + “is a” columns (kept separate from @type)
     VOCAB_ELEMENT_TYPE: "https://jonathanvajda.com/ontology/vocabElementType",
@@ -70,13 +50,7 @@ import {
   // Small utilities
   // ---------------------------
   function isAnyUri(s) {
-    if (!s || typeof s !== "string") return false;
-    try {
-      const u = new URL(s);
-      return !!u.protocol && !!u.hostname;
-    } catch {
-      return false;
-    }
+    return isAbsoluteIri(s, { allowedSchemes: null });
   }
 
   function isCapitalizedToken(tok) {
@@ -93,7 +67,12 @@ import {
 
   function getTextValues(node) {
     const out = [];
-    for (const p of CFG.TEXT_PROPERTIES) {
+    for (const p of [
+      COMMON_NAMESPACE_IRIS.cco2.hasTextValue, // project convention: use CCO text value while ignoring its narrow domain axiom
+      COMMON_NAMESPACE_IRIS.rdfs.label,
+      COMMON_NAMESPACE_IRIS.dcterms.description,
+      COMMON_NAMESPACE_IRIS.rdfs.comment
+    ]) {
       const arr = node?.[p];
       if (!Array.isArray(arr)) continue;
       for (const item of arr) {
@@ -107,13 +86,13 @@ import {
   function looksLikeVocabularyNode(node) {
     const id = node?.["@id"] || "";
     // Strong match: our vocabulary node IDs
-    if (typeof id === "string" && id.startsWith(CFG.GDC_BASE_IRI + "_")) return true;
+    if (typeof id === "string" && id.startsWith(`${COMMON_NAMESPACE_IRIS.bfo.genericallyDependentContinuant}_`)) return true;
 
     // Also treat nodes with ABOUT_LINK_IRI + rdfs:label as vocab-ish
-    if (node?.[CFG.ABOUT_LINK_IRI] && node?.[CFG.RDFS_LABEL]) return true;
+    if (node?.[COMMON_NAMESPACE_IRIS.bfo.continuantPartOf] && node?.[COMMON_NAMESPACE_IRIS.rdfs.label]) return true;
 
     // Or nodes typed as the GDC type IRI
-    if (hasType(node, CFG.GDC_TYPE_IRI)) return true;
+    if (hasType(node, COMMON_NAMESPACE_IRIS.bfo.genericallyDependentContinuant)) return true;
 
     return false;
   }
@@ -242,8 +221,7 @@ import {
       const chunkMap = new Map();
 
       for (const node of sourceGraph) {
-        // Skip persons
-        if (hasType(node, this.cfg.PERSON_IRI)) continue;
+        if (hasType(node, COMMON_NAMESPACE_IRIS.cco2.person)) continue;
 
         const sourceNodeIri = node["@id"];
         if (!sourceNodeIri) continue;
@@ -263,18 +241,18 @@ import {
 
             if (chunkMap.has(key)) {
               const existing = chunkMap.get(key);
-              const about = existing[this.cfg.ABOUT_LINK_IRI] || [];
+              const about = existing[COMMON_NAMESPACE_IRIS.bfo.continuantPartOf] || [];
               if (!about.some((x) => x?.["@id"] === sourceNodeIri)) {
                 about.push({ "@id": sourceNodeIri });
-                existing[this.cfg.ABOUT_LINK_IRI] = about;
+                existing[COMMON_NAMESPACE_IRIS.bfo.continuantPartOf] = about;
               }
             } else {
               const gdcId = this.hashCode(key);
               const newNode = {
-                "@id": `${this.cfg.GDC_BASE_IRI}_${gdcId}`,
-                "@type": [this.cfg.GDC_TYPE_IRI],
-                [this.cfg.RDFS_LABEL]: [{ "@value": lemmatized }],
-                [this.cfg.ABOUT_LINK_IRI]: [{ "@id": sourceNodeIri }],
+                "@id": `${COMMON_NAMESPACE_IRIS.bfo.genericallyDependentContinuant}_${gdcId}`,
+                "@type": [COMMON_NAMESPACE_IRIS.bfo.genericallyDependentContinuant],
+                [COMMON_NAMESPACE_IRIS.rdfs.label]: [{ "@value": lemmatized }],
+                [COMMON_NAMESPACE_IRIS.bfo.continuantPartOf]: [{ "@id": sourceNodeIri }],
               };
               chunkMap.set(key, newNode);
             }
@@ -291,12 +269,12 @@ import {
   // ---------------------------
   function nodeToRow(node, dbName) {
     const iri = node["@id"] || "";
-    const label = node?.[CFG.RDFS_LABEL]?.[0]?.["@value"] ?? "";
+    const label = node?.[COMMON_NAMESPACE_IRIS.rdfs.label]?.[0]?.["@value"] ?? "";
 
     const elementType = node?.[CFG.VOCAB_ELEMENT_TYPE]?.[0]?.["@id"] ?? "";
-    const definition = node?.[CFG.SKOS_DEFINITION]?.[0]?.["@value"] ?? "";
+    const definition = node?.[COMMON_NAMESPACE_IRIS.skos.definition]?.[0]?.["@value"] ?? "";
     const isA = node?.[CFG.VOCAB_IS_A]?.[0]?.["@value"] ?? "";
-    const isDefinedBy = node?.[CFG.RDFS_IS_DEFINED_BY]?.[0]?.["@id"] ?? CFG.defaultIsDefinedByFromDb(dbName);
+    const isDefinedBy = node?.[COMMON_NAMESPACE_IRIS.rdfs.isDefinedBy]?.[0]?.["@id"] ?? CFG.defaultIsDefinedByFromDb(dbName);
 
     return { iri, label, elementType, definition, isA, isDefinedBy };
   }
@@ -309,27 +287,29 @@ import {
 
     // Keep existing @type and ensure it stays an array
     const types = Array.isArray(node["@type"]) ? node["@type"].slice() : (node["@type"] ? [node["@type"]] : []);
-    if (!types.includes(CFG.GDC_TYPE_IRI)) types.push(CFG.GDC_TYPE_IRI);
+    if (!types.includes(COMMON_NAMESPACE_IRIS.bfo.genericallyDependentContinuant)) {
+      types.push(COMMON_NAMESPACE_IRIS.bfo.genericallyDependentContinuant);
+    }
     node["@type"] = types;
 
     // rdfs:label
-    node[CFG.RDFS_LABEL] = [{ "@value": row.label || "" }];
+    node[COMMON_NAMESPACE_IRIS.rdfs.label] = [{ "@value": row.label || "" }];
 
     // element type (OWL-ish) stored separately
     if (row.elementType) node[CFG.VOCAB_ELEMENT_TYPE] = [{ "@id": row.elementType }];
     else delete node[CFG.VOCAB_ELEMENT_TYPE];
 
     // definition (skos:definition)
-    if (row.definition) node[CFG.SKOS_DEFINITION] = [{ "@value": row.definition }];
-    else delete node[CFG.SKOS_DEFINITION];
+    if (row.definition) node[COMMON_NAMESPACE_IRIS.skos.definition] = [{ "@value": row.definition }];
+    else delete node[COMMON_NAMESPACE_IRIS.skos.definition];
 
     // is a (string)
-    if (row.isA) node[CFG.VOCAB_IS_A] = [{ "@value": row.isA, "@type": CFG.XSD_STRING }];
+    if (row.isA) node[CFG.VOCAB_IS_A] = [{ "@value": row.isA, "@type": COMMON_NAMESPACE_IRIS.xsd.string }];
     else delete node[CFG.VOCAB_IS_A];
 
     // isDefinedBy (IRI)
     const defBy = row.isDefinedBy || CFG.defaultIsDefinedByFromDb(dbName);
-    node[CFG.RDFS_IS_DEFINED_BY] = [{ "@id": defBy }];
+    node[COMMON_NAMESPACE_IRIS.rdfs.isDefinedBy] = [{ "@id": defBy }];
 
     return node;
   }
@@ -401,7 +381,10 @@ import {
       throw new Error(`is defined by must be a valid absolute IRI: ${row.isDefinedBy}`);
     }
 
-    const base = nodesById?.get(row.iri) || { "@id": row.iri, "@type": [CFG.GDC_TYPE_IRI] };
+    const base = nodesById?.get(row.iri) || {
+      "@id": row.iri,
+      "@type": [COMMON_NAMESPACE_IRIS.bfo.genericallyDependentContinuant]
+    };
     const updated = applyRowToNode(row, base, dbName);
 
     await storeCompetencyQuestionNodes([updated]);

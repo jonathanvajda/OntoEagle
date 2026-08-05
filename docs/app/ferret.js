@@ -29,7 +29,6 @@ let allNodesCache = [];
 const tagger = new window.POSTagger(window.POSTAGGER_LEXICON);
 const gdcManager = new window.GDCManager(tagger, allNodesCache);
 
-const NS = COMMON_NAMESPACE_IRIS;
 const CQ_CSV_HEADERS = Object.freeze([
   'cq_id', 'cq_title', 'cq_description', 'cq_created_date', 'cq_modified_date', 'cq_status',
   'item_type', 'item_id', 'item_text',
@@ -58,8 +57,6 @@ const OKEA = {
   HAS_SQL_QUERY_TEXT: "https://github.com/jonathanvajda/okea/has_sql_query_text_value"
 };
 
-const CCO_HAS_TEXT_VALUE = NS.cco2.hasTextValue;
-
 /**
  * Read a JSON-LD literal from the project convention predicate cco2:hasTextValue.
  * CQ Ferret intentionally uses this CCO predicate while ignoring its narrow
@@ -70,7 +67,7 @@ const CCO_HAS_TEXT_VALUE = NS.cco2.hasTextValue;
  * @returns {string} Literal value or fallback.
  */
 function readCcoTextValueLiteral(node, fallback = '') {
-  return node?.[CCO_HAS_TEXT_VALUE]?.[0]?.['@value']
+  return node?.[COMMON_NAMESPACE_IRIS.cco2.hasTextValue]?.[0]?.['@value']
     ?? fallback;
 }
 
@@ -166,7 +163,7 @@ function renderSidebarFromCache() {
     hasType(n, "https://github.com/jonathanvajda/okea/ont000002")
   );
 
-  const titleProperty = NS.rdfs.label;
+  const titleProperty = COMMON_NAMESPACE_IRIS.rdfs.label;
   cqNodes.sort((a, b) => {
     const titleA = a[titleProperty]?.[0]?.['@value'] ?? '';
     const titleB = b[titleProperty]?.[0]?.['@value'] ?? '';
@@ -186,7 +183,7 @@ function addCQToSidebar(cq) {
     }
   };
   const titleSpan = document.createElement("span");
-  const titleProperty = NS.rdfs.label;
+  const titleProperty = COMMON_NAMESPACE_IRIS.rdfs.label;
   titleSpan.textContent = cq[titleProperty]?.[0]?.['@value'] ?? 'Untitled CQ';
   const deleteBtn = document.createElement("button");
   deleteBtn.textContent = "✖";
@@ -205,7 +202,7 @@ function addCQToSidebar(cq) {
 function updateCQInSidebar(cq) {
   const listItem = document.querySelector(`.cq-list-item[data-id="${cq['@id']}"]`);
   if (listItem) {
-    const titleProperty = NS.rdfs.label;
+    const titleProperty = COMMON_NAMESPACE_IRIS.rdfs.label;
     listItem.querySelector('span').textContent = cq[titleProperty]?.[0]?.['@value'] ?? 'Untitled CQ';
   }
 }
@@ -227,31 +224,31 @@ function loadCQIntoForm(cqId) {
   console.log("Found CQ Node:", cq);
 
   currentCQId = cqId;
-  document.getElementById("cq-title").value = cq[NS.rdfs.label]?.[0]?.['@value'] ?? '';
-  document.getElementById("cq-description").value = cq[NS.dcterms.description]?.[0]?.['@value'] ?? '';
+  document.getElementById("cq-title").value = cq[COMMON_NAMESPACE_IRIS.rdfs.label]?.[0]?.['@value'] ?? '';
+  document.getElementById("cq-description").value = cq[COMMON_NAMESPACE_IRIS.dcterms.description]?.[0]?.['@value'] ?? '';
   document.getElementById("cq-status").value = cq["http://example.com/ns/status"]?.[0]?.['@value'] ?? 'Draft';
   const personsList = document.getElementById('persons-list');
   personsList.innerHTML = '';
-  const participantLinks = cq[NS.dcterms.contributor] || [];
+  const participantLinks = cq[COMMON_NAMESPACE_IRIS.dcterms.contributor] || [];
   console.log("Found Contributor Links:", participantLinks);
   // Process Contributors
   const participantNodes = allNodesCache.filter(n =>
     participantLinks.some(p => p?.["@id"] === n?.["@id"]) &&
-    hasType(n, NS.cco2.person)
+    hasType(n, COMMON_NAMESPACE_IRIS.cco2.person)
   );
   console.log("Found Participant Nodes:", participantNodes);
   participantNodes.forEach(pNode => {
     const personId = pNode['@id'];
-    const emailId = pNode[NS.cco2.isSubjectOf]?.[0]?.['@id'] ?? '';
-    const name = pNode[NS.rdfs.label]?.[0]?.['@value'] ?? '';
-    const notes = pNode[NS.rdfs.comment]?.[0]?.['@value'] ?? '';
+    const emailId = pNode[COMMON_NAMESPACE_IRIS.cco2.isSubjectOf]?.[0]?.['@id'] ?? '';
+    const name = pNode[COMMON_NAMESPACE_IRIS.rdfs.label]?.[0]?.['@value'] ?? '';
+    const notes = pNode[COMMON_NAMESPACE_IRIS.rdfs.comment]?.[0]?.['@value'] ?? '';
     let contact = '';
     if (emailId) {
       const emailNode = allNodesCache.find(n => n['@id'] === emailId);
       contact = readCcoTextValueLiteral(emailNode);
     }
     let role = 'Other';
-    const roleLink = pNode[NS.bfo.bearerOf]?.[0]?.['@id'];
+    const roleLink = pNode[COMMON_NAMESPACE_IRIS.bfo.bearerOf]?.[0]?.['@id'];
     if (roleLink) {
       const roleNode = allNodesCache.find(n => n['@id'] === roleLink);
       role = readCcoTextValueLiteral(roleNode, 'Other');
@@ -266,7 +263,7 @@ function loadCQIntoForm(cqId) {
   const subquestionsList = document.getElementById('subquestions-list');
   subquestionsList.innerHTML = '';
   const subquestionNodes = allNodesCache.filter(n =>
-    (cq[NS.bfo.hasContinuantPart] || []).some(item => item["@id"] === n["@id"]) &&
+    (cq[COMMON_NAMESPACE_IRIS.bfo.hasContinuantPart] || []).some(item => item["@id"] === n["@id"]) &&
     n["@type"].includes("https://github.com/jonathanvajda/okea/ont000001")
   );
 
@@ -275,7 +272,7 @@ function loadCQIntoForm(cqId) {
   const decisionLogicList = document.getElementById('decision-logic-list');
   decisionLogicList.innerHTML = '';
   const logicNodes = allNodesCache.filter(n =>
-    (cq[NS.bfo.hasContinuantPart] || []).some(item => item["@id"] === n["@id"]) &&
+    (cq[COMMON_NAMESPACE_IRIS.bfo.hasContinuantPart] || []).some(item => item["@id"] === n["@id"]) &&
     n["@type"].includes("https://github.com/jonathanvajda/okea/ont000009")
   );
 
@@ -284,13 +281,13 @@ function loadCQIntoForm(cqId) {
   const dataRequirementsList = document.getElementById('data-requirements-list');
   dataRequirementsList.innerHTML = '';
   const dataSourceNodes = allNodesCache.filter(n =>
-    (cq[NS.dcterms.requires] || []).some(item => item["@id"] === n["@id"]) &&
-    n["@type"].includes(NS.cco2.database)
+    (cq[COMMON_NAMESPACE_IRIS.dcterms.requires] || []).some(item => item["@id"] === n["@id"]) &&
+    n["@type"].includes(COMMON_NAMESPACE_IRIS.cco2.database)
   );
 
   dataSourceNodes.forEach(dsNode => {
     const sourceText = readCcoTextValueLiteral(dsNode);
-    const qualityText = dsNode[NS.rdfs.comment]?.[0]?.["@value"] ?? '';
+    const qualityText = dsNode[COMMON_NAMESPACE_IRIS.rdfs.comment]?.[0]?.["@value"] ?? '';
     addDataRequirementItem(sourceText, qualityText);
   });
   if (dataRequirementsList.children.length === 0) addDataRequirementItem();
@@ -556,17 +553,17 @@ function addPersonItem(name = '', role = 'Creator', contact = '', notes = '', pe
     if (searchTerm.length < 2) return;
     const allPeople = allNodesCache.filter(n =>
       n["@type"] && Array.isArray(n["@type"]) && // <-- Add this check
-      n["@type"].includes(NS.cco2.person)
+      n["@type"].includes(COMMON_NAMESPACE_IRIS.cco2.person)
     );
     const matches = allPeople.filter(p => {
-      const personName = p[NS.rdfs.label]?.[0]?.['@value'] ?? '';
+      const personName = p[COMMON_NAMESPACE_IRIS.rdfs.label]?.[0]?.['@value'] ?? '';
       return personName.toLowerCase().includes(searchTerm);
     });
     matches.forEach(match => {
       const resultItem = document.createElement('div');
       resultItem.className = 'person-search-result-item';
-      const personName = match[NS.rdfs.label]?.[0]?.['@value'] ?? '';
-      const emailIdMatch = match[NS.cco2.isSubjectOf]?.[0]?.['@id'];
+      const personName = match[COMMON_NAMESPACE_IRIS.rdfs.label]?.[0]?.['@value'] ?? '';
+      const emailIdMatch = match[COMMON_NAMESPACE_IRIS.cco2.isSubjectOf]?.[0]?.['@id'];
       const emailNode = allNodesCache.find(n => n['@id'] === emailIdMatch);
       const personContact = readCcoTextValueLiteral(emailNode, 'No contact info');
       resultItem.innerHTML = `${personName} <small>${personContact}</small>`;
@@ -574,7 +571,7 @@ function addPersonItem(name = '', role = 'Creator', contact = '', notes = '', pe
         const selectedPersonId = match['@id'];
         const selectedEmailId = emailIdMatch;
         const selectedName = personName;
-        const selectedNotes = match[NS.rdfs.comment]?.[0]?.['@value'] ?? '';
+        const selectedNotes = match[COMMON_NAMESPACE_IRIS.rdfs.comment]?.[0]?.['@value'] ?? '';
         const selectedContact = personContact === 'No contact info' ? '' : personContact;
         nameInput.value = selectedName;
         contactInput.value = selectedContact;
@@ -662,27 +659,27 @@ function generateJSONLD() {
     if (!personId && p.name) {
       existingPersonNode = allNodesCache.find(n =>
         n["@type"] && Array.isArray(n["@type"]) && // <-- Add this check
-        n["@type"].includes(NS.cco2.person) &&
-        n[NS.rdfs.label]?.[0]?.['@value'] === p.name
+        n["@type"].includes(COMMON_NAMESPACE_IRIS.cco2.person) &&
+        n[COMMON_NAMESPACE_IRIS.rdfs.label]?.[0]?.['@value'] === p.name
       );
       if (existingPersonNode) {
         console.log(`Found existing person for "${p.name}" with ID: ${existingPersonNode['@id']}`);
         personId = existingPersonNode['@id'];
         // Try to get the existing email ID too
-        emailId = existingPersonNode[NS.cco2.isSubjectOf]?.[0]?.['@id'] || emailId;
+        emailId = existingPersonNode[COMMON_NAMESPACE_IRIS.cco2.isSubjectOf]?.[0]?.['@id'] || emailId;
       }
     }
 
     // If still no personId, generate a new one
     if (!personId) {
-      personId = `${NS.cco2.person}/Person_${Date.now() + index}`;
+      personId = `${COMMON_NAMESPACE_IRIS.cco2.person}/Person_${Date.now() + index}`;
     }
     // Generate email ID if still missing
     if (!emailId) {
-      emailId = `${NS.cco2.emailBox}_${Date.now() + index}`;
+      emailId = `${COMMON_NAMESPACE_IRIS.cco2.emailBox}_${Date.now() + index}`;
     }
 
-    const roleId = `${NS.bfo.role}_role_${p.role.replace(/\s+/g, '')}`;
+    const roleId = `${COMMON_NAMESPACE_IRIS.bfo.role}_role_${p.role.replace(/\s+/g, '')}`;
 
     // Add the contributor link for the CQ node
     contributorLinks.push({ "@id": personId });
@@ -691,11 +688,11 @@ function generateJSONLD() {
     if (!allNodesCache.find(n => n['@id'] === personId)) {
       personRelatedNodes.push({
         "@id": personId,
-        "@type": [NS.cco2.person, NS.owl.NamedIndividual],
-        [NS.rdfs.label]: [{ "@value": p.name }],
-        [NS.rdfs.comment]: [{ "@value": p.notes }],
-        [NS.cco2.isSubjectOf]: [{ "@id": emailId }],
-        [NS.bfo.bearerOf]: [{ "@id": roleId }]
+        "@type": [COMMON_NAMESPACE_IRIS.cco2.person, COMMON_NAMESPACE_IRIS.owl.NamedIndividual],
+        [COMMON_NAMESPACE_IRIS.rdfs.label]: [{ "@value": p.name }],
+        [COMMON_NAMESPACE_IRIS.rdfs.comment]: [{ "@value": p.notes }],
+        [COMMON_NAMESPACE_IRIS.cco2.isSubjectOf]: [{ "@id": emailId }],
+        [COMMON_NAMESPACE_IRIS.bfo.bearerOf]: [{ "@id": roleId }]
       });
     }
 
@@ -703,9 +700,9 @@ function generateJSONLD() {
     if (!allNodesCache.find(n => n['@id'] === emailId)) {
       personRelatedNodes.push({
         "@id": emailId,
-        "@type": [NS.cco2.emailBox, NS.owl.NamedIndividual],
+        "@type": [COMMON_NAMESPACE_IRIS.cco2.emailBox, COMMON_NAMESPACE_IRIS.owl.NamedIndividual],
         // Use a more robust property name here, ensure it matches your email node definition
-        [CCO_HAS_TEXT_VALUE]: [{ "@value": p.contact }],
+        [COMMON_NAMESPACE_IRIS.cco2.hasTextValue]: [{ "@value": p.contact }],
       });
     }
 
@@ -713,8 +710,8 @@ function generateJSONLD() {
     if (!allNodesCache.find(n => n['@id'] === roleId)) {
       personRelatedNodes.push({
         "@id": roleId,
-        "@type": [NS.bfo.role, NS.owl.NamedIndividual],
-        [CCO_HAS_TEXT_VALUE]: [{ "@value": p.role }],
+        "@type": [COMMON_NAMESPACE_IRIS.bfo.role, COMMON_NAMESPACE_IRIS.owl.NamedIndividual],
+        [COMMON_NAMESPACE_IRIS.cco2.hasTextValue]: [{ "@value": p.role }],
       });
     }
   });
@@ -722,29 +719,29 @@ function generateJSONLD() {
 
 
   const dataSourceNodes = dataRequirements.map((dr, index) => ({
-    "@id": `${NS.cco2.database}/Database_${cqUniqueId}_${index + 1}`,
+    "@id": `${COMMON_NAMESPACE_IRIS.cco2.database}/Database_${cqUniqueId}_${index + 1}`,
     // ... rest of data source node ...
-    "@type": [NS.cco2.database, NS.owl.NamedIndividual],
-    [CCO_HAS_TEXT_VALUE]: [{ "@value": dr.source }],
-    [NS.rdfs.comment]: [{ "@value": dr.quality }]
+    "@type": [COMMON_NAMESPACE_IRIS.cco2.database, COMMON_NAMESPACE_IRIS.owl.NamedIndividual],
+    [COMMON_NAMESPACE_IRIS.cco2.hasTextValue]: [{ "@value": dr.source }],
+    [COMMON_NAMESPACE_IRIS.rdfs.comment]: [{ "@value": dr.quality }]
   }));
   const subquestionNodes = subquestions.map((sq, index) => ({
     "@id": `https://github.com/jonathanvajda/okea/ont000001_IterrogativeICE_${cqUniqueId}_${index + 1}`,
     // ... rest of subquestion node ...
-    "@type": ["https://github.com/jonathanvajda/okea/ont000001", NS.owl.NamedIndividual],
-    [CCO_HAS_TEXT_VALUE]: [{ "@value": sq }],
+    "@type": ["https://github.com/jonathanvajda/okea/ont000001", COMMON_NAMESPACE_IRIS.owl.NamedIndividual],
+    [COMMON_NAMESPACE_IRIS.cco2.hasTextValue]: [{ "@value": sq }],
   }));
   const decisionLogicNodes = decisionLogic.map((dl, index) => ({
     "@id": `https://github.com/jonathanvajda/okea/ont000009_DecisionLogic_${cqUniqueId}_${index + 1}`,
     // ... rest of logic node ...
-    "@type": ["https://github.com/jonathanvajda/okea/ont000009", NS.owl.NamedIndividual],
-    [CCO_HAS_TEXT_VALUE]: [{ "@value": dl }],
+    "@type": ["https://github.com/jonathanvajda/okea/ont000009", COMMON_NAMESPACE_IRIS.owl.NamedIndividual],
+    [COMMON_NAMESPACE_IRIS.cco2.hasTextValue]: [{ "@value": dl }],
   }));
   
   const mermaidDiagramNodes = mermaidDiagram.map((dl, index) => ({
     "@id": `https://github.com/jonathanvajda/okea/ont000004_MermaidDiagram_${cqUniqueId}_${index + 1}`,
     // ... rest of logic node ...
-    "@type": ["https://github.com/jonathanvajda/okea/ont000004", NS.owl.NamedIndividual],
+    "@type": ["https://github.com/jonathanvajda/okea/ont000004", COMMON_NAMESPACE_IRIS.owl.NamedIndividual],
     "https://github.com/jonathanvajda/okea/has_mermaid_diagram_text_value": [{ "@value": dl }],
   }));
   
@@ -753,17 +750,17 @@ function generateJSONLD() {
 
     return {
       "@id": `https://github.com/jonathanvajda/okea/ont000016_DatabaseQuery_${cqUniqueId}_${index + 1}`,
-      "@type": [semantics.classIri, NS.owl.NamedIndividual],
+      "@type": [semantics.classIri, COMMON_NAMESPACE_IRIS.owl.NamedIndividual],
       [semantics.textPredicate]: [{ "@value": dq.text }]
     };
   });
 
   // ... (timestamp logic unchanged) ...
   const nowISO = new Date().toISOString();
-  const lastModifiedTimestamp = [{ "@value": nowISO, "@type": NS.xsd.dateTime }];
+  const lastModifiedTimestamp = [{ "@value": nowISO, "@type": COMMON_NAMESPACE_IRIS.xsd.dateTime }];
   let createdTimestamp;
-  if (currentCQId) { const existingCQ = allNodesCache.find(n => n['@id'] === currentCQId); if (existingCQ && existingCQ[NS.dcterms.created]) { createdTimestamp = existingCQ[NS.dcterms.created]; } }
-  if (!createdTimestamp) { createdTimestamp = [{ "@value": nowISO, "@type": NS.xsd.dateTime }]; }
+  if (currentCQId) { const existingCQ = allNodesCache.find(n => n['@id'] === currentCQId); if (existingCQ && existingCQ[COMMON_NAMESPACE_IRIS.dcterms.created]) { createdTimestamp = existingCQ[COMMON_NAMESPACE_IRIS.dcterms.created]; } }
+  if (!createdTimestamp) { createdTimestamp = [{ "@value": nowISO, "@type": COMMON_NAMESPACE_IRIS.xsd.dateTime }]; }
 
   const jsonLD = [
     ...personRelatedNodes,
@@ -774,15 +771,15 @@ function generateJSONLD() {
     ...databaseQueryNodes,
     {
       "@id": `https://github.com/jonathanvajda/okea/ont000002_CQ_${cqUniqueId}`,
-      "@type": ["https://github.com/jonathanvajda/okea/ont000002", NS.owl.NamedIndividual],
-      [NS.rdfs.label]: [{ "@value": title }],
-      [NS.dcterms.description]: [{ "@value": description }],
-      [NS.dcterms.created]: createdTimestamp,
-      [NS.dcterms.modified]: lastModifiedTimestamp,
+      "@type": ["https://github.com/jonathanvajda/okea/ont000002", COMMON_NAMESPACE_IRIS.owl.NamedIndividual],
+      [COMMON_NAMESPACE_IRIS.rdfs.label]: [{ "@value": title }],
+      [COMMON_NAMESPACE_IRIS.dcterms.description]: [{ "@value": description }],
+      [COMMON_NAMESPACE_IRIS.dcterms.created]: createdTimestamp,
+      [COMMON_NAMESPACE_IRIS.dcterms.modified]: lastModifiedTimestamp,
       "http://example.com/ns/status": [{ "@value": status }],
-      [NS.dcterms.contributor]: contributorLinks, // Use the collected links
-      [NS.dcterms.requires]: dataSourceNodes.map(dsn => ({ "@id": dsn['@id'] })),
-      [NS.bfo.hasContinuantPart]: [
+      [COMMON_NAMESPACE_IRIS.dcterms.contributor]: contributorLinks, // Use the collected links
+      [COMMON_NAMESPACE_IRIS.dcterms.requires]: dataSourceNodes.map(dsn => ({ "@id": dsn['@id'] })),
+      [COMMON_NAMESPACE_IRIS.bfo.hasContinuantPart]: [
         ...decisionLogicNodes.map(n => ({ "@id": n['@id'] })),
         ...subquestionNodes.map(n => ({ "@id": n['@id'] }))
       ],
@@ -806,7 +803,7 @@ async function performSave() {
   const syncNode = {
     '@id': 'sync_state',
     id: 'sync_state', // Required for the IndexedDB keyPath
-    [NS.dcterms.modified]: new Date().toISOString()
+    [COMMON_NAMESPACE_IRIS.dcterms.modified]: new Date().toISOString()
   };
 
   // 3. Combine the form data with the sync node.
@@ -912,25 +909,25 @@ function createCompetencyQuestionCsvRecords(nodes) {
   cqNodes.forEach(cq => {
     const baseRow = {
       cq_id: cq['@id'] || '',
-      cq_title: cq[NS.rdfs.label]?.[0]?.['@value'] ?? '',
-      cq_description: cq[NS.dcterms.description]?.[0]?.['@value'] ?? '',
-      cq_created_date: cq[NS.dcterms.created]?.[0]?.['@value'] ?? '',
-      cq_modified_date: cq[NS.dcterms.modified]?.[0]?.['@value'] ?? '',
+      cq_title: cq[COMMON_NAMESPACE_IRIS.rdfs.label]?.[0]?.['@value'] ?? '',
+      cq_description: cq[COMMON_NAMESPACE_IRIS.dcterms.description]?.[0]?.['@value'] ?? '',
+      cq_created_date: cq[COMMON_NAMESPACE_IRIS.dcterms.created]?.[0]?.['@value'] ?? '',
+      cq_modified_date: cq[COMMON_NAMESPACE_IRIS.dcterms.modified]?.[0]?.['@value'] ?? '',
       cq_status: cq["http://example.com/ns/status"]?.[0]?.['@value'] ?? '',
     };
 
     let itemsFound = 0;
 
     // Process Contributors (Persons/Roles)
-    const participantLinks = cq[NS.dcterms.contributor] || [];
+    const participantLinks = cq[COMMON_NAMESPACE_IRIS.dcterms.contributor] || [];
     const participantNodes = sourceNodes.filter(n =>
-      participantLinks.some(p => p["@id"] === n["@id"]) && n["@type"].includes(NS.cco2.person)
+      participantLinks.some(p => p["@id"] === n["@id"]) && n["@type"].includes(COMMON_NAMESPACE_IRIS.cco2.person)
     );
     participantNodes.forEach(pNode => {
       itemsFound++;
       const personId = pNode['@id'];
-      const emailId = pNode[NS.cco2.isSubjectOf]?.[0]?.['@id'] ?? '';
-      const roleLink = pNode[NS.bfo.bearerOf]?.[0]?.['@id'];
+      const emailId = pNode[COMMON_NAMESPACE_IRIS.cco2.isSubjectOf]?.[0]?.['@id'] ?? '';
+      const roleLink = pNode[COMMON_NAMESPACE_IRIS.bfo.bearerOf]?.[0]?.['@id'];
 
       const emailNode = sourceNodes.find(n => n['@id'] === emailId);
       const roleNode = sourceNodes.find(n => n['@id'] === roleLink);
@@ -939,10 +936,10 @@ function createCompetencyQuestionCsvRecords(nodes) {
         ...baseRow,
         item_type: 'Contributor',
         item_id: personId,
-        item_text: pNode[NS.rdfs.label]?.[0]?.['@value'] ?? '',
+        item_text: pNode[COMMON_NAMESPACE_IRIS.rdfs.label]?.[0]?.['@value'] ?? '',
         contributor_role: readCcoTextValueLiteral(roleNode),
         contributor_contact: readCcoTextValueLiteral(emailNode),
-        contributor_notes: pNode[NS.rdfs.comment]?.[0]?.['@value'] ?? '',
+        contributor_notes: pNode[COMMON_NAMESPACE_IRIS.rdfs.comment]?.[0]?.['@value'] ?? '',
         // ADDED: Populate the new ID columns
         contributor_email_id: emailId,
         contributor_role_id: roleLink,
@@ -953,9 +950,9 @@ function createCompetencyQuestionCsvRecords(nodes) {
 
     // Process other item types (Subquestions, Logic, Data Sources)
     const itemTypes = [
-      { type: 'Subquestion', iri: OKEA.INTERROGATIVE_ICE, link: NS.bfo.hasContinuantPart },
-      { type: 'DecisionLogic', iri: OKEA.BUSINESS_RULE, link: NS.bfo.hasContinuantPart },
-      { type: 'DataSource', iri: NS.cco2.database, link: NS.dcterms.requires },
+      { type: 'Subquestion', iri: OKEA.INTERROGATIVE_ICE, link: COMMON_NAMESPACE_IRIS.bfo.hasContinuantPart },
+      { type: 'DecisionLogic', iri: OKEA.BUSINESS_RULE, link: COMMON_NAMESPACE_IRIS.bfo.hasContinuantPart },
+      { type: 'DataSource', iri: COMMON_NAMESPACE_IRIS.cco2.database, link: COMMON_NAMESPACE_IRIS.dcterms.requires },
       { type: 'MermaidDiagram', iri: 'https://github.com/jonathanvajda/okea/ont000004', link: 'https://github.com/jonathanvajda/okea/ont000012'},
       { type: 'DatabaseQuery', iri: 'https://github.com/jonathanvajda/okea/ont000016', link: 'https://github.com/jonathanvajda/okea/ont000014'}
     ];
@@ -989,7 +986,7 @@ function createCompetencyQuestionCsvRecords(nodes) {
         }
 
         if (config.type === 'DataSource') {
-          row.datasource_quality_notes = node[NS.rdfs.comment]?.[0]?.['@value'] ?? '';
+          row.datasource_quality_notes = node[COMMON_NAMESPACE_IRIS.rdfs.comment]?.[0]?.['@value'] ?? '';
         }
 
         if (config.type === 'MermaidDiagram') {
@@ -1078,15 +1075,15 @@ async function handleCSVUpload(event) {
 
       const cqNode = {
         "@id": baseRow.cq_id,
-        "@type": ["https://github.com/jonathanvajda/okea/ont000002", NS.owl.NamedIndividual],
-        [NS.rdfs.label]: [{ "@value": baseRow.cq_title }],
-        [NS.dcterms.description]: [{ "@value": baseRow.cq_description }],
-        [NS.dcterms.created]: [{ "@value": baseRow.cq_created_date, "@type": NS.xsd.dateTime }],
-        [NS.dcterms.modified]: [{ "@value": baseRow.cq_modified_date, "@type": NS.xsd.dateTime }],
+        "@type": ["https://github.com/jonathanvajda/okea/ont000002", COMMON_NAMESPACE_IRIS.owl.NamedIndividual],
+        [COMMON_NAMESPACE_IRIS.rdfs.label]: [{ "@value": baseRow.cq_title }],
+        [COMMON_NAMESPACE_IRIS.dcterms.description]: [{ "@value": baseRow.cq_description }],
+        [COMMON_NAMESPACE_IRIS.dcterms.created]: [{ "@value": baseRow.cq_created_date, "@type": COMMON_NAMESPACE_IRIS.xsd.dateTime }],
+        [COMMON_NAMESPACE_IRIS.dcterms.modified]: [{ "@value": baseRow.cq_modified_date, "@type": COMMON_NAMESPACE_IRIS.xsd.dateTime }],
         "http://example.com/ns/status": [{ "@value": baseRow.cq_status }],
-        [NS.dcterms.contributor]: [],
-        [NS.dcterms.requires]: [],
-        [NS.bfo.hasContinuantPart]: []
+        [COMMON_NAMESPACE_IRIS.dcterms.contributor]: [],
+        [COMMON_NAMESPACE_IRIS.dcterms.requires]: [],
+        [COMMON_NAMESPACE_IRIS.bfo.hasContinuantPart]: []
       };
 
       // Process each item row within the CQ group
@@ -1098,97 +1095,97 @@ async function handleCSVUpload(event) {
             // Create Person, Email, and Role nodes, ensuring no duplicates within this import
             if (row.item_id && !processedNodeIds.has(row.item_id)) {
               const pNode = {
-                "@id": row.item_id, "@type": [NS.cco2.person, NS.owl.NamedIndividual],
-                [NS.rdfs.label]: [{ "@value": row.item_text }],
-                [NS.rdfs.comment]: [{ "@value": row.contributor_notes }],
-                [NS.cco2.isSubjectOf]: [{ "@id": row.contributor_email_id }],
-                [NS.bfo.bearerOf]: [{ "@id": row.contributor_role_id }]
+                "@id": row.item_id, "@type": [COMMON_NAMESPACE_IRIS.cco2.person, COMMON_NAMESPACE_IRIS.owl.NamedIndividual],
+                [COMMON_NAMESPACE_IRIS.rdfs.label]: [{ "@value": row.item_text }],
+                [COMMON_NAMESPACE_IRIS.rdfs.comment]: [{ "@value": row.contributor_notes }],
+                [COMMON_NAMESPACE_IRIS.cco2.isSubjectOf]: [{ "@id": row.contributor_email_id }],
+                [COMMON_NAMESPACE_IRIS.bfo.bearerOf]: [{ "@id": row.contributor_role_id }]
               };
               newGraph.push(pNode);
               processedNodeIds.add(row.item_id);
             }
             if (row.contributor_email_id && !processedNodeIds.has(row.contributor_email_id)) {
               const eNode = {
-                "@id": row.contributor_email_id, "@type": [NS.cco2.emailBox, NS.owl.NamedIndividual],
-                [CCO_HAS_TEXT_VALUE]: [{ "@value": row.contributor_contact }],
+                "@id": row.contributor_email_id, "@type": [COMMON_NAMESPACE_IRIS.cco2.emailBox, COMMON_NAMESPACE_IRIS.owl.NamedIndividual],
+                [COMMON_NAMESPACE_IRIS.cco2.hasTextValue]: [{ "@value": row.contributor_contact }],
               };
               newGraph.push(eNode);
               processedNodeIds.add(row.contributor_email_id);
             }
             if (row.contributor_role_id && !processedNodeIds.has(row.contributor_role_id)) {
               const rNode = {
-                "@id": row.contributor_role_id, "@type": [NS.bfo.role, NS.owl.NamedIndividual],
-                [CCO_HAS_TEXT_VALUE]: [{ "@value": row.contributor_role }],
+                "@id": row.contributor_role_id, "@type": [COMMON_NAMESPACE_IRIS.bfo.role, COMMON_NAMESPACE_IRIS.owl.NamedIndividual],
+                [COMMON_NAMESPACE_IRIS.cco2.hasTextValue]: [{ "@value": row.contributor_role }],
               };
               newGraph.push(rNode);
               processedNodeIds.add(row.contributor_role_id);
             }
-            cqNode[NS.dcterms.contributor].push({ "@id": row.item_id });
+            cqNode[COMMON_NAMESPACE_IRIS.dcterms.contributor].push({ "@id": row.item_id });
             break;
 
           // --- ADDED MISSING CASES ---
           case 'Subquestion':
             if (!processedNodeIds.has(row.item_id)) {
               const sqNode = {
-                "@id": row.item_id, "@type": ["https://github.com/jonathanvajda/okea/ont000001", NS.owl.NamedIndividual],
-                [CCO_HAS_TEXT_VALUE]: [{ "@value": row.item_text }],
+                "@id": row.item_id, "@type": ["https://github.com/jonathanvajda/okea/ont000001", COMMON_NAMESPACE_IRIS.owl.NamedIndividual],
+                [COMMON_NAMESPACE_IRIS.cco2.hasTextValue]: [{ "@value": row.item_text }],
               };
               newGraph.push(sqNode);
               processedNodeIds.add(row.item_id);
             }
-            cqNode[NS.bfo.hasContinuantPart].push({ "@id": row.item_id });
+            cqNode[COMMON_NAMESPACE_IRIS.bfo.hasContinuantPart].push({ "@id": row.item_id });
             break;
 
           case 'DecisionLogic':
             if (!processedNodeIds.has(row.item_id)) {
               const dlNode = {
-                "@id": row.item_id, "@type": ["https://github.com/jonathanvajda/okea/ont000009", NS.owl.NamedIndividual],
-                [CCO_HAS_TEXT_VALUE]: [{ "@value": row.item_text }],
+                "@id": row.item_id, "@type": ["https://github.com/jonathanvajda/okea/ont000009", COMMON_NAMESPACE_IRIS.owl.NamedIndividual],
+                [COMMON_NAMESPACE_IRIS.cco2.hasTextValue]: [{ "@value": row.item_text }],
               };
               newGraph.push(dlNode);
               processedNodeIds.add(row.item_id);
             }
-            cqNode[NS.bfo.hasContinuantPart].push({ "@id": row.item_id });
+            cqNode[COMMON_NAMESPACE_IRIS.bfo.hasContinuantPart].push({ "@id": row.item_id });
             break;
 
           case 'DataSource':
             if (!processedNodeIds.has(row.item_id)) {
               const dsNode = {
                 "@id": row.item_id,
-                "@type": [NS.cco2.database, NS.owl.NamedIndividual],
-                [CCO_HAS_TEXT_VALUE]: [{ "@value": row.item_text }],
-                [NS.rdfs.comment]: [{ "@value": row.datasource_quality_notes }]
+                "@type": [COMMON_NAMESPACE_IRIS.cco2.database, COMMON_NAMESPACE_IRIS.owl.NamedIndividual],
+                [COMMON_NAMESPACE_IRIS.cco2.hasTextValue]: [{ "@value": row.item_text }],
+                [COMMON_NAMESPACE_IRIS.rdfs.comment]: [{ "@value": row.datasource_quality_notes }]
               };
               newGraph.push(dsNode);
               processedNodeIds.add(row.item_id);
             }
-            cqNode[NS.dcterms.requires].push({ "@id": row.item_id });
+            cqNode[COMMON_NAMESPACE_IRIS.dcterms.requires].push({ "@id": row.item_id });
             break;
 
           case 'MermaidDiagram':
             if (!processedNodeIds.has(row.item_id)) {
               const mermaidNode = {
                 "@id": row.item_id,
-                "@type": ["https://github.com/jonathanvajda/okea/ont000004", NS.owl.NamedIndividual],
+                "@type": ["https://github.com/jonathanvajda/okea/ont000004", COMMON_NAMESPACE_IRIS.owl.NamedIndividual],
                 "https://github.com/jonathanvajda/okea/has_mermaid_diagram_text_value": [{ "@value": row.mermaid_diagram_text || row.item_text }]
               };
               newGraph.push(mermaidNode);
               processedNodeIds.add(row.item_id);
             }
-            cqNode[NS.bfo.hasContinuantPart].push({ "@id": row.item_id });
+            cqNode[COMMON_NAMESPACE_IRIS.bfo.hasContinuantPart].push({ "@id": row.item_id });
             break;
 
           case 'DatabaseQuery':
             if (!processedNodeIds.has(row.item_id)) {
               const dbQueryNode = {
                 "@id": row.item_id,
-                "@type": ["https://github.com/jonathanvajda/okea/ont000016", NS.owl.NamedIndividual],
+                "@type": ["https://github.com/jonathanvajda/okea/ont000016", COMMON_NAMESPACE_IRIS.owl.NamedIndividual],
                 "https://github.com/jonathanvajda/okea/has_query_text_value": [{ "@value": row.database_query_text || row.item_text }]
               };
               newGraph.push(dbQueryNode);
               processedNodeIds.add(row.item_id);
             }
-            cqNode[NS.bfo.hasContinuantPart].push({ "@id": row.item_id });
+            cqNode[COMMON_NAMESPACE_IRIS.bfo.hasContinuantPart].push({ "@id": row.item_id });
             break;  
         }
       });

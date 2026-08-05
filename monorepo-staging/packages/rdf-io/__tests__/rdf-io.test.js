@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
+import { COMMON_NAMESPACE_IRIS } from '../../namespace-registry/src/namespace-registry.js';
 import {
-  RDF_TYPE,
   createRdfDataset,
   createRdfQuadsFromJsonLdGraph,
   createRdfQuadsFromObjects,
@@ -83,7 +83,7 @@ describe('object-to-RDF projection', () => {
     expect(result.quads).toHaveLength(4);
     expect(result.quads).toEqual(expect.arrayContaining([
       expect.objectContaining({
-        predicate: namedNode(RDF_TYPE),
+        predicate: namedNode(COMMON_NAMESPACE_IRIS.rdf.type),
         object: namedNode('http://www.w3.org/2002/07/owl#Class')
       }),
       expect.objectContaining({
