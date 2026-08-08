@@ -1,14 +1,10 @@
 import { createValidationError } from './storage-error.js';
+import { normalizeStringToAsciiSlug } from '../normalization-utils/index.js';
 
 const DEFAULT_TIME_SOURCE = () => new Date().toISOString();
 
 function normalizeIdPart(part) {
-  return String(part ?? '')
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 80);
+  return normalizeStringToAsciiSlug(part).slice(0, 80);
 }
 
 /**
