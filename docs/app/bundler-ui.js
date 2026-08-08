@@ -35,6 +35,7 @@ import {
   getSupportedMimeTypeForFilename,
   isMimeDescriptorCategory
 } from './shared/format-registry/index.js';
+import { isAbsoluteIri } from './shared/ontology-utils/index.js';
 
 import {
   openOntoEagleProjectDatabase,
@@ -61,7 +62,6 @@ const DOWNLOAD_MIME = Object.freeze({
   robotSeed: SUPPORTED_MIME_DESCRIPTORS.plainText.mimeType,
   turtle: SUPPORTED_MIME_DESCRIPTORS.turtle.mimeType
 });
-const IRI_PATTERN = /^(https?:|urn:)/i;
 
 /* ---------- DOM refs (bundler.html only) ---------- */
 
@@ -169,7 +169,7 @@ function extractSeedTextFromCsv(text) {
   const iris = [];
   for (const row of parsed.rows) {
     for (const cell of row) {
-      if (IRI_PATTERN.test(cell)) iris.push(cell);
+      if (isAbsoluteIri(cell, { allowedSchemes: ['http', 'https', 'urn'] })) iris.push(cell);
     }
   }
   return Array.from(new Set(iris)).join('\n') + (iris.length ? '\n' : '');
