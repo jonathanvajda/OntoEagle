@@ -1,9 +1,15 @@
 import {
   buildSparqlRewritePreviewRows,
+  buildSparqlGraphModelFromAst,
+  buildSparqlUpdatePreviewConstructs,
   classifySparqlOperationFamily,
   countAppliedSparqlIriRewrites,
+  createSparqlAstTermKey,
+  extractSelectedVariableKeysFromSparqlAst,
   extractSparqlPrologueDeclarations,
   extractSparqlRewriteTokens,
+  extractWhereTriplesFromSparqlAst,
+  formatSparqlAstTermLabel,
   formatSparqlIriToken,
   formatSparqlPrefixDeclarations,
   prependSparqlPrologue,
@@ -172,5 +178,95 @@ describe('sparql-utils IRI rewrite', () => {
   test('formats target IRIs as prefixed names when active prefixes support them', () => {
     expect(formatSparqlIriToken('http://www.w3.org/2000/01/rdf-schema#comment', prefixes)).toBe('rdfs:comment');
     expect(formatSparqlIriToken('http://other.example/x', prefixes)).toBe('<http://other.example/x>');
+  });
+});
+
+describe('sparql-utils query pattern extraction', () => {
+  const ast = {
+    queryType: 'SELECT',
+    prefixes: { foaf: 'http://xmlns.com/foaf/0.1/' },
+    variables: [{ termType: 'Variable', value: 'person' }],
+    where: [
+      {
+        type: 'bgp',
+        triples: [
+          {
+            subject: { termType: 'Variable', value: 'person' },
+            predicate: { termType: 'NamedNode', value: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type' },
+            object: { termType: 'NamedNode', value: 'http://xmlns.com/foaf/0.1/Person' }
+          }
+        ]
+      },
+      {
+        type: 'optional',
+        patterns: [{
+          type: 'bgp',
+          triples: [{
+            subject: { termType: 'Variable', value: 'person' },
+            predicate: { termType: 'NamedNode', value: 'http://xmlns.com/foaf/0.1/name' },
+            object: { termType: 'Literal', value: 'Alice', language: 'en' }
+          }]
+        }]
+      }
+    ]
+  };
+
+  test('extracts selected variables and recursive WHERE triples', () => {
+    expect([...extractSelectedVariableKeysFromSparqlAst(ast)]).toEqual(['var:?person']);
+    expect(extractWhereTriplesFromSparqlAst(ast.where)).toHaveLength(2);
+  });
+
+  test('creates graph models from SPARQL.js AST-shaped objects', () => {
+    const graph = buildSparqlGraphModelFromAst(ast);
+
+    expect(graph.whereTripleCount).toBe(2);
+    expect(graph.nodes).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 'var:?person', isSelectedVar: true, category: 'variable' }),
+      expect.objectContaining({ id: 'iri:http://xmlns.com/foaf/0.1/Person', category: 'class' })
+    ]));
+    expect(graph.edges).toEqual(expect.arrayContaining([
+      expect.objectContaining({ category: 'rdfType' }),
+      expect.objectContaining({ category: 'datatypeProp' })
+    ]));
+  });
+
+  test('formats stable SPARQL AST term keys and labels', () => {
+    expect(createSparqlAstTermKey({ termType: 'Variable', value: 'x' })).toBe('var:?x');
+    expect(formatSparqlAstTermLabel({
+      termType: 'Literal',
+      value: 'Alice',
+      language: 'en',
+      datatype: { termType: 'NamedNode', value: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#langString' }
+    }, {})).toContain('"Alice"@en');
+  });
+});
+
+describe('sparql-utils update pattern implementation', () => {
+  test('builds CONSTRUCT previews for INSERT/DELETE WHERE updates', () => {
+    const previews = buildSparqlUpdatePreviewConstructs([
+      'PREFIX ex: <http://example.org/>',
+      'DELETE { ?s ex:old ?o }',
+      'INSERT { ?s ex:new ?o }',
+      'WHERE { ?s ex:old ?o }'
+    ].join('\n'));
+
+    expect(previews).toHaveLength(2);
+    expect(previews[0]).toEqual(expect.objectContaining({
+      label: 'Triples that would be deleted',
+      query: expect.stringContaining('CONSTRUCT {  ?s ex:old ?o  } WHERE {  ?s ex:old ?o  }')
+    }));
+    expect(previews[1]).toEqual(expect.objectContaining({
+      label: 'Triples that would be inserted',
+      query: expect.stringContaining('CONSTRUCT {  ?s ex:new ?o  } WHERE {  ?s ex:old ?o  }')
+    }));
+  });
+
+  test('builds CONSTRUCT preview for INSERT DATA', () => {
+    const previews = buildSparqlUpdatePreviewConstructs('INSERT DATA { <s> <p> <o> . }');
+
+    expect(previews).toEqual([{
+      label: 'Triples that would be inserted',
+      query: '\nCONSTRUCT {  <s> <p> <o> .  } WHERE {}'
+    }]);
   });
 });

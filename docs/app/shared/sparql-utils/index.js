@@ -23,3 +23,24 @@ export {
   formatSparqlIriToken,
   rewriteSparqlIris
 } from './iri-rewrite.js';
+
+export {
+  applySparqlTypeHeuristicsToGraphNodes,
+  buildSparqlGraphModelFromAst,
+  classifySparqlTriplePatternEdge,
+  compactSparqlAstIriForDisplay,
+  createSparqlAstTermKey,
+  extractSelectedVariableKeysFromSparqlAst,
+  extractWhereTriplesFromSparqlAst,
+  formatSparqlAstTermLabel,
+  parseSparqlQueryToAst,
+  selectBestSparqlAstPrefixForIri
+} from './query-patterns.js';
+
+export {
+  buildSparqlUpdatePreviewConstructs,
+  describeSparqlUpdateShape,
+  parseSparqlDeleteInsertWhereUpdate,
+  parseSparqlDeleteWhereUpdate,
+  parseSparqlInsertWhereUpdate
+} from './update-patterns.js';

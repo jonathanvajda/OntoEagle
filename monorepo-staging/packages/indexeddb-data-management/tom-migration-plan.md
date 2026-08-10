@@ -34,10 +34,49 @@ Important current behavior to preserve:
 |Normalized working table/session|`ArtifactRecord` in `artifacts`|`artifactKind: 'ontology-table'`, `role: 'staged'`|
 |Generated ontology RDF|`ArtifactRecord` in `artifacts`|`artifactKind: 'ontology-rdf'`, `role: 'generated'` or `transformed`|
 |Generated RDF graph rows, when materialized|`GraphRecord` plus `QuadRow` records|`role: 'generated'`|
-|Ontology settings object|`SettingRecord` in `settings`|Scope `project:<projectId>`, key `ontologySettings`|
+|Ontology metadata profile|`SettingRecord` in `settings`|Scope `project:<projectId>`, key `okea:OntologyMetadataProfile`; value is a canonical full-IRI JSON-LD-compatible ontology metadata record|
 |Save/export/generation event|`RunRecord` in `runs`|`runKind: 'ontology-generation'` or `export`|
 
 TOM should initially remain a single-project app. The shared package should provide the storage substrate; TOM should continue to own the ontology table model, grid rendering, settings modal, and RDF generation UI.
+
+## RDF Composition State
+
+### As-Is
+
+- TOM's editable table/grid remains the primary in-memory working model for ontology content.
+- TOM ontology metadata settings are now stored in the shared project settings store as JSON-LD-compatible data using full IRI keys.
+- TOM export currently still composes RDF from app-owned in-memory table/settings state, then passes the resulting RDF dataset/serialization path through shared RDF and format utilities.
+- TOM does not yet consistently materialize the table rows plus ontology metadata into shared `quadRows` before export.
+- Generated RDF is saved as a project artifact. Optional graph-row materialization is documented, but not the required export source yet.
+
+This means TOM is aligned with the shared storage/settings model, but the RDF composition pipeline is not yet fully canonicalized around `quadRows`.
+
+### To-Be
+
+TOM should use one canonical RDF composition path:
+
+1. Read TOM table rows from the Glide-backed table model.
+2. Read ontology metadata from the project-scoped `okea:OntologyMetadataProfile` setting.
+3. Normalize both into one RDF dataset represented as canonical RDF/quad rows.
+4. Serialize that RDF dataset through shared `rdf-io` into Turtle, TriG, N-Triples, N-Quads, JSON-LD, RDF/XML, or other supported formats.
+5. Save the serialized output as an `ontology-rdf` generated artifact.
+6. Optionally materialize the same dataset into `GraphRecord` plus `QuadRow` records for downstream search/query/reuse.
+
+The target flow is:
+
+`TOM table rows + ontology metadata record -> canonical RDF dataset/quadRows -> shared serializer -> generated ontology artifact`
+
+### Intended Path
+
+1. Keep the current TOM UI adapter in place so the settings modal and table continue to work.
+2. Promote or add TOM-focused pure functions that build RDF terms/quads from table rows without touching DOM or IndexedDB.
+3. Add ontology metadata writer functions in the shared `ontology-metadata` package that append ontology-level triples/quads to an existing RDF dataset.
+4. Replace TOM's remaining app-local RDF composition branch with a single call sequence:
+   `readTomTableRows() -> buildTomOntologyQuads() -> appendOntologyMetadataQuads() -> serializeRdfDatasetWithAdapters()`.
+5. Add Jest fixtures proving that the old TOM expected outputs are preserved, or documenting exact intentional differences.
+6. Only after manual validation, make generated RDF export depend on the canonical dataset path instead of TOM's legacy composition path.
+
+This is intentionally separate from the already-completed settings migration. The settings migration fixes durable ontology metadata storage; the next RDF composition pass fixes how TOM turns table content plus metadata into serializable RDF.
 
 ## File System Access Rollout Guidance
 
@@ -84,7 +123,7 @@ Conflict handling:
 |All `workspaceStore` snapshots, if retained|Store as historical staged artifacts or run payloads|Prefer latest-only for initial migration unless user requests history|
 |Latest `rdfStore` record|Store serialized RDF as artifact payload|`artifactKind: 'ontology-rdf'`, `role: 'generated'`|
 |Generated RDF parsed into triples/quads|Optional materialization through `rdf-io` then `storeGraphQuadRows()`|Only after parse success; do not block restoring TOM UI|
-|`ontologySettingsStore.ontologySettings`|`normalizeSettingRecord({ scope: projectId, key: 'ontologySettings', value })`|`settingsStore.storeSettingRecord()`|
+|`ontologySettingsStore.ontologySettings`|Normalize to canonical ontology metadata record|`settingsStore.storeSettingRecord()` with key `okea:OntologyMetadataProfile`|
 
 ## Migration Workflow
 

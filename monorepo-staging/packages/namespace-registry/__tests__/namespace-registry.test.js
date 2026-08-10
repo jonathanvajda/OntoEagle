@@ -9,12 +9,10 @@ import {
   expandCurieToIri,
   extractJsonLdContextPrefixes,
   extractRdfPrefixesFromText,
-  extractSparqlPrefixesFromText,
   extractTurtlePrefixDeclarations,
   extractXmlNamespacePrefixes,
   findLongestPrefixMatch,
   formatIriForDisplay,
-  formatSparqlPrefixDeclarations,
   iriForNamespaceId,
   namespaceIriMapFromRegistry,
   listNamespaceStemsInStore,
@@ -22,7 +20,6 @@ import {
   namespacePrefixMapFromRegistry,
   namespaceToPrefixMap,
   normalizePrefixMap,
-  prependSparqlPrefixes,
   selectPrefixesUsedByRdfTerms,
   saveProjectPrefixes
 } from '../src/index.js';
@@ -121,9 +118,53 @@ describe('namespace-registry package', () => {
       ok: true,
       value: 'https://github.com/jonathanvajda/okea/OntologyOfKnowledgeEngineeringArtifacts'
     });
+    expect(iriForNamespaceId('okea', 'OntologyMetadataProfile')).toEqual({
+      ok: true,
+      value: 'https://github.com/jonathanvajda/okea/OntologyMetadataProfile'
+    });
     expect(iriForNamespaceId('okea', 'artifact')).toEqual({
       ok: true,
       value: 'https://github.com/jonathanvajda/okea/artifact'
+    });
+    expect(iriForNamespaceId('okea', 'hasGitRepositoryUrl')).toEqual({
+      ok: true,
+      value: 'https://github.com/jonathanvajda/okea/has_git_repository_url'
+    });
+    expect(iriForNamespaceId('okea', 'hasGeneratingSoftwareApplicationName')).toEqual({
+      ok: true,
+      value: 'https://github.com/jonathanvajda/okea/has_generating_software_application_name'
+    });
+    expect(iriForNamespaceId('okea', 'hasGenerationRunIdentifier')).toEqual({
+      ok: true,
+      value: 'https://github.com/jonathanvajda/okea/has_generation_run_identifier'
+    });
+    expect(iriForNamespaceId('okea', 'hasIssueTrackerUrl')).toEqual({
+      ok: true,
+      value: 'https://github.com/jonathanvajda/okea/has_issue_tracker_url'
+    });
+    expect(iriForNamespaceId('okea', 'hasOntologyDownloadUrl')).toEqual({
+      ok: true,
+      value: 'https://github.com/jonathanvajda/okea/has_ontology_download_url'
+    });
+    expect(iriForNamespaceId('okea', 'hasQualityAssuranceReportUrl')).toEqual({
+      ok: true,
+      value: 'https://github.com/jonathanvajda/okea/has_quality_assurance_report_url'
+    });
+    expect(iriForNamespaceId('okea', 'hasOntologyBaseIri')).toEqual({
+      ok: true,
+      value: 'https://github.com/jonathanvajda/okea/has_ontology_base_iri'
+    });
+    expect(iriForNamespaceId('okea', 'hasIriPolicyModeTextValue')).toEqual({
+      ok: true,
+      value: 'https://github.com/jonathanvajda/okea/has_iri_policy_mode_text_value'
+    });
+    expect(iriForNamespaceId('okea', 'hasOpaqueIriLocalNameIntegerWidthValue')).toEqual({
+      ok: true,
+      value: 'https://github.com/jonathanvajda/okea/has_opaque_iri_local_name_integer_width_value'
+    });
+    expect(iriForNamespaceId('okea', 'hasIriVersionInsertionPositionTextValue')).toEqual({
+      ok: true,
+      value: 'https://github.com/jonathanvajda/okea/has_iri_version_insertion_position_text_value'
     });
     expect(iriForNamespaceId('dc', 'contributor')).toEqual({
       ok: true,
@@ -292,50 +333,6 @@ describe('namespace-registry package', () => {
       ok: false,
       error: 'rdf prefix parser error',
       message: 'bad rdf'
-    });
-  });
-
-  test('SPARQL prefix helpers extract, format, and prepend prologues without logging', () => {
-    const query = `
-      BASE <https://example.org/base/>
-      PREFIX ex: <https://example.org/>
-      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-      SELECT * WHERE { ?s rdfs:label ?o }
-    `;
-    const extracted = extractSparqlPrefixesFromText(query);
-    expect(extracted).toMatchObject({
-      ok: true,
-      baseIri: 'https://example.org/base/',
-      prefixes: {
-        ex: 'https://example.org/',
-        rdfs: 'http://www.w3.org/2000/01/rdf-schema#'
-      }
-    });
-
-    expect(formatSparqlPrefixDeclarations({ rdfs: COMMON_NAMESPACE_REGISTRY.rdfs.namespaceIri, ex: 'https://example.org/' }).value)
-      .toBe('PREFIX ex: <https://example.org/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>');
-
-    expect(prependSparqlPrefixes('SELECT * WHERE { ?s ?p ?o }', { ex: 'https://example.org/' }, { baseIri: 'https://example.org/base/' }).value)
-      .toBe('BASE <https://example.org/base/>\nPREFIX ex: <https://example.org/>\n\nSELECT * WHERE { ?s ?p ?o }');
-  });
-
-  test('SPARQL prefix helpers preserve duplicate/invalid-prefix warnings', () => {
-    const extracted = extractSparqlPrefixesFromText(`
-      PREFIX ex: <https://example.org/old/>
-      PREFIX ex: <https://example.org/new/>
-      PREFIX bad: <relative/path>
-      SELECT * WHERE { ?s ?p ?o }
-    `);
-    expect(extracted.prefixes).toEqual({ ex: 'https://example.org/new/' });
-    expect(extracted.warnings).toEqual([
-      'Duplicate SPARQL prefix "ex" found; using the last declaration.',
-      'Ignored prefix "bad" with invalid namespace IRI.'
-    ]);
-
-    expect(prependSparqlPrefixes('', { good: 'https://example.org/', bad: 'relative' })).toEqual({
-      ok: true,
-      value: 'PREFIX good: <https://example.org/>',
-      warnings: ['Ignored prefix "bad" with invalid namespace IRI.']
     });
   });
 

@@ -2,10 +2,7 @@ import {
   ADDED_BY_USER_IRI,
   extractDocumentsFromJsonLd,
   mapByIri,
-  parseGraphJsonLdText,
-  valueToDisplayValues,
-  valueToIris,
-  valueToStrings
+  parseGraphJsonLdText
 } from './rdf_extract.js';
 import { readFileAsText } from './shared/browser-file-io/index.js';
 import { getSupportedMimeTypeForFilename } from './shared/format-registry/index.js';
@@ -14,9 +11,12 @@ import {
   rdfDatasetToJsonLdGraph
 } from './shared/rdf-io/index.js';
 import {
-  COMMON_NAMESPACE_REGISTRY,
-  iriForNamespaceId
+  COMMON_NAMESPACE_REGISTRY
 } from './shared/namespace-registry/index.js';
+import {
+  getJsonLdGraphNodes,
+  readOntologyRecordsFromJsonLd
+} from './shared/ontology-metadata/index.js';
 import {
   listOntologyDatasetMeta,
   getOntologyDatasetMeta,
@@ -30,57 +30,8 @@ import {
   storeOntoEagleRunRecord
 } from './ontoeagle-indexeddb-store.js';
 
-function namespaceIdIri(namespaceKey, idKey) {
-  const result = iriForNamespaceId(namespaceKey, idKey);
-  if (!result.ok) {
-    throw new Error(`Missing namespace registry ID: ${namespaceKey}:${idKey}`);
-  }
-  return result.value;
-}
-
-function namespaceIri(namespaceKey) {
-  const namespace = COMMON_NAMESPACE_REGISTRY[namespaceKey]?.namespaceIri;
-  if (!namespace) {
-    throw new Error(`Missing namespace registry entry: ${namespaceKey}`);
-  }
-  return namespace;
-}
-
 const NAMESPACE = Object.freeze({
-  obo: namespaceIri('obo')
-});
-
-const IRI = Object.freeze({
-  rdfType: namespaceIdIri('rdf', 'type'),
-  rdfsLabel: namespaceIdIri('rdfs', 'label'),
-  rdfsComment: namespaceIdIri('rdfs', 'comment'),
-  rdfsIsDefinedBy: namespaceIdIri('rdfs', 'isDefinedBy'),
-  owlOntology: namespaceIdIri('owl', 'Ontology'),
-  owlVersionIri: namespaceIdIri('owl', 'versionIRI'),
-  owlVersionInfo: namespaceIdIri('owl', 'versionInfo'),
-  owlImports: namespaceIdIri('owl', 'imports'),
-  owlPriorVersion: namespaceIdIri('owl', 'priorVersion'),
-  owlBackwardCompatibleWith: namespaceIdIri('owl', 'backwardCompatibleWith'),
-  owlIncompatibleWith: namespaceIdIri('owl', 'incompatibleWith'),
-  skosDefinition: namespaceIdIri('skos', 'definition'),
-  dctermsTitle: namespaceIdIri('dcterms', 'title'),
-  dctermsDescription: namespaceIdIri('dcterms', 'description'),
-  dctermsLicense: namespaceIdIri('dcterms', 'license'),
-  dctermsRightsHolder: namespaceIdIri('dcterms', 'rightsHolder'),
-  dctermsRights: namespaceIdIri('dcterms', 'rights'),
-  dctermsCreator: namespaceIdIri('dcterms', 'creator'),
-  dctermsContributor: namespaceIdIri('dcterms', 'contributor'),
-  dctermsCreated: namespaceIdIri('dcterms', 'created'),
-  dctermsModified: namespaceIdIri('dcterms', 'modified'),
-  dctermsPublisher: namespaceIdIri('dcterms', 'publisher'),
-  dctermsBibliographicCitation: namespaceIdIri('dcterms', 'bibliographicCitation'),
-  dcTitle: namespaceIdIri('dc', 'title'),
-  dcDescription: namespaceIdIri('dc', 'description'),
-  dcLicense: namespaceIdIri('dc', 'license'),
-  dcRights: namespaceIdIri('dc', 'rights'),
-  dcCreator: namespaceIdIri('dc', 'creator'),
-  dcContributor: namespaceIdIri('dc', 'contributor'),
-  ccoCuratedIn: namespaceIdIri('cco2', 'curatedIn')
+  obo: COMMON_NAMESPACE_REGISTRY.obo.namespaceIri
 });
 const DATASET_SCHEMA_VERSION = 2;
 const REGISTRY_STORAGE_KEY = 'ontoeagle:ontologyRegistryOverrides';
@@ -96,83 +47,6 @@ export const ONTOLOGY_LEVELS = Object.freeze([
   { key: 'kg', label: 'Knowledge Graphs' },
   { key: 'unsorted', label: 'Unsorted Ontologies' }
 ]);
-
-const P = Object.freeze({
-  type: [IRI.rdfType, 'rdf:type', '@type'],
-  label: [IRI.dctermsTitle, 'dcterms:title', IRI.dcTitle, 'dc:title', IRI.rdfsLabel, 'rdfs:label'],
-  description: [IRI.dctermsDescription, 'dcterms:description', IRI.dcDescription, 'dc:description', IRI.skosDefinition, 'skos:definition', IRI.rdfsComment, 'rdfs:comment'],
-  versionIri: [IRI.owlVersionIri, 'owl:versionIRI'],
-  versionInfo: [IRI.owlVersionInfo, 'owl:versionInfo'],
-  imports: [IRI.owlImports, 'owl:imports'],
-  license: [IRI.dctermsLicense, 'dcterms:license', IRI.dcLicense, 'dc:license'],
-  rightsHolder: [IRI.dctermsRightsHolder, 'dcterms:rightsHolder', IRI.dctermsRights, 'dcterms:rights', IRI.dcRights, 'dc:rights'],
-  creator: [IRI.dctermsCreator, 'dcterms:creator', IRI.dcCreator, 'dc:creator'],
-  contributor: [IRI.dctermsContributor, 'dcterms:contributor', IRI.dcContributor, 'dc:contributor'],
-  comment: [IRI.rdfsComment, 'rdfs:comment'],
-  created: [IRI.dctermsCreated, 'dcterms:created'],
-  modified: [IRI.dctermsModified, 'dcterms:modified'],
-  publisher: [IRI.dctermsPublisher, 'dcterms:publisher'],
-  citation: [IRI.dctermsBibliographicCitation, 'dcterms:bibliographicCitation'],
-  priorVersion: [IRI.owlPriorVersion, 'owl:priorVersion'],
-  backwardCompatibleWith: [IRI.owlBackwardCompatibleWith, 'owl:backwardCompatibleWith'],
-  incompatibleWith: [IRI.owlIncompatibleWith, 'owl:incompatibleWith'],
-  curatedIn: [IRI.ccoCuratedIn, IRI.rdfsIsDefinedBy, 'rdfs:isDefinedBy']
-});
-
-function getGraph(jsonld) {
-  if (Array.isArray(jsonld)) return jsonld;
-  if (Array.isArray(jsonld?.['@graph'])) return jsonld['@graph'];
-  return [];
-}
-
-function getAny(node, keys) {
-  if (!node || typeof node !== 'object') return undefined;
-  for (const key of keys) {
-    if (key in node) return node[key];
-  }
-  return undefined;
-}
-
-function valuesForKeys(node, keys) {
-  const values = [];
-  for (const key of keys) {
-    const raw = getAny(node, [key]);
-    if (raw == null) continue;
-    values.push(...(Array.isArray(raw) ? raw : [raw]));
-    if (values.length) break;
-  }
-  return values;
-}
-
-function languageRank(value) {
-  if (!value || typeof value !== 'object') return 1;
-  const lang = String(value['@language'] || '').toLowerCase();
-  if (lang === 'en') return 0;
-  if (!lang) return 1;
-  return 2;
-}
-
-function sortLanguagePreferred(values) {
-  return [...values].sort((a, b) => languageRank(a) - languageRank(b));
-}
-
-function hasOntologyType(node) {
-  return valueToStrings(getAny(node, P.type)).includes(IRI.owlOntology)
-    || valueToIris(getAny(node, P.type)).includes(IRI.owlOntology);
-}
-
-function firstString(node, keys) {
-  const values = sortLanguagePreferred(valuesForKeys(node, keys));
-  return valueToStrings(values)[0] || valueToDisplayValues(values)[0]?.value || '';
-}
-
-function displayValues(node, keys) {
-  return valueToDisplayValues(sortLanguagePreferred(valuesForKeys(node, keys)));
-}
-
-function uniqueStrings(values) {
-  return [...new Set((values || []).map((v) => String(v || '').trim()).filter(Boolean))];
-}
 
 function normalizeLogo(value) {
   const v = String(value || '').toLowerCase();
@@ -220,7 +94,7 @@ function stableDatasetId(fileName, fingerprint) {
 }
 
 function annotateUserJsonLd(jsonld) {
-  for (const node of getGraph(jsonld)) {
+  for (const node of getJsonLdGraphNodes(jsonld)) {
     if (node && typeof node === 'object' && typeof node['@id'] === 'string' && node['@id'].startsWith('http')) {
       node[ADDED_BY_USER_IRI] = [{ '@value': 'TRUE' }];
     }
@@ -340,7 +214,7 @@ export async function importUserOntologyFile(file) {
     ontologyName,
     fileName: file.name
   });
-  const ontologyRecords = extractOntologyRecordsFromJsonLd(jsonld).records.map((record) => ({
+  const ontologyRecords = readOntologyRecordsFromJsonLd(jsonld).records.map((record) => ({
     ...record,
     addedByUser: true,
     source: 'user',
@@ -402,49 +276,7 @@ async function saveOntologySnapshot(ontologyIndex) {
   });
 }
 
-export function extractOntologyRecordsFromJsonLd(jsonld) {
-  const graph = getGraph(jsonld);
-  const records = [];
-  const versionToOntologyIri = new Map();
-
-  for (const node of graph) {
-    if (!node || typeof node !== 'object' || typeof node['@id'] !== 'string') continue;
-    if (!hasOntologyType(node)) continue;
-
-    const iri = node['@id'];
-    const versionIris = valueToIris(getAny(node, P.versionIri));
-    const record = {
-      iri,
-      label: firstString(node, P.label) || iri,
-      description: firstString(node, P.description),
-      versionIri: versionIris[0] || '',
-      versionIriCount: versionIris.length,
-      versionInfo: uniqueStrings(valueToStrings(getAny(node, P.versionInfo))),
-      imports: uniqueStrings(valueToIris(getAny(node, P.imports))),
-      license: displayValues(node, P.license),
-      rightsHolder: displayValues(node, P.rightsHolder),
-      creators: displayValues(node, P.creator),
-      contributors: displayValues(node, P.contributor),
-      comments: displayValues(node, P.comment),
-      created: displayValues(node, P.created),
-      modified: displayValues(node, P.modified),
-      publisher: displayValues(node, P.publisher),
-      citations: displayValues(node, P.citation),
-      priorVersion: valueToIris(getAny(node, P.priorVersion)),
-      backwardCompatibleWith: valueToIris(getAny(node, P.backwardCompatibleWith)),
-      incompatibleWith: valueToIris(getAny(node, P.incompatibleWith)),
-      registry: null,
-      ontology_level: 'unsorted',
-      registered: false,
-      addedByUser: false
-    };
-
-    records.push(record);
-    for (const versionIri of versionIris) versionToOntologyIri.set(versionIri, iri);
-  }
-
-  return { records, byIri: new Map(records.map((record) => [record.iri, record])), versionToOntologyIri };
-}
+export { readOntologyRecordsFromJsonLd as extractOntologyRecordsFromJsonLd };
 
 export async function loadRegistryOverrides() {
   const parsed = await getOntoEagleAppSetting(REGISTRY_STORAGE_KEY, []);
@@ -574,7 +406,7 @@ export async function loadOntologyWorkspace(options = {}) {
 
   if (!ontologyIndex) {
     const { jsonld } = await ensureBuiltinDataset();
-    ontologyIndex = extractOntologyRecordsFromJsonLd(jsonld);
+    ontologyIndex = readOntologyRecordsFromJsonLd(jsonld);
     await saveOntologySnapshot(ontologyIndex);
   }
 

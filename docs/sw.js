@@ -4,7 +4,7 @@
    - graph.jsonld: stale-while-revalidate
 */
 
-const SW_VERSION = '__BUILD_ID__-ontology-utils-v1';
+const SW_VERSION = '__BUILD_ID__-sparql-utils-v1';
 const CACHE_SHELL = `ontoeagle-shell-${SW_VERSION}`;
 const CACHE_DATA = `ontoeagle-data-${SW_VERSION}`;
 
@@ -68,7 +68,6 @@ const SHELL_ASSETS = [
   './app/shared/namespace-registry/prefix-map.js',
   './app/shared/namespace-registry/rdf-prefixes.js',
   './app/shared/namespace-registry/rdf-serialization-prefixes.js',
-  './app/shared/namespace-registry/sparql-prefixes.js',
   './app/shared/ontology-utils/identifiers.js',
   './app/shared/ontology-utils/index.js',
   './app/shared/ontology-utils/iri.js',
@@ -76,6 +75,13 @@ const SHELL_ASSETS = [
   './app/shared/ontology-utils/ontology-namespace.js',
   './app/shared/ontology-utils/rdf-terms.js',
   './app/shared/ontology-utils/xsd-datatypes.js',
+  './app/shared/sparql-utils/index.js',
+  './app/shared/sparql-utils/iri-rewrite.js',
+  './app/shared/sparql-utils/lexical-scan.js',
+  './app/shared/sparql-utils/prologue.js',
+  './app/shared/sparql-utils/query-patterns.js',
+  './app/shared/sparql-utils/query-kind.js',
+  './app/shared/sparql-utils/update-patterns.js',
   './app/shared/rdf-io/index.js',
   './app/shared/rdf-io/graph-export.js',
   './app/shared/rdf-io/jsonld-adapter.js',

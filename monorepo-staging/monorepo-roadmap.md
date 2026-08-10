@@ -527,7 +527,7 @@ Then continuing onto:
 1. Ontology-related utils (is valid URN, is valid IRI, is blank node, is ontology file, xsd datatype detection/updating, etc.; make UUID/GUID)
 1. Normalization utils (toCamelCase, toPascalCase, toSnakeCase, etc.; getting datetime, appending datetime to filename)
 1. SPARQL query pattern extraction
-1. Ontology metadata extraction
+1. Ontology metadata read/write and IRI provisioning
 1. SPARQL update pattern implementation
 1. Visualization of RDF in Mermaid
 1. Visualization of RDF in Cytoscape
@@ -611,8 +611,8 @@ Tentative families to start with:
     - Export quads/datasets to TTL, TriG, N-Triples, N-Quads, JSON-LD, RDF/XML.
 1. IRI and CURIE Utilities
     - IRI validation, compact/expand CURIEs, prefix lookup, safe IRI generation, replacement.
-1. Ontology Metadata Extraction
-    - Ontology IRI, version IRI, title, description, imports, license, creator, modified date.
+1. Ontology Metadata Read/Write and IRI Provisioning
+    - Read, normalize, write, and round-trip ontology IRI, version IRI, imports, title, description, license/access rights, creator, contributor, repository URLs, issue tracker URLs, download URLs, quality assurance report URLs, base IRI, IRI schema, local-name style, opaque/readable policy, and next-IRI provisioning.
 1. RDF Graph Operations
     - Filtering quads, graph merging, graph diffing, graph overlays, graph validation helpers.
 1. Project Data Model
