@@ -30,10 +30,16 @@ Use full IRIs internally. Compact keys are only for serialization.
 |License/access rights|`dcterms:license`|`dc:license`, `dcterms:accessRights`, `dc:accessRights`, `skos:accessRights`.|License URL literals should use `xsd:anyURI` where serialized as typed literals.|
 |Creator|`dcterms:creator`|`dc:creator`.|Values may be ORCID IRIs or text literals.|
 |Contributor|`dcterms:contributor`|`dc:contributor`.|Values may be ORCID IRIs or text literals.|
+|Created datetime|`dcterms:created`|App legacy `createdAt` / `createdAtIso` inputs during normalization.|Use `xsd:dateTime` literals. For generated ontology outputs, this should match the transformation run datetime.|
+|Modified datetime|`dcterms:modified`|App legacy `modifiedAt` / `modifiedAtIso` inputs during normalization.|Use `xsd:dateTime` literals. For generated ontology outputs, default to the run datetime unless a later edit timestamp is known.|
+|Source|`dcterms:source`|None.|Use a privacy-safe local filename string for browser file inputs. Do not emit full local filesystem paths.|
+|Format|`dcterms:format`|None.|Use the official MIME type for the serialized export, for example `text/turtle`, not `Turtle` or `ttl`.|
 |Git repository URL|`okea:has_git_repository_url`|None.|New OKEA predicate, because DCTERMS/RDFS/SKOS do not cover this precisely.|
 |Issue tracker URL|`okea:has_issue_tracker_url`|None.|New OKEA predicate.|
 |Ontology download URL|`okea:has_ontology_download_url`|None.|New OKEA predicate.|
 |Quality assurance report URL|`okea:has_quality_assurance_report_url`|None.|New OKEA predicate.|
+|Generating software application name|`okea:has_generating_software_application_name`|None.|New OKEA predicate for generated ontology artifacts.|
+|Generation run identifier|`okea:has_generation_run_identifier`|None.|New OKEA predicate. Value is an `xsd:string` identifier; UUID/GUID values are valid but not required.|
 
 ## Canonical Internal Record Shape
 
@@ -63,6 +69,15 @@ Example:
   [COMMON_NAMESPACE_IRIS.owl.imports]: [
     { '@id': 'https://example.org/imported/ImportedOntology' }
   ],
+  [COMMON_NAMESPACE_IRIS.dcterms.created]: [
+    { '@value': '2026-08-10T15:32:45.000Z', '@type': COMMON_NAMESPACE_IRIS.xsd.dateTime }
+  ],
+  [COMMON_NAMESPACE_IRIS.dcterms.format]: [
+    { '@value': 'text/turtle' }
+  ],
+  [COMMON_NAMESPACE_IRIS.dcterms.source]: [
+    { '@value': 'source-file.csv' }
+  ],
   [COMMON_NAMESPACE_IRIS.dcterms.title]: [
     { '@value': 'Example Ontology', '@language': 'en' }
   ],
@@ -77,6 +92,12 @@ Example:
   [COMMON_NAMESPACE_IRIS.okea.hasIssueTrackerUrl]: [],
   [COMMON_NAMESPACE_IRIS.okea.hasOntologyDownloadUrl]: [],
   [COMMON_NAMESPACE_IRIS.okea.hasQualityAssuranceReportUrl]: [],
+  [COMMON_NAMESPACE_IRIS.okea.hasGeneratingSoftwareApplicationName]: [
+    { '@value': 'Table-Nova' }
+  ],
+  [COMMON_NAMESPACE_IRIS.okea.hasGenerationRunIdentifier]: [
+    { '@value': 'run:table-nova:example' }
+  ],
   [COMMON_NAMESPACE_IRIS.okea.hasOntologyBaseIri]: [
     { '@value': 'https://example.org', '@type': COMMON_NAMESPACE_IRIS.xsd.anyURI }
   ],
@@ -267,12 +288,9 @@ The package now includes the canonical full-IRI metadata record shape, RDF quad 
 - When exporting combined ABox/TBox RDF, include the same ontology declaration and metadata in the combined dataset.
 - Keep ABox-only exports free of ontology metadata unless the user explicitly asks to describe the dataset as an ontology.
 - Populate metadata from the transformation run where possible: source file name/title, generated datetime/version IRI, creator/profile settings if available, app/run provenance, and project artifact metadata.
-- Use `appendOntologyMetadataQuads`; do not hand-roll `<iri> rdf:type owl:Ontology` or local metadata constants in Table-Nova.
-- Final behavior is intentionally TBD until the Table-Nova rewire. The supported options should include:
-  - Require the user to provide an ontology IRI before TBox/combined ontology metadata is emitted.
-  - Generate an ontology IRI from project/run title and default base IRI.
-  - Emit metadata only when a project or app setting enables generated ontology metadata.
-  - Emit metadata by default for TBox/combined exports, with an opt-out setting.
+- Use `buildTableNovaOntologyMetadataRecord` for Table-Nova's app-specific composition and `appendOntologyMetadataQuads` for RDF materialization; do not hand-roll `<iri> rdf:type owl:Ontology` or local metadata constants.
+- Current behavior: emit metadata by default for TBox/combined exports, using generated ontology IRI, datetime version IRI, source filename, MIME `dcterms:format`, and generation run/app provenance. ABox-only exports remain unchanged.
+- Future supported options may include requiring an explicit ontology IRI, generating one from project settings, or providing an opt-out setting.
 
 ## Jest Coverage Needed
 
@@ -282,7 +300,9 @@ The package now includes the canonical full-IRI metadata record shape, RDF quad 
 - Read and write OKEA repository/issue/download/QA URLs.
 - Write `<ontologyIri> rdf:type owl:Ontology` for generated ontology metadata records.
 - Append ontology metadata quads to an existing TBox dataset without changing original ABox/TBox quads.
-- Write metadata to RDF quads and JSON-LD object form.
+- Write metadata to RDF quads and read it back into the canonical full-IRI JSON-LD-compatible shape.
+- Preserve `dcterms:created`, `dcterms:source`, `dcterms:format`, `okea:has_generating_software_application_name`, and `okea:has_generation_run_identifier`.
+- Verify `dcterms:format` uses MIME values and `dcterms:source` does not leak full local paths.
 - Generate semantic-version and datetime version IRIs.
 - Provision next opaque IRI from sparse existing IRIs.
 - Provision readable IRIs in PascalCase, camelCase, snake_case, kebab-case, Train-Case, and COBOL-CASE.
