@@ -20,7 +20,7 @@ import {
   scanSparqlLexicalTokens,
   splitSparqlPrologueFromBody,
   stripSparqlLineComments
-} from '../docs/app/shared/sparql-utils/index.js';
+} from '../src/index.js';
 
 describe('sparql-utils prologue handling', () => {
   test('extracts namespace prefixes and keeps BASE separate from prefix maps', () => {

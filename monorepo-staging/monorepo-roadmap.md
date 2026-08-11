@@ -503,14 +503,14 @@ Here are all of the apps:
         - OntoEagle and Ontology Bundler may remain one deployable site while depending on separate shared libraries. Likewise, Visual Lynx and Linked-Data Transformer can remain colocated without retaining duplicate RDF-handling code.
 
 Given this portfolio, I would prioritize:
-1. MIME type/format/extension registry
-1. Namespace prefix registry
-1. Browser file/download utilities
-1. Tabular parsing and serialization
-1. RDF parsing and serialization
-1. IndexedDB data storage conventions for project data
-1. IndexedDB data storage conventions for graph data
-1. IndexedDB data storage conventions for user/app settings
+1. [x] MIME type/format/extension registry
+2. [x] Namespace prefix registry
+3. [x] Browser file/download utilities
+4. [x] Tabular parsing and serialization
+5. [x] RDF parsing and serialization
+6. [x] IndexedDB data storage conventions for project data
+7. [x] IndexedDB data storage conventions for graph data
+8. [x] IndexedDB data storage conventions for user/app settings
 
 After these foundational capabilities, a large portion of your current duplicated infrastructure should already be centralized.
 ```
@@ -524,20 +524,18 @@ browser platform utilities
 ```
 
 Then continuing onto:
-1. Ontology-related utils (is valid URN, is valid IRI, is blank node, is ontology file, xsd datatype detection/updating, etc.; make UUID/GUID)
-1. Normalization utils (toCamelCase, toPascalCase, toSnakeCase, etc.; getting datetime, appending datetime to filename)
-1. SPARQL query pattern extraction
-1. Ontology metadata read/write and IRI provisioning
-1. SPARQL update pattern implementation
-1. Visualization of RDF in Mermaid
-1. Visualization of RDF in Cytoscape
-1. Visualization of SPARQL in Cytoscape
-1. YAML export
-1. HTML export
-1. Toast notifications, logging utils, status notifications, lightmode-darkmode
-1. Standardized JS API to run headless
-1. Package distribution, minification, etc.
-1. Documentation for an agent to run headless apps
+1. [x] Ontology-related utils (is valid URN, is valid IRI, is blank node, is ontology file, xsd datatype detection/updating, etc.; make UUID/GUID)
+2. [x] Normalization utils (toCamelCase, toPascalCase, toSnakeCase, etc.; getting datetime, appending datetime to filename)
+3. [x] SPARQL query pattern extraction
+4. [x] Ontology metadata read/write and IRI provisioning
+5. [x] SPARQL update pattern implementation
+6. [ ] Visualization of RDF in Cytoscape
+7. [ ] Visualization of SPARQL in Cytoscape
+8. [ ] YAML and HTML export
+9. [ ] Toast notifications, logging utils, status notifications, lightmode-darkmode
+10. [ ] Standardized JS API to run headless
+11. [ ] Package distribution, minification, and CDN exporting/importing
+12. [ ] Documentation for an agent to run headless apps
 
 # Promoting Code into Common library
 Since many of these code bases have common parentage or common principles (and developers), deduplication should usually be easier than ordinary legacy consolidation. The primary challenge is less “discover whether these implementations are related” and more:

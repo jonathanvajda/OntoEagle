@@ -10,10 +10,13 @@ The first package boundary is intentionally narrow:
 - SPARQL lexical scanning where comments, strings, and IRI references must be respected.
 - SPARQL read/update operation classification.
 - SPARQL IRI rewrite token extraction, preview rows, output rewriting, and change counting.
+- SPARQL UPDATE materialization against an injected quad-store adapter for supported DELETE/INSERT template shapes.
 
 The first package does not promote:
 
 - Comunica execution adapters.
+- Arbitrary SPARQL UPDATE execution against remote endpoints.
+- Administrative SPARQL UPDATE operations such as CLEAR, DROP, LOAD, CREATE, COPY, MOVE, and ADD.
 - SPARQL.js AST-to-graph visualization models.
 - App-specific query result rendering.
 - Diagnostic polarity grading.
@@ -38,6 +41,7 @@ Those should be follow-on adapter packages or later capability-family work.
 | IRI rewrite | IRI Swapper | Existing `rewriteSparqlQuery` is too broad | SPARQL text, prefixes, IRI map | Rewritten SPARQL and change log | Result object | None | Promote as `rewriteSparqlIris` |
 | Applied change count | IRI Swapper | Existing implementation inferred from output text | Rewrite result | Count | Pure numeric return | None | Promote as `countAppliedSparqlIriRewrites` using change log |
 | IRI token formatting | IRI Swapper + namespace-registry CURIE helpers | Existing `chooseQNameOrIri` is local/private | IRI and active prefixes | SPARQL token | Pure string return | None | Promote as `formatSparqlIriToken` |
+| SPARQL UPDATE quad-store materialization | Axiolotl + OCD Comunica adapters | Existing Axiolotl commit path was UI-local and split N-Triples strings; OCD has mature Comunica stream/error patterns | UPDATE text plus injected construct/query/parser/quad-store adapters | Insert/delete counts, target graph, operation log | Throws stable adapter/unsupported-shape errors | Side effects isolated to injected quad-store callbacks | Promote as `applySparqlUpdateToQuadStore` |
 
 ## Canonical Package Structure
 
@@ -50,7 +54,21 @@ docs/app/shared/sparql-utils/
   lexical-scan.js
   query-kind.js
   iri-rewrite.js
+  query-patterns.js
+  update-patterns.js
+  update-materialization.js
+monorepo-staging/packages/sparql-utils/src/
+  index.js
+  prologue.js
+  lexical-scan.js
+  query-kind.js
+  iri-rewrite.js
+  query-patterns.js
+  update-patterns.js
+  update-materialization.js
 tests/
+  sparql-utils.test.js
+monorepo-staging/packages/sparql-utils/__tests__/
   sparql-utils.test.js
 ```
 
@@ -125,6 +143,21 @@ Formats an IRI as a SPARQL prefixed name when active prefixes support it, otherw
 
 Counts applied changes from the rewrite change log.
 
+### `applySparqlUpdateToQuadStore(updateText, adapters, options)`
+
+Applies supported SPARQL UPDATE shapes to a quad store by materializing generated CONSTRUCT previews:
+
+- Runs delete previews through `adapters.runConstructQuery`.
+- Parses construct output through `adapters.parseConstructResult`.
+- Deletes exact rows through `adapters.deleteQuadRows`.
+- Runs insert previews, parses RDF/JS quads, and inserts rows through `adapters.insertQuadRows`.
+
+This function owns the reusable orchestration and row conversion. It does not own Comunica, IndexedDB, DOM, or logging. Those remain adapters.
+
+### `rdfJsQuadsToQuadRows(quads, options)`
+
+Converts RDF/JS quads to the shared quad-row-like shape used by project portfolio stores and Axiolotl's active workspace adapter.
+
 ## Error, Warning, And Logging Model
 
 - Pure promoted functions must not log.
@@ -132,6 +165,7 @@ Counts applied changes from the rewrite change log.
 - Structural failures return `ok:false` only where the caller requested a structural read, such as `readBalancedSparqlBraceBlock`.
 - Text classification returns `'UNKNOWN'` rather than throwing.
 - Rewrite functions return a change log instead of requiring callers to infer changes by searching output text.
+- UPDATE materialization throws when required adapters are missing or when the UPDATE shape is unsupported. This prevents silent no-op update execution.
 
 ## Namespace And Prefix Decision
 
@@ -155,6 +189,8 @@ Added `tests/sparql-utils.test.js` covering:
 - Rewrite of prefix declarations, IRI refs, and prefixed names.
 - Change-log-based applied count.
 - SPARQL IRI token formatting.
+- SPARQL UPDATE materialization through injected quad-store adapters.
+- RDF/JS quad-to-quad-row conversion preserving literal values, language, datatype, and graph.
 
 ## Conditional App Adoption Plan
 
@@ -181,6 +217,8 @@ Replace:
 - `getQueryKind` -> `classifySparqlOperationFamily`
 - `isUpdateQuery` -> `isSparqlUpdateOperation`
 - `buildQuery` and `commonSPARQLPrefixes` -> namespace-registry prefix map plus `prependSparqlPrologue` or `formatSparqlPrefixDeclarations`
+- UI-local `commitUpdateByMaterialization` internals -> `applySparqlUpdateToQuadStore` with Axiolotl adapters for `runConstructPreview`, `parseRdfTextWithAdapters`, `deleteExactTriples`, and `stashGraphToIndexedDB`
+- no-op `applyUpdateWithComunica` -> deleted
 
 Keep for later adapter pass:
 
@@ -189,9 +227,9 @@ Keep for later adapter pass:
 - `runQueryOnLocalDataset`
 - `runQueryOnEndpoint`
 - `runConstructPreview`
-- `applyConstructWithComunica`
+- Remote endpoint update execution
 
-Expected app change: query operation branching becomes package-driven, while IndexedDB workspace and Comunica execution remain Axiolotl-owned until the execution adapter package is promoted.
+Expected app change: query operation branching and supported local UPDATE materialization become package-driven. IndexedDB workspace and Comunica execution objects remain app adapters.
 
 ### OCM
 
