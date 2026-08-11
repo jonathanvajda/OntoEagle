@@ -105,6 +105,10 @@ describe('format-registry MIME helpers', () => {
       ok: true,
       value: { id: 'json', mimeType: 'application/json', category: 'data' }
     });
+    expect(getSupportedMimeTypeForFilename('report.yaml')).toMatchObject({
+      ok: true,
+      value: { id: 'yaml', mimeType: 'text/yaml', category: 'data' }
+    });
     expect(getSupportedMimeTypeForFilename('project.zip')).toMatchObject({
       ok: true,
       value: { id: 'zip', mimeType: 'application/zip', category: 'archive' }
@@ -145,6 +149,10 @@ describe('format-registry MIME helpers', () => {
     expect(normalizeSupportedMimeType('application/ld+json')).toMatchObject({
       ok: true,
       value: { id: 'jsonLd' }
+    });
+    expect(normalizeSupportedMimeType('application/x-yaml')).toMatchObject({
+      ok: true,
+      value: { id: 'yaml', mimeType: 'text/yaml' }
     });
     expect(normalizeSupportedMimeType('application/x-private')).toEqual({
       ok: false,

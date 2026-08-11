@@ -7,6 +7,13 @@ import {
   truncateText
 } from './ontology-meta.js';
 import { iconSvg } from './ontology-icons.js';
+import { serializeDelimitedRows } from './shared/tabular-io/index.js';
+import { downloadTextFile } from './shared/browser-file-io/index.js';
+import {
+  createReportTextExportDescriptor,
+  openPrintableHtmlDocument,
+  serializeReportDocumentToHtml
+} from './shared/report-export/index.js';
 
 const statusText = document.getElementById('ontStatusText');
 const ontologyCard = document.getElementById('ontologyCard');
@@ -217,8 +224,34 @@ function renderTermList(record) {
       { title: 'Definition', field: 'definition', headerFilter: 'input', widthGrow: 2, formatter: 'textarea' }
     ]
   });
-  document.getElementById('termCsvBtn')?.addEventListener('click', () => table.download('csv', `${record.label || 'ontology'}-terms.csv`));
-  document.getElementById('termPrintBtn')?.addEventListener('click', () => table.print(false, true));
+  document.getElementById('termCsvBtn')?.addEventListener('click', () => {
+    const csv = serializeDelimitedRows([
+      ['IRI', 'Type', 'Label', 'Synonym', 'Definition'],
+      ...rows.map((row) => [row.iri, row.type, row.label, row.synonym, row.definition])
+    ], { delimiter: ',', trailingNewline: true });
+    const descriptor = createReportTextExportDescriptor({
+      text: csv,
+      formatKey: 'csv',
+      baseFileName: `${record.label || 'ontology'}-terms`,
+      includeTimestamp: false
+    });
+    downloadTextFile(descriptor.fileName, descriptor.text, { mimeType: descriptor.mimeType });
+  });
+  document.getElementById('termPrintBtn')?.addEventListener('click', () => {
+    const title = `${record.label || 'Ontology'} Terms`;
+    const html = serializeReportDocumentToHtml({
+      title,
+      metadata: [['Ontology IRI', record.iri]],
+      tables: [{
+        caption: title,
+        headers: ['IRI', 'Type', 'Label', 'Synonym', 'Definition'],
+        rows: rows.map((row) => [row.iri, row.type, row.label, row.synonym, row.definition])
+      }]
+    }, {
+      css: '@page{size:landscape;margin:0.5in;}th,td{border:1px solid #000;overflow-wrap:anywhere;}'
+    });
+    openPrintableHtmlDocument(html);
+  });
 }
 
 function renderTermListDeferred(record) {

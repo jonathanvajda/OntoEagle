@@ -529,10 +529,10 @@ Then continuing onto:
 3. [x] SPARQL query pattern extraction
 4. [x] Ontology metadata read/write and IRI provisioning
 5. [x] SPARQL update pattern implementation
-6. [ ] Visualization of RDF in Cytoscape
-7. [ ] Visualization of SPARQL in Cytoscape
-8. [ ] YAML and HTML export
-9. [ ] Toast notifications, logging utils, status notifications, lightmode-darkmode
+6. [ ] YAML, HTML, and print export
+7. [ ] Toast notifications, logging utils, status notifications, lightmode-darkmode
+8. [ ] Visualization of RDF in Cytoscape
+9. [ ] Visualization of SPARQL in Cytoscape
 10. [ ] Standardized JS API to run headless
 11. [ ] Package distribution, minification, and CDN exporting/importing
 12. [ ] Documentation for an agent to run headless apps
