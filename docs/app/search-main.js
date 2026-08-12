@@ -29,6 +29,7 @@ import {
   createRdfQuadsFromObjects,
   rdfDatasetToJsonLdGraph
 } from './shared/rdf-io/index.js';
+import { renderStatusMessage } from './shared/ui-feedback/index.js';
   
 
 import {
@@ -115,7 +116,7 @@ const OWL_TYPE_IRIS = Object.freeze([
  * @param {string} s
  */
 function setStatus(s) {
-  if (elStatusText) elStatusText.textContent = s;
+  renderStatusMessage(elStatusText, { message: s, severity: 'info' }, { classPrefix: 'ont-status' });
 }
 
 function setSearchReady(isReady) {

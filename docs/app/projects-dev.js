@@ -23,6 +23,7 @@ import {
   scanProjectFolder,
   selectProjectFolder
 } from './shared/indexeddb-data-management/index.js';
+import { renderStatusMessage } from './shared/ui-feedback/index.js';
 
 const ONTOEAGLE_DB_NAME = 'OntoEagleDB';
 const PORTFOLIO_DB_NAME = 'OntologyWorkbenchProjects';
@@ -39,9 +40,8 @@ const fsaState = {
 };
 
 function setStatus(message, kind = 'info') {
-  if (!statusEl) return;
-  statusEl.textContent = message;
-  statusEl.dataset.kind = kind;
+  renderStatusMessage(statusEl, { message, severity: kind }, { classPrefix: 'project-status' });
+  if (statusEl) statusEl.dataset.kind = kind;
 }
 
 function el(tag, attrs = {}, children = []) {

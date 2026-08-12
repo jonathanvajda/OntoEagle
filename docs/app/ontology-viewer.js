@@ -14,6 +14,7 @@ import {
   openPrintableHtmlDocument,
   serializeReportDocumentToHtml
 } from './shared/report-export/index.js';
+import { renderStatusMessage } from './shared/ui-feedback/index.js';
 
 const statusText = document.getElementById('ontStatusText');
 const ontologyCard = document.getElementById('ontologyCard');
@@ -28,7 +29,7 @@ let workspace = null;
 let currentRecord = null;
 
 function setStatus(text) {
-  if (statusText) statusText.textContent = text;
+  renderStatusMessage(statusText, { message: text, severity: 'info' }, { classPrefix: 'ont-status' });
 }
 
 function escapeHtml(value) {

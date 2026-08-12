@@ -5,6 +5,7 @@
  *  - lexicon.js + POSTaggerGraph.js (for rebuild)
  */
 import { COMMON_NAMESPACE_IRIS } from './shared/namespace-registry/index.js';
+import { renderStatusMessage } from './shared/ui-feedback/index.js';
 
 (() => {
   "use strict";
@@ -33,7 +34,7 @@ import { COMMON_NAMESPACE_IRIS } from './shared/namespace-registry/index.js';
 
   function setStatus(msg) {
     const el = document.getElementById("status");
-    if (el) el.textContent = msg;
+    renderStatusMessage(el, { message: msg, severity: 'info' }, { classPrefix: 'ont-status' });
   }
 
   function normalizeTypeToLabel(v) {

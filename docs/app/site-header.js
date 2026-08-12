@@ -6,6 +6,11 @@ import {
   inspectIndexedDbDatabase,
   openProjectPortfolioDatabase
 } from './shared/indexeddb-data-management/index.js';
+import {
+  applyThemePreference,
+  readThemePreference,
+  toggleThemePreference
+} from './shared/ui-feedback/index.js';
 
 (() => {
   "use strict";
@@ -425,20 +430,11 @@ import {
 
     const getSavedTheme = async () => {
       const settings = await getSettingsStore();
-      const v = await settings.readSettingValue(SETTING_KEY, null);
-      return (v === 'light' || v === 'dark') ? v : null;
-    };
-
-    const saveTheme = async (theme) => {
-      const settings = await getSettingsStore();
-      await settings.writeSettingValue(SETTING_KEY, theme);
+      return readThemePreference(settings, { settingKey: SETTING_KEY, fallback: null });
     };
 
     const applyTheme = (theme) => {
-      root.setAttribute('data-theme', theme);
-      // aria-pressed: true when "dark" (you can invert if you prefer)
-      btn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
-      btn.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+      applyThemePreference({ theme, rootElement: root, toggleElement: btn });
     };
 
     const initTheme = async () => {
@@ -452,13 +448,17 @@ import {
     };
 
     const toggleTheme = async () => {
-      const current = root.getAttribute('data-theme') || getSystemTheme();
-      const next = current === 'dark' ? 'light' : 'dark';
-      applyTheme(next);
       try {
-        await saveTheme(next);
+        await toggleThemePreference({
+          currentTheme: root.getAttribute('data-theme') || getSystemTheme(),
+          rootElement: root,
+          toggleElement: btn,
+          settingsStore: await getSettingsStore(),
+          settingKey: SETTING_KEY
+        });
       } catch (_err) {
-        applyTheme(next);
+        const current = root.getAttribute('data-theme') || getSystemTheme();
+        applyTheme(current === 'dark' ? 'light' : 'dark');
       }
     };
 

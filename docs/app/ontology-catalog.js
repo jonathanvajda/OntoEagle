@@ -5,6 +5,7 @@ import {
   truncateText
 } from './ontology-meta.js';
 import { iconSvg } from './ontology-icons.js';
+import { renderStatusMessage } from './shared/ui-feedback/index.js';
 
 const statusText = document.getElementById('ontStatusText');
 const loading = document.getElementById('ontologyCatalogLoading');
@@ -20,7 +21,7 @@ let workspace = null;
 let editingIri = '';
 
 function setStatus(text) {
-  if (statusText) statusText.textContent = text;
+  renderStatusMessage(statusText, { message: text, severity: 'info' }, { classPrefix: 'ont-status' });
 }
 
 function escapeHtml(value) {

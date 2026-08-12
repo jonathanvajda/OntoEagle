@@ -17,6 +17,7 @@ import {
   listOntologyDatasetMeta,
   setOntologyDatasetEnabled
 } from './ontoeagle-indexeddb-store.js';
+import { renderStatusMessage } from './shared/ui-feedback/index.js';
 
 const modalId = 'ontCatalogDataManagerModal';
 const fileInputId = 'ontCatalogDataManagerFile';
@@ -37,7 +38,7 @@ function escapeHtml(value) {
 
 function setManagerStatus(message) {
   const el = document.getElementById(statusId);
-  if (el) el.textContent = message || '';
+  renderStatusMessage(el, { message: message || '', severity: 'info' }, { classPrefix: 'ont-status' });
 }
 
 function emitUpdated() {

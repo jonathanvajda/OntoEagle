@@ -36,6 +36,7 @@ import {
   isMimeDescriptorCategory
 } from './shared/format-registry/index.js';
 import { isAbsoluteIri } from './shared/ontology-utils/index.js';
+import { renderStatusMessage } from './shared/ui-feedback/index.js';
 
 import {
   openOntoEagleProjectDatabase,
@@ -126,7 +127,7 @@ function escapeHtml(s) {
 }
 
 function setSlimStatus(message) {
-  if (slimStatus) slimStatus.textContent = message;
+  renderStatusMessage(slimStatus, { message, severity: 'info' }, { classPrefix: 'ont-status' });
 }
 
 async function ensureEnabledDocsLoaded() {
@@ -411,7 +412,7 @@ async function bundlerInit() {
  * @param {string} s
  */
 function setStatus(s) {
-  if (elStatusText) elStatusText.textContent = s;
+  renderStatusMessage(elStatusText, { message: s, severity: 'info' }, { classPrefix: 'ont-status' });
 }
 
 /**
