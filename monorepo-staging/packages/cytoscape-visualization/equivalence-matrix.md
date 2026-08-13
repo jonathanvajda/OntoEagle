@@ -13,5 +13,8 @@
 |Node labels|D3 visualizer derives labels during graph-specific processing.|Shared `buildLabelIndex` prefers `rdfs:label`, then registered label/title predicates, then graph projection falls back to registry compaction/local names.|
 |Properties panel|Existing behavior is renderer/page-specific.|Shared `buildNodePropertyIndex` and `buildInspectorViewModel` group types, annotations, datatype properties, and optional object properties.|
 |Literals|Often graph-specific display behavior.|Stored as node annotations by default; optional literal nodes later.|
+|Cytoscape element payloads|D3 visual objects can become practical state.|Cytoscape element `data` preserves source RDF terms and quad payloads for display/debug, while GraphState remains canonical.|
+|Parallel edges and self-loops|Handled by D3 link rendering behavior.|Projected as distinct Cytoscape edges with stable quad-derived IDs.|
+|Datatype properties as edges|Varies by page/view.|Default keeps literals in properties; `renderLiteralsAsNodes` projects datatype edges to literal nodes.|
 |Renderer|SVG/D3 force simulation.|Cytoscape `cose` baseline; renderer is not canonical state.|
 |Testing|Existing tests cover parts of JSON-LD visualizer core.|New Jest tests snapshot graph-state and Cytoscape element contracts.|

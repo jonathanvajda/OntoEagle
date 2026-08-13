@@ -10,8 +10,8 @@
 |Ontology classification|4|Pure, deterministic, tested for `rdf:type` metadata policy, precedence, unknown resources, and OWL restriction/axiom support blank nodes.|
 |Label and property indexes|4|Pure, deterministic, tested for label precedence, repeated annotations, language-tagged literals, typed literals, and grouped inspector rows.|
 |RDF-to-GraphState projection|4|Pure, deterministic, tested for named nodes, literals, blank nodes, duplicate IDs, named graphs, Phase 2 ontology classification, and Phase 3 labels/properties.|
-|Cytoscape element projection|3|Pure and tested, including default hiding of blank nodes and axiom-support nodes plus property-record payloads, but not yet fully styled/interacted across all Phase 4/5 requirements.|
-|Browser Cytoscape app|2|Parallel page exists for manual comparison and exposes Phase 2 filters plus Phase 3 grouped inspector rows; interaction parity and large-graph performance tuning are not implemented.|
+|Cytoscape element projection|4|Pure and tested for visible nodes, rendered predicate edges, RDF term preservation, predicate-label edge labels, parallel edges, self-loops, literal-node mode, and debug `rdf:type` edges.|
+|Browser Cytoscape app|2|Parallel page exists for manual comparison and exposes Phase 2 filters plus Phase 3 grouped inspector rows; interaction parity, styling parity, layout controls, and large-graph performance tuning are not implemented.|
 
 ## Performance Note
 

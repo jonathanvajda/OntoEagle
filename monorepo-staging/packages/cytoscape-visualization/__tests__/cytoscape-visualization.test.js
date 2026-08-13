@@ -7,6 +7,7 @@ import {
   classifyOntologyNode,
   isAxiomSupportNode,
   isRenderedPredicate,
+  estimateNodeVisualDimensions,
   projectGraphStateToCytoscapeElements,
   projectRdfToGraphState
 } from '../src/index.js';
@@ -175,5 +176,107 @@ describe('Cytoscape visualization Phase 3 label and property indexes', () => {
     expect(viewModel.headingRows).toContainEqual(['Label', 'Entity']);
     expect(viewModel.groups.some((group) => group.label === 'Types')).toBe(true);
     expect(viewModel.groups.some((group) => group.label === 'Annotations')).toBe(true);
+  });
+});
+
+describe('Cytoscape visualization Phase 4 RDF-to-Cytoscape projection', () => {
+  test('projects a small ontology fixture with RDF terms, semantic kinds, and predicate labels', () => {
+    const ontology = namedNode('http://example.org/ExampleOntology');
+    const person = namedNode('http://example.org/Person');
+    const organization = namedNode('http://example.org/Organization');
+    const memberOf = namedNode('http://example.org/memberOf');
+    const state = projectRdfToGraphState([
+      quad(ontology, namedNode(COMMON_NAMESPACE_IRIS.rdf.type), namedNode(COMMON_NAMESPACE_IRIS.owl.Ontology)),
+      quad(person, namedNode(COMMON_NAMESPACE_IRIS.rdf.type), namedNode(COMMON_NAMESPACE_IRIS.owl.Class)),
+      quad(organization, namedNode(COMMON_NAMESPACE_IRIS.rdf.type), namedNode(COMMON_NAMESPACE_IRIS.owl.Class)),
+      quad(memberOf, namedNode(COMMON_NAMESPACE_IRIS.rdf.type), namedNode(COMMON_NAMESPACE_IRIS.owl.ObjectProperty)),
+      quad(memberOf, namedNode(COMMON_NAMESPACE_IRIS.rdfs.label), literal('member of')),
+      quad(person, memberOf, organization),
+      quad(person, namedNode(COMMON_NAMESPACE_IRIS.rdfs.label), literal('Person', COMMON_NAMESPACE_IRIS.xsd.string, 'en'))
+    ]);
+    const elements = projectGraphStateToCytoscapeElements(state);
+    const personElement = elements.find((element) => element.group === 'nodes' && element.data.iri === person.value);
+    const memberOfEdge = elements.find((element) => element.group === 'edges' && element.data.predicateIri === memberOf.value);
+
+    expect(personElement).toMatchObject({
+      group: 'nodes',
+      data: {
+        label: 'Person',
+        visualWidth: expect.any(Number),
+        visualHeight: expect.any(Number),
+        textMaxWidth: expect.any(Number),
+        kind: 'class',
+        term: person
+      }
+    });
+    expect(memberOfEdge).toMatchObject({
+      group: 'edges',
+      data: {
+        source: createGraphTermId(person),
+        target: createGraphTermId(organization),
+        label: 'member of',
+        kind: 'object',
+        subjectTerm: person,
+        predicateTerm: memberOf,
+        objectTerm: organization
+      }
+    });
+  });
+
+  test('computes stable node dimensions so wrapped labels remain inside node boxes', () => {
+    const shortLabel = estimateNodeVisualDimensions('Short');
+    const longLabel = estimateNodeVisualDimensions('SPARQL Protocol and Resource Description Framework Query Language Select Query');
+    const longWordLabel = estimateNodeVisualDimensions('SupercalifragilisticexpialidociousOntologyArtifact');
+
+    expect(shortLabel.visualWidth).toBeGreaterThanOrEqual(54);
+    expect(longLabel.visualWidth).toBeLessThanOrEqual(230);
+    expect(longLabel.visualHeight).toBeGreaterThan(shortLabel.visualHeight);
+    expect(longWordLabel.visualHeight).toBeGreaterThan(shortLabel.visualHeight);
+    expect(longLabel.textMaxWidth).toBeLessThan(longLabel.visualWidth);
+  });
+
+  test('supports multiple edges between the same nodes and self-loop statements', () => {
+    const node = namedNode('http://example.org/A');
+    const parent = namedNode('http://example.org/B');
+    const state = projectRdfToGraphState([
+      quad(node, namedNode(COMMON_NAMESPACE_IRIS.rdfs.subClassOf), parent),
+      quad(node, namedNode('http://example.org/relatedTo'), parent),
+      quad(node, namedNode('http://example.org/refines'), node)
+    ]);
+    const edgeElements = projectGraphStateToCytoscapeElements(state).filter((element) => element.group === 'edges');
+
+    expect(edgeElements).toHaveLength(3);
+    expect(edgeElements.filter((edge) => edge.data.source === createGraphTermId(node) && edge.data.target === createGraphTermId(parent))).toHaveLength(2);
+    expect(edgeElements.some((edge) => edge.data.source === createGraphTermId(node) && edge.data.target === createGraphTermId(node))).toBe(true);
+  });
+
+  test('projects datatype literal nodes when requested and keeps rdf:type hidden unless debug mode is enabled', () => {
+    const subject = namedNode('http://example.org/A');
+    const quads = [
+      quad(subject, namedNode(COMMON_NAMESPACE_IRIS.rdf.type), namedNode(COMMON_NAMESPACE_IRIS.owl.Class)),
+      quad(subject, namedNode('http://example.org/count'), literal('2', COMMON_NAMESPACE_IRIS.xsd.integer))
+    ];
+    const literalState = projectRdfToGraphState(quads, { renderLiteralsAsNodes: true });
+    const literalElements = projectGraphStateToCytoscapeElements(literalState);
+    const debugState = projectRdfToGraphState(quads, { includeTypeEdges: true, renderLiteralsAsNodes: true });
+    const debugEdges = projectGraphStateToCytoscapeElements(debugState).filter((element) => element.group === 'edges');
+
+    expect(literalElements.some((element) => element.group === 'nodes' && element.data.kind === 'literal' && element.data.value === '2')).toBe(true);
+    expect(literalElements.some((element) => element.group === 'edges' && element.data.kind === 'datatype')).toBe(true);
+    expect(literalElements.some((element) => element.group === 'edges' && element.data.predicateIri === COMMON_NAMESPACE_IRIS.rdf.type)).toBe(false);
+    expect(debugEdges.some((edge) => edge.data.predicateIri === COMMON_NAMESPACE_IRIS.rdf.type)).toBe(true);
+  });
+
+  test('limits focused projection to the focus node and adjacent nodes', () => {
+    const focus = namedNode('http://example.org/Focus');
+    const adjacent = namedNode('http://example.org/Adjacent');
+    const distant = namedNode('http://example.org/Distant');
+    const state = projectRdfToGraphState([
+      quad(focus, namedNode('http://example.org/p'), adjacent),
+      quad(distant, namedNode('http://example.org/p'), namedNode('http://example.org/Other'))
+    ], { focusNodeIri: focus.value });
+
+    expect(state.nodes.map((node) => node.iri).filter(Boolean).sort()).toEqual([adjacent.value, focus.value]);
+    expect(state.edges).toHaveLength(1);
   });
 });
