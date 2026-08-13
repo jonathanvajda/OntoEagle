@@ -1,10 +1,13 @@
 import {
   createGraphEdgeId,
   createGraphTermId,
+  buildGraphFilterOptionIndex,
+  buildGraphFilterPanelViewModel,
   buildInspectorViewModel,
   buildLabelIndex,
   buildNodePropertyIndex,
   calculateNeighborNudgePositions,
+  calculateVisibleGraphElementIds,
   createCytoscapeLayoutOptions,
   createDefaultCytoscapeStylesheet,
   classifyOntologyNode,
@@ -14,7 +17,9 @@ import {
   getFirstDegreeNeighborNodeIds,
   listCytoscapeLayoutOptions,
   projectGraphStateToCytoscapeElements,
-  projectRdfToGraphState
+  projectRdfToGraphState,
+  selectGraphElementIds,
+  updateGraphVisibilityFilters
 } from '../src/index.js';
 import {
   COMMON_NAMESPACE_IRIS
@@ -406,6 +411,102 @@ describe('Cytoscape visualization Phase 6 layout and edge deconfliction', () => 
     ]);
   });
 });
+
+describe('Cytoscape visualization Phase 7 filtering and visibility', () => {
+  test('builds filter options for node kinds, predicates, subjects, and objects', () => {
+    const state = createFilterFixtureState();
+    const options = buildGraphFilterOptionIndex(state);
+
+    expect(options.kinds).toEqual(expect.arrayContaining([
+      expect.objectContaining({ value: 'class', count: 3 }),
+      expect.objectContaining({ value: 'object-property', count: 1 })
+    ]));
+    expect(options.predicates).toEqual(expect.arrayContaining([
+      expect.objectContaining({ value: COMMON_NAMESPACE_IRIS.rdfs.subClassOf, count: 1 }),
+      expect.objectContaining({ value: 'http://example.org/memberOf', label: 'member of', count: 1 })
+    ]));
+    expect(options.subjects.some((option) => option.label === 'Person')).toBe(true);
+    expect(options.objects.some((option) => option.label === 'Organization')).toBe(true);
+  });
+
+  test('filters visibility by kind, predicate, subject, and object without mutating RDF state', () => {
+    const state = createFilterFixtureState();
+    const personId = createGraphTermId(namedNode('http://example.org/Person'));
+    const organizationId = createGraphTermId(namedNode('http://example.org/Organization'));
+    const filtered = updateGraphVisibilityFilters(state, {
+      visibleKinds: ['class'],
+      visiblePredicates: ['http://example.org/memberOf'],
+      visibleSubjectIds: [personId],
+      visibleObjectIds: [organizationId]
+    });
+    const visible = calculateVisibleGraphElementIds(filtered);
+    const elements = projectGraphStateToCytoscapeElements(filtered);
+
+    expect(filtered.quads).toHaveLength(state.quads.length);
+    expect(visible.nodeIds).toEqual(new Set([personId, organizationId]));
+    expect(visible.edgeIds.size).toBe(1);
+    expect(elements.filter((element) => element.group === 'nodes')).toHaveLength(2);
+    expect(elements.filter((element) => element.group === 'edges')).toHaveLength(1);
+  });
+
+  test('builds panel counts and supports reset/show-all filter patches', () => {
+    const state = createFilterFixtureState();
+    const filtered = updateGraphVisibilityFilters(state, { visibleKinds: ['object-property'] });
+    const viewModel = buildGraphFilterPanelViewModel(filtered);
+    const reset = updateGraphVisibilityFilters(filtered, {
+      hideBlankNodes: true,
+      hideAxiomSupportNodes: true,
+      visibleKinds: [],
+      visiblePredicates: [],
+      visibleSubjectIds: [],
+      visibleObjectIds: []
+    });
+    const showAll = updateGraphVisibilityFilters(filtered, {
+      hideBlankNodes: false,
+      hideAxiomSupportNodes: false,
+      visibleKinds: [],
+      visiblePredicates: [],
+      visibleSubjectIds: [],
+      visibleObjectIds: []
+    });
+
+    expect(viewModel.counts.hiddenNodes).toBeGreaterThan(0);
+    expect(buildGraphFilterPanelViewModel(reset).counts.visibleNodes).toBeLessThanOrEqual(state.nodes.length);
+    expect(buildGraphFilterPanelViewModel(showAll).counts.visibleNodes).toBe(state.nodes.length);
+  });
+
+  test('supports single, Ctrl additive, and Shift range selection helpers', () => {
+    const orderedIds = ['a', 'b', 'c', 'd'];
+    const single = selectGraphElementIds([], orderedIds, 'b');
+    const additive = selectGraphElementIds(single.selectedIds, orderedIds, 'd', { ctrlKey: true });
+    const removed = selectGraphElementIds(additive.selectedIds, orderedIds, 'b', { ctrlKey: true });
+    const range = selectGraphElementIds([], orderedIds, 'd', { shiftKey: true, anchorId: 'b' });
+
+    expect(single).toEqual({ selectedIds: ['b'], anchorId: 'b' });
+    expect(additive).toEqual({ selectedIds: ['b', 'd'], anchorId: 'd' });
+    expect(removed).toEqual({ selectedIds: ['d'], anchorId: 'b' });
+    expect(range).toEqual({ selectedIds: ['b', 'c', 'd'], anchorId: 'b' });
+  });
+});
+
+function createFilterFixtureState() {
+  const person = namedNode('http://example.org/Person');
+  const organization = namedNode('http://example.org/Organization');
+  const employee = namedNode('http://example.org/Employee');
+  const memberOf = namedNode('http://example.org/memberOf');
+  return projectRdfToGraphState([
+    quad(person, namedNode(COMMON_NAMESPACE_IRIS.rdf.type), namedNode(COMMON_NAMESPACE_IRIS.owl.Class)),
+    quad(organization, namedNode(COMMON_NAMESPACE_IRIS.rdf.type), namedNode(COMMON_NAMESPACE_IRIS.owl.Class)),
+    quad(employee, namedNode(COMMON_NAMESPACE_IRIS.rdf.type), namedNode(COMMON_NAMESPACE_IRIS.owl.Class)),
+    quad(memberOf, namedNode(COMMON_NAMESPACE_IRIS.rdf.type), namedNode(COMMON_NAMESPACE_IRIS.owl.ObjectProperty)),
+    quad(memberOf, namedNode(COMMON_NAMESPACE_IRIS.rdfs.label), literal('member of')),
+    quad(person, namedNode(COMMON_NAMESPACE_IRIS.rdfs.label), literal('Person')),
+    quad(organization, namedNode(COMMON_NAMESPACE_IRIS.rdfs.label), literal('Organization')),
+    quad(person, memberOf, organization),
+    quad(employee, namedNode(COMMON_NAMESPACE_IRIS.rdfs.subClassOf), person),
+    quad(blankNode('support'), namedNode('http://example.org/p'), person)
+  ]);
+}
 
 function findStyle(stylesheet, selector) {
   return stylesheet.find((entry) => entry.selector === selector);

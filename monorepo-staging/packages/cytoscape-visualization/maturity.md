@@ -12,8 +12,9 @@
 |RDF-to-GraphState projection|4|Pure, deterministic, tested for named nodes, literals, blank nodes, duplicate IDs, named graphs, Phase 2 ontology classification, and Phase 3 labels/properties.|
 |Cytoscape element projection|4|Pure and tested for visible nodes, rendered predicate edges, RDF term preservation, predicate-label edge labels, parallel edges, self-loops, literal-node mode, and debug `rdf:type` edges.|
 |Visual styling parity|4|Shared stylesheet is data-driven by node/edge kind and tested for semantic node categories, directed readable edge labels, datatype edge styling, hover selectors, and selected states.|
-|Layout and edge deconfliction|3|Layout preset registry and deterministic edge routing metadata are implemented and tested. Browser controls expose overview/wide/readable/compact/grid/hierarchy relayout and fit. Screenshot comparison and real performance benchmarks remain manual deliverables.|
-|Browser Cytoscape app|3|Parallel page exists for manual comparison and exposes Phase 2 filters, Phase 3 grouped inspector rows, Phase 5 hover styling, and Phase 6 layout controls; deeper visibility/selection state is not implemented.|
+|Layout and edge deconfliction|3|Layout preset registry, deterministic edge routing metadata, and dampened neighbor-drag helpers are implemented and tested. Browser controls expose overview/wide/readable/compact/grid/hierarchy relayout, fit, and optional neighbor nudging. Screenshot comparison and real performance benchmarks remain manual deliverables.|
+|Filtering and visibility|4|Filter option indexes, visibility calculation, filter state updates, filter panel view model, and single/Ctrl/Shift selection helpers are implemented and tested. Browser page exposes blank-node, axiom-support, kind, predicate, subject, object, reset, show-all, and visible/hidden count controls.|
+|Browser Cytoscape app|3|Parallel page exists for manual comparison and exposes Phase 2 filters, Phase 3 grouped inspector rows, Phase 5 hover styling, Phase 6 layout controls, and Phase 7 filter controls; deeper edit workflow is not implemented.|
 
 ## Performance Note
 

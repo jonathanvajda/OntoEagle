@@ -20,5 +20,8 @@
 |Selection and hover|D3 has direct DOM interaction states.|Cytoscape uses data-driven selectors plus `.is-hovered`, `node:selected`, and `edge:selected` styles; the parallel page now adds/removes hover classes.|
 |Layout|D3 uses a continuous force simulation that spreads hub-and-spoke neighborhoods.|Cytoscape now exposes deterministic layout presets: overview, wide, readable, compact, grid, and hierarchy. Layout runs on render or explicit relayout, not continuously.|
 |Parallel edges and loops|D3 layout/link drawing separates some overlaps incidentally.|Cytoscape projection now assigns deterministic routing metadata for parallel edges and self-loops; styles consume those data fields.|
+|Dragging neighborhoods|D3 force simulation can let neighboring nodes move with a dragged node.|Cytoscape drag behavior now has an optional neighbor-nudge policy: first-degree neighbors move by a dampened fraction of the dragged node delta. RDF graph state is not changed.|
+|Filtering|D3 filter behavior is page/DOM-specific.|Shared helpers now build filter option indexes and calculate visible node/edge IDs from graph UI state. Cytoscape receives a projection of that state; the RDF graph remains intact.|
+|Selection semantics|D3 selection is bound to rendered elements.|Shared helper supports single, Ctrl/meta additive, and Shift range selection over ordered graph IDs. Browser interaction wiring can consume this in Phase 8.|
 |Renderer|SVG/D3 force simulation.|Cytoscape `cose` baseline; renderer is not canonical state.|
 |Testing|Existing tests cover parts of JSON-LD visualizer core.|New Jest tests snapshot graph-state and Cytoscape element contracts.|
