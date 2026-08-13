@@ -8,9 +8,11 @@ import {
   buildNodePropertyIndex,
   calculateNeighborNudgePositions,
   calculateVisibleGraphElementIds,
+  clearGraphElementSelection,
   createCytoscapeLayoutOptions,
   createDefaultCytoscapeStylesheet,
   classifyOntologyNode,
+  createGraphElementCopyPayload,
   isAxiomSupportNode,
   isRenderedPredicate,
   estimateNodeVisualDimensions,
@@ -19,6 +21,11 @@ import {
   projectGraphStateToCytoscapeElements,
   projectRdfToGraphState,
   selectGraphElementIds,
+  updateGraphElementSelection,
+  hideSelectedGraphElements,
+  pinGraphNodePosition,
+  restoreHiddenGraphElements,
+  setGraphInspectorTarget,
   updateGraphVisibilityFilters
 } from '../src/index.js';
 import {
@@ -486,6 +493,78 @@ describe('Cytoscape visualization Phase 7 filtering and visibility', () => {
     expect(additive).toEqual({ selectedIds: ['b', 'd'], anchorId: 'd' });
     expect(removed).toEqual({ selectedIds: ['d'], anchorId: 'b' });
     expect(range).toEqual({ selectedIds: ['b', 'c', 'd'], anchorId: 'b' });
+  });
+});
+
+describe('Cytoscape visualization Phase 8 selection, dragging, hiding, and inspector', () => {
+  test('routes node and edge selection through graph UI state', () => {
+    const state = createFilterFixtureState();
+    const personId = createGraphTermId(namedNode('http://example.org/Person'));
+    const edgeId = state.edges.find((edge) => edge.predicateIri === 'http://example.org/memberOf').id;
+    const nodeSelected = updateGraphElementSelection(state, { elementType: 'node', elementId: personId });
+    const edgeSelected = updateGraphElementSelection(nodeSelected, { elementType: 'edge', elementId: edgeId });
+
+    expect(nodeSelected.ui.selectedNodeIds).toEqual([personId]);
+    expect(nodeSelected.ui.activeInspectorTarget).toEqual({ elementType: 'node', elementId: personId });
+    expect(edgeSelected.ui.selectedNodeIds).toEqual([]);
+    expect(edgeSelected.ui.selectedEdgeIds).toEqual([edgeId]);
+  });
+
+  test('hides selected elements and restores hidden elements without removing RDF state', () => {
+    const state = createFilterFixtureState();
+    const personId = createGraphTermId(namedNode('http://example.org/Person'));
+    const selected = updateGraphElementSelection(state, { elementType: 'node', elementId: personId });
+    const hidden = hideSelectedGraphElements(selected);
+    const restored = restoreHiddenGraphElements(hidden);
+
+    expect(hidden.ui.hiddenNodeIds).toContain(personId);
+    expect(hidden.ui.selectedNodeIds).toEqual([]);
+    expect(hidden.quads).toHaveLength(state.quads.length);
+    expect(calculateVisibleGraphElementIds(hidden).nodeIds.has(personId)).toBe(false);
+    expect(restored.ui.hiddenNodeIds).toEqual([]);
+  });
+
+  test('persists pinned node positions into Cytoscape node element projection', () => {
+    const state = createFilterFixtureState();
+    const personId = createGraphTermId(namedNode('http://example.org/Person'));
+    const pinned = pinGraphNodePosition(state, personId, { x: 123, y: 456 });
+    const element = projectGraphStateToCytoscapeElements(pinned)
+      .find((candidate) => candidate.group === 'nodes' && candidate.data.id === personId);
+
+    expect(pinned.ui.pinnedNodePositions[personId]).toEqual({ x: 123, y: 456 });
+    expect(element.position).toEqual({ x: 123, y: 456 });
+  });
+
+  test('sets inspector targets and creates copy payloads for IRIs, CURIEs, and triple IDs', () => {
+    const state = createFilterFixtureState();
+    const personId = createGraphTermId(namedNode('http://example.org/Person'));
+    const inspected = setGraphInspectorTarget(state, { elementType: 'node', elementId: personId });
+    const elements = projectGraphStateToCytoscapeElements(state);
+    const nodeElement = elements.find((candidate) => candidate.group === 'nodes' && candidate.data.id === personId);
+    const edgeElement = elements.find((candidate) => candidate.group === 'edges' && candidate.data.predicateIri === COMMON_NAMESPACE_IRIS.rdfs.subClassOf);
+
+    expect(inspected.ui.activeInspectorTarget).toEqual({ elementType: 'node', elementId: personId });
+    expect(createGraphElementCopyPayload(nodeElement.data)).toMatchObject({
+      iri: 'http://example.org/Person',
+      curie: 'http://example.org/Person',
+      tripleId: ''
+    });
+    expect(createGraphElementCopyPayload(edgeElement.data)).toMatchObject({
+      iri: COMMON_NAMESPACE_IRIS.rdfs.subClassOf,
+      curie: 'rdfs:subClassOf',
+      tripleId: edgeElement.data.id
+    });
+  });
+
+  test('clears selection and inspector target together', () => {
+    const state = createFilterFixtureState();
+    const personId = createGraphTermId(namedNode('http://example.org/Person'));
+    const selected = updateGraphElementSelection(state, { elementType: 'node', elementId: personId });
+    const cleared = clearGraphElementSelection(selected);
+
+    expect(cleared.ui.selectedNodeIds).toEqual([]);
+    expect(cleared.ui.selectedEdgeIds).toEqual([]);
+    expect(cleared.ui.activeInspectorTarget).toBeNull();
   });
 });
 

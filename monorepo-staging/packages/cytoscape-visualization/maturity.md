@@ -14,7 +14,8 @@
 |Visual styling parity|4|Shared stylesheet is data-driven by node/edge kind and tested for semantic node categories, directed readable edge labels, datatype edge styling, hover selectors, and selected states.|
 |Layout and edge deconfliction|3|Layout preset registry, deterministic edge routing metadata, and dampened neighbor-drag helpers are implemented and tested. Browser controls expose overview/wide/readable/compact/grid/hierarchy relayout, fit, and optional neighbor nudging. Screenshot comparison and real performance benchmarks remain manual deliverables.|
 |Filtering and visibility|4|Filter option indexes, visibility calculation, filter state updates, filter panel view model, and single/Ctrl/Shift selection helpers are implemented and tested. Browser page exposes blank-node, axiom-support, kind, predicate, subject, object, reset, show-all, and visible/hidden count controls.|
-|Browser Cytoscape app|3|Parallel page exists for manual comparison and exposes Phase 2 filters, Phase 3 grouped inspector rows, Phase 5 hover styling, Phase 6 layout controls, and Phase 7 filter controls; deeper edit workflow is not implemented.|
+|Selection, dragging, hiding, and inspector|4|Selection reducers, clear-selection, hide selected, restore hidden, pinned node positions, inspector target state, copy payloads, and neighbor-drag helpers are implemented and tested. Browser page wires node/edge selection, modifier-aware selection state, hiding/restoring, drag position pinning, inspector rows, and copy buttons.|
+|Browser Cytoscape app|3|Parallel page exists for manual comparison and exposes Phase 2 filters, Phase 3 grouped inspector rows, Phase 5 hover styling, Phase 6 layout controls, Phase 7 filter controls, and Phase 8 selection/hide/restore/copy interactions; RDF edit workflow is not implemented.|
 
 ## Performance Note
 

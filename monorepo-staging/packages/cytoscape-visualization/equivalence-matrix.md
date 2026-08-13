@@ -23,5 +23,8 @@
 |Dragging neighborhoods|D3 force simulation can let neighboring nodes move with a dragged node.|Cytoscape drag behavior now has an optional neighbor-nudge policy: first-degree neighbors move by a dampened fraction of the dragged node delta. RDF graph state is not changed.|
 |Filtering|D3 filter behavior is page/DOM-specific.|Shared helpers now build filter option indexes and calculate visible node/edge IDs from graph UI state. Cytoscape receives a projection of that state; the RDF graph remains intact.|
 |Selection semantics|D3 selection is bound to rendered elements.|Shared helper supports single, Ctrl/meta additive, and Shift range selection over ordered graph IDs. Browser interaction wiring can consume this in Phase 8.|
+|Hiding and restoring|D3 can hide/cancel rendered nodes through view-specific state.|Shared reducers hide selected graph element IDs and restore hidden IDs without deleting RDF state. Cytoscape is reconciled from graph UI state.|
+|Pinned positions|D3 drag positions live in simulation/render state.|Cytoscape drag-end positions are stored in graph UI `pinnedNodePositions` and projected back into element positions.|
+|Copy actions|Existing views expose ad hoc copy behavior.|Shared copy payload helper returns IRI, CURIE, and triple ID strings from selected element data.|
 |Renderer|SVG/D3 force simulation.|Cytoscape `cose` baseline; renderer is not canonical state.|
 |Testing|Existing tests cover parts of JSON-LD visualizer core.|New Jest tests snapshot graph-state and Cytoscape element contracts.|
