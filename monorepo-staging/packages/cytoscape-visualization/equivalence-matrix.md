@@ -10,6 +10,8 @@
 |`rdf:type`|Visual category source.|Stored as node type metadata; not rendered as an edge by default.|
 |Ontology class/property typing|Visual category source.|Classified by explicit type using deterministic precedence: ontology, class, object property, datatype property, annotation property, named individual, axiom support, blank node, literal, resource.|
 |OWL restriction/list/axiom blank nodes|Can visually dominate ontology views when rendered naively.|Detected as `axiom-support` and hidden by default, with a Visual Lynx page toggle to show them.|
+|Node labels|D3 visualizer derives labels during graph-specific processing.|Shared `buildLabelIndex` prefers `rdfs:label`, then registered label/title predicates, then graph projection falls back to registry compaction/local names.|
+|Properties panel|Existing behavior is renderer/page-specific.|Shared `buildNodePropertyIndex` and `buildInspectorViewModel` group types, annotations, datatype properties, and optional object properties.|
 |Literals|Often graph-specific display behavior.|Stored as node annotations by default; optional literal nodes later.|
 |Renderer|SVG/D3 force simulation.|Cytoscape `cose` baseline; renderer is not canonical state.|
 |Testing|Existing tests cover parts of JSON-LD visualizer core.|New Jest tests snapshot graph-state and Cytoscape element contracts.|

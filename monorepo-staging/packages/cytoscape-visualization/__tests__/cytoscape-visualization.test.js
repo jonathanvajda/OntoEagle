@@ -1,6 +1,9 @@
 import {
   createGraphEdgeId,
   createGraphTermId,
+  buildInspectorViewModel,
+  buildLabelIndex,
+  buildNodePropertyIndex,
   classifyOntologyNode,
   isAxiomSupportNode,
   isRenderedPredicate,
@@ -106,5 +109,71 @@ describe('Cytoscape visualization Phase 2 ontology classification', () => {
 
   test('keeps unknown named resources neutral', () => {
     expect(classifyOntologyNode({ term: namedNode('http://example.org/Unknown'), typeIris: [] })).toBe('resource');
+  });
+});
+
+describe('Cytoscape visualization Phase 3 label and property indexes', () => {
+  test('prefers rdfs:label over alternate label predicates and preserves multiline labels', () => {
+    const subject = namedNode('http://example.org/Entity');
+    const labelIndex = buildLabelIndex([
+      quad(subject, namedNode(COMMON_NAMESPACE_IRIS.skos.prefLabel), literal('Preferred label')),
+      quad(subject, namedNode(COMMON_NAMESPACE_IRIS.rdfs.label), literal('Line one\nLine two', COMMON_NAMESPACE_IRIS.xsd.string, 'en'))
+    ]);
+
+    expect(labelIndex.get(createGraphTermId(subject))).toMatchObject({
+      label: 'Line one\nLine two',
+      predicateIri: COMMON_NAMESPACE_IRIS.rdfs.label,
+      language: 'en'
+    });
+  });
+
+  test('builds deterministic node property rows for repeated annotations and typed literals', () => {
+    const subject = namedNode('http://example.org/Entity');
+    const quads = [
+      quad(subject, namedNode(COMMON_NAMESPACE_IRIS.rdf.type), namedNode(COMMON_NAMESPACE_IRIS.owl.Class)),
+      quad(subject, namedNode(COMMON_NAMESPACE_IRIS.rdfs.comment), literal('Second comment')),
+      quad(subject, namedNode(COMMON_NAMESPACE_IRIS.rdfs.comment), literal('First comment', COMMON_NAMESPACE_IRIS.xsd.string, 'en')),
+      quad(subject, namedNode('http://example.org/age'), literal('42', COMMON_NAMESPACE_IRIS.xsd.integer)),
+      quad(subject, namedNode(COMMON_NAMESPACE_IRIS.rdfs.subClassOf), namedNode('http://example.org/Parent'))
+    ];
+    const state = projectRdfToGraphState(quads);
+    const record = buildNodePropertyIndex(quads, state.indexes).get(createGraphTermId(subject));
+
+    expect(record.typeIris).toContain(COMMON_NAMESPACE_IRIS.owl.Class);
+    expect(record.annotations).toEqual([
+      expect.objectContaining({
+        predicateIri: COMMON_NAMESPACE_IRIS.rdfs.comment,
+        value: 'First comment',
+        language: 'en'
+      }),
+      expect.objectContaining({
+        predicateIri: COMMON_NAMESPACE_IRIS.rdfs.comment,
+        value: 'Second comment'
+      })
+    ]);
+    expect(record.datatypeProperties).toEqual([
+      expect.objectContaining({
+        predicateIri: 'http://example.org/age',
+        value: '42',
+        datatypeIri: COMMON_NAMESPACE_IRIS.xsd.integer
+      })
+    ]);
+    expect(record.objectProperties).toHaveLength(0);
+  });
+
+  test('adds property records to Cytoscape node data and builds grouped inspector view models', () => {
+    const subject = namedNode('http://example.org/Entity');
+    const state = projectRdfToGraphState([
+      quad(subject, namedNode(COMMON_NAMESPACE_IRIS.rdf.type), namedNode(COMMON_NAMESPACE_IRIS.owl.Class)),
+      quad(subject, namedNode(COMMON_NAMESPACE_IRIS.rdfs.label), literal('Entity'))
+    ]);
+    const nodeElement = projectGraphStateToCytoscapeElements(state, { hideBlankNodes: false })
+      .find((element) => element.group === 'nodes' && element.data.iri === subject.value);
+    const viewModel = buildInspectorViewModel(nodeElement.data, state.indexes.propertyIndex);
+
+    expect(nodeElement.data.propertyRecord).toBeTruthy();
+    expect(viewModel.headingRows).toContainEqual(['Label', 'Entity']);
+    expect(viewModel.groups.some((group) => group.label === 'Types')).toBe(true);
+    expect(viewModel.groups.some((group) => group.label === 'Annotations')).toBe(true);
   });
 });
