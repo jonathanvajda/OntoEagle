@@ -4,12 +4,14 @@ import {
   buildInspectorViewModel,
   buildLabelIndex,
   buildNodePropertyIndex,
+  calculateNeighborNudgePositions,
   createCytoscapeLayoutOptions,
   createDefaultCytoscapeStylesheet,
   classifyOntologyNode,
   isAxiomSupportNode,
   isRenderedPredicate,
   estimateNodeVisualDimensions,
+  getFirstDegreeNeighborNodeIds,
   listCytoscapeLayoutOptions,
   projectGraphStateToCytoscapeElements,
   projectRdfToGraphState
@@ -327,22 +329,26 @@ describe('Cytoscape visualization Phase 5 visual styling parity', () => {
 });
 
 describe('Cytoscape visualization Phase 6 layout and edge deconfliction', () => {
-  test('provides deterministic layout presets for overview, readable, compact, and grid views', () => {
+  test('provides deterministic layout presets for overview, wide, readable, compact, grid, and hierarchy views', () => {
     expect(listCytoscapeLayoutOptions()).toEqual([
       { value: 'overview', label: 'Overview' },
+      { value: 'wide', label: 'Wide' },
       { value: 'readable', label: 'Readable' },
       { value: 'compact', label: 'Compact' },
-      { value: 'grid', label: 'Grid' }
+      { value: 'grid', label: 'Grid' },
+      { value: 'breadthfirst', label: 'Hierarchy' }
     ]);
     expect(createCytoscapeLayoutOptions('readable')).toMatchObject({
       name: 'cose',
       fit: true,
       nodeDimensionsIncludeLabels: true,
-      idealEdgeLength: 180
+      idealEdgeLength: 220
     });
+    expect(createCytoscapeLayoutOptions('wide').nodeRepulsion).toBeGreaterThan(createCytoscapeLayoutOptions('overview').nodeRepulsion);
+    expect(createCytoscapeLayoutOptions('breadthfirst')).toMatchObject({ name: 'breadthfirst', directed: true });
     expect(createCytoscapeLayoutOptions('missing')).toMatchObject({
       name: 'cose',
-      idealEdgeLength: 120
+      idealEdgeLength: 170
     });
   });
 
@@ -372,6 +378,32 @@ describe('Cytoscape visualization Phase 6 layout and edge deconfliction', () => 
     expect(edgeStyle['control-point-distances']).toBe('data(controlPointDistance)');
     expect(edgeStyle['loop-direction']).toBe('data(loopDirection)');
     expect(edgeStyle['loop-sweep']).toBe('data(loopSweep)');
+  });
+
+  test('computes dampened neighbor movement for manual drag interactions', () => {
+    const focus = namedNode('http://example.org/Focus');
+    const left = namedNode('http://example.org/Left');
+    const right = namedNode('http://example.org/Right');
+    const distant = namedNode('http://example.org/Distant');
+    const state = projectRdfToGraphState([
+      quad(focus, namedNode('http://example.org/p'), left),
+      quad(right, namedNode('http://example.org/p'), focus),
+      quad(distant, namedNode('http://example.org/p'), namedNode('http://example.org/Other'))
+    ]);
+    const focusId = createGraphTermId(focus);
+    const neighborIds = getFirstDegreeNeighborNodeIds(state, focusId);
+    const nudged = calculateNeighborNudgePositions(
+      { x: 10, y: 10 },
+      { x: 30, y: 0 },
+      new Map(neighborIds.map((nodeId) => [nodeId, { x: 100, y: 100 }])),
+      { strength: 0.5 }
+    );
+
+    expect(neighborIds).toEqual([createGraphTermId(left), createGraphTermId(right)].sort());
+    expect(Array.from(nudged.values())).toEqual([
+      { x: 110, y: 95 },
+      { x: 110, y: 95 }
+    ]);
   });
 });
 
