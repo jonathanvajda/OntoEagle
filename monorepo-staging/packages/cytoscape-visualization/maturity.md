@@ -11,7 +11,8 @@
 |Label and property indexes|4|Pure, deterministic, tested for label precedence, repeated annotations, language-tagged literals, typed literals, and grouped inspector rows.|
 |RDF-to-GraphState projection|4|Pure, deterministic, tested for named nodes, literals, blank nodes, duplicate IDs, named graphs, Phase 2 ontology classification, and Phase 3 labels/properties.|
 |Cytoscape element projection|4|Pure and tested for visible nodes, rendered predicate edges, RDF term preservation, predicate-label edge labels, parallel edges, self-loops, literal-node mode, and debug `rdf:type` edges.|
-|Browser Cytoscape app|2|Parallel page exists for manual comparison and exposes Phase 2 filters plus Phase 3 grouped inspector rows; interaction parity, styling parity, layout controls, and large-graph performance tuning are not implemented.|
+|Visual styling parity|4|Shared stylesheet is data-driven by node/edge kind and tested for semantic node categories, directed readable edge labels, datatype edge styling, hover selectors, and selected states.|
+|Browser Cytoscape app|3|Parallel page exists for manual comparison and exposes Phase 2 filters, Phase 3 grouped inspector rows, and Phase 5 hover styling; layout controls and large-graph performance tuning are not implemented.|
 
 ## Performance Note
 

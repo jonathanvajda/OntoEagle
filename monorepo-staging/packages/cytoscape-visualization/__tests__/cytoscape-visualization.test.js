@@ -4,6 +4,7 @@ import {
   buildInspectorViewModel,
   buildLabelIndex,
   buildNodePropertyIndex,
+  createDefaultCytoscapeStylesheet,
   classifyOntologyNode,
   isAxiomSupportNode,
   isRenderedPredicate,
@@ -280,3 +281,49 @@ describe('Cytoscape visualization Phase 4 RDF-to-Cytoscape projection', () => {
     expect(state.edges).toHaveLength(1);
   });
 });
+
+describe('Cytoscape visualization Phase 5 visual styling parity', () => {
+  test('defines semantic node styles for ontology graph categories', () => {
+    const stylesheet = createDefaultCytoscapeStylesheet();
+    const selectors = stylesheet.map((entry) => entry.selector);
+
+    expect(selectors).toEqual(expect.arrayContaining([
+      'node[kind = "class"]',
+      'node[kind = "object-property"]',
+      'node[kind = "datatype-property"]',
+      'node[kind = "annotation-property"]',
+      'node[kind = "ontology"]',
+      'node[kind = "named-individual"]',
+      'node[kind = "axiom-support"]',
+      'node[kind = "blank-node"]',
+      'node[kind = "literal"]'
+    ]));
+    expect(findStyle(stylesheet, 'node').style).toMatchObject({
+      width: 'data(visualWidth)',
+      height: 'data(visualHeight)',
+      'text-max-width': 'data(textMaxWidth)',
+      'text-halign': 'center',
+      'text-valign': 'center'
+    });
+  });
+
+  test('defines readable directed edge styles and interaction states', () => {
+    const stylesheet = createDefaultCytoscapeStylesheet();
+
+    expect(findStyle(stylesheet, 'edge').style).toMatchObject({
+      label: 'data(label)',
+      'target-arrow-shape': 'triangle',
+      'curve-style': 'unbundled-bezier',
+      'text-background-opacity': 0.92,
+      'text-rotation': 'autorotate'
+    });
+    expect(findStyle(stylesheet, 'edge[kind = "datatype"]').style['line-color']).toBe('#15803d');
+    expect(findStyle(stylesheet, 'node.is-hovered').style['border-width']).toBe(4);
+    expect(findStyle(stylesheet, 'node:selected').style['border-color']).toBe('#2563eb');
+    expect(findStyle(stylesheet, 'edge:selected').style.width).toBe(3);
+  });
+});
+
+function findStyle(stylesheet, selector) {
+  return stylesheet.find((entry) => entry.selector === selector);
+}

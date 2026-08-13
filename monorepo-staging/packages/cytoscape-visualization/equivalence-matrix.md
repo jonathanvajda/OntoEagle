@@ -16,5 +16,7 @@
 |Cytoscape element payloads|D3 visual objects can become practical state.|Cytoscape element `data` preserves source RDF terms and quad payloads for display/debug, while GraphState remains canonical.|
 |Parallel edges and self-loops|Handled by D3 link rendering behavior.|Projected as distinct Cytoscape edges with stable quad-derived IDs.|
 |Datatype properties as edges|Varies by page/view.|Default keeps literals in properties; `renderLiteralsAsNodes` projects datatype edges to literal nodes.|
+|Semantic colors|D3 uses a broad ontology color language.|Shared Cytoscape style preserves the same categories: yellow classes, cyan object properties, green datatype/literal values, red ontologies, orange annotation properties, purple individuals, and gray support structures.|
+|Selection and hover|D3 has direct DOM interaction states.|Cytoscape uses data-driven selectors plus `.is-hovered`, `node:selected`, and `edge:selected` styles; the parallel page now adds/removes hover classes.|
 |Renderer|SVG/D3 force simulation.|Cytoscape `cose` baseline; renderer is not canonical state.|
 |Testing|Existing tests cover parts of JSON-LD visualizer core.|New Jest tests snapshot graph-state and Cytoscape element contracts.|
