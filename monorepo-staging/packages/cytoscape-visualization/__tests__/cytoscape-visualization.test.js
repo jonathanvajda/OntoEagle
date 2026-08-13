@@ -4,11 +4,13 @@ import {
   buildInspectorViewModel,
   buildLabelIndex,
   buildNodePropertyIndex,
+  createCytoscapeLayoutOptions,
   createDefaultCytoscapeStylesheet,
   classifyOntologyNode,
   isAxiomSupportNode,
   isRenderedPredicate,
   estimateNodeVisualDimensions,
+  listCytoscapeLayoutOptions,
   projectGraphStateToCytoscapeElements,
   projectRdfToGraphState
 } from '../src/index.js';
@@ -321,6 +323,55 @@ describe('Cytoscape visualization Phase 5 visual styling parity', () => {
     expect(findStyle(stylesheet, 'node.is-hovered').style['border-width']).toBe(4);
     expect(findStyle(stylesheet, 'node:selected').style['border-color']).toBe('#2563eb');
     expect(findStyle(stylesheet, 'edge:selected').style.width).toBe(3);
+  });
+});
+
+describe('Cytoscape visualization Phase 6 layout and edge deconfliction', () => {
+  test('provides deterministic layout presets for overview, readable, compact, and grid views', () => {
+    expect(listCytoscapeLayoutOptions()).toEqual([
+      { value: 'overview', label: 'Overview' },
+      { value: 'readable', label: 'Readable' },
+      { value: 'compact', label: 'Compact' },
+      { value: 'grid', label: 'Grid' }
+    ]);
+    expect(createCytoscapeLayoutOptions('readable')).toMatchObject({
+      name: 'cose',
+      fit: true,
+      nodeDimensionsIncludeLabels: true,
+      idealEdgeLength: 180
+    });
+    expect(createCytoscapeLayoutOptions('missing')).toMatchObject({
+      name: 'cose',
+      idealEdgeLength: 120
+    });
+  });
+
+  test('assigns deterministic routing data for parallel edges and self-loops', () => {
+    const node = namedNode('http://example.org/A');
+    const parent = namedNode('http://example.org/B');
+    const state = projectRdfToGraphState([
+      quad(node, namedNode('http://example.org/p1'), parent),
+      quad(node, namedNode('http://example.org/p2'), parent),
+      quad(node, namedNode('http://example.org/p3'), parent),
+      quad(node, namedNode('http://example.org/self1'), node),
+      quad(node, namedNode('http://example.org/self2'), node)
+    ]);
+    const edges = projectGraphStateToCytoscapeElements(state).filter((element) => element.group === 'edges');
+    const parallelEdges = edges.filter((edge) => edge.data.target === createGraphTermId(parent));
+    const selfLoops = edges.filter((edge) => edge.data.source === edge.data.target);
+
+    expect(parallelEdges.map((edge) => edge.data.parallelEdgeCount)).toEqual([3, 3, 3]);
+    expect(new Set(parallelEdges.map((edge) => edge.data.controlPointDistance)).size).toBe(3);
+    expect(selfLoops.map((edge) => edge.data.parallelEdgeCount)).toEqual([2, 2]);
+    expect(selfLoops.every((edge) => edge.data.loopDirection.endsWith('deg'))).toBe(true);
+  });
+
+  test('uses routing metadata in the Cytoscape edge stylesheet', () => {
+    const edgeStyle = findStyle(createDefaultCytoscapeStylesheet(), 'edge').style;
+
+    expect(edgeStyle['control-point-distances']).toBe('data(controlPointDistance)');
+    expect(edgeStyle['loop-direction']).toBe('data(loopDirection)');
+    expect(edgeStyle['loop-sweep']).toBe('data(loopSweep)');
   });
 });
 

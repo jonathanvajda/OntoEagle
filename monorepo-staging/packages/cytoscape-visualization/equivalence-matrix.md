@@ -18,5 +18,7 @@
 |Datatype properties as edges|Varies by page/view.|Default keeps literals in properties; `renderLiteralsAsNodes` projects datatype edges to literal nodes.|
 |Semantic colors|D3 uses a broad ontology color language.|Shared Cytoscape style preserves the same categories: yellow classes, cyan object properties, green datatype/literal values, red ontologies, orange annotation properties, purple individuals, and gray support structures.|
 |Selection and hover|D3 has direct DOM interaction states.|Cytoscape uses data-driven selectors plus `.is-hovered`, `node:selected`, and `edge:selected` styles; the parallel page now adds/removes hover classes.|
+|Layout|D3 uses a continuous force simulation that spreads hub-and-spoke neighborhoods.|Cytoscape now exposes deterministic layout presets: overview, readable, compact, and grid. Layout runs on render or explicit relayout, not continuously.|
+|Parallel edges and loops|D3 layout/link drawing separates some overlaps incidentally.|Cytoscape projection now assigns deterministic routing metadata for parallel edges and self-loops; styles consume those data fields.|
 |Renderer|SVG/D3 force simulation.|Cytoscape `cose` baseline; renderer is not canonical state.|
 |Testing|Existing tests cover parts of JSON-LD visualizer core.|New Jest tests snapshot graph-state and Cytoscape element contracts.|
