@@ -11,6 +11,7 @@ import {
   clearGraphElementSelection,
   createCytoscapeLayoutOptions,
   createDefaultCytoscapeStylesheet,
+  createRdfGraphProjectionPolicy,
   classifyOntologyNode,
   createGraphElementCopyPayload,
   isAxiomSupportNode,
@@ -123,6 +124,21 @@ describe('Cytoscape visualization Phase 2 ontology classification', () => {
     expect(restrictionNode.kind).toBe('axiom-support');
     expect(projectGraphStateToCytoscapeElements(state).some((element) => element.data.kind === 'axiom-support')).toBe(false);
     expect(projectGraphStateToCytoscapeElements(state, { hideAxiomSupportNodes: false }).some((element) => element.data.kind === 'axiom-support')).toBe(true);
+  });
+
+  test('treats anonymous OWL class blank nodes as axiom support instead of ordinary classes', () => {
+    const anonymousClass = blankNode('n3-143');
+    const state = projectRdfToGraphState([
+      quad(anonymousClass, namedNode(COMMON_NAMESPACE_IRIS.rdf.type), namedNode(COMMON_NAMESPACE_IRIS.owl.Class))
+    ]);
+    const anonymousClassNode = state.nodes.find((node) => node.term?.termType === 'BlankNode');
+
+    expect(anonymousClassNode.kind).toBe('axiom-support');
+    expect(classifyOntologyNode({
+      id: createGraphTermId(anonymousClass),
+      term: anonymousClass,
+      typeIris: [COMMON_NAMESPACE_IRIS.owl.Class]
+    })).toBe('axiom-support');
   });
 
   test('keeps unknown named resources neutral', () => {
@@ -295,6 +311,50 @@ describe('Cytoscape visualization Phase 4 RDF-to-Cytoscape projection', () => {
 
     expect(state.nodes.map((node) => node.iri).filter(Boolean).sort()).toEqual([adjacent.value, focus.value]);
     expect(state.edges).toHaveLength(1);
+  });
+
+  test('can exclude blank and axiom support nodes from projection without dropping source quads', () => {
+    const named = namedNode('http://example.org/Named');
+    const anonymousClass = blankNode('n3-143');
+    const ordinaryBlank = blankNode('ordinary');
+    const quads = [
+      quad(named, namedNode(COMMON_NAMESPACE_IRIS.rdfs.subClassOf), anonymousClass),
+      quad(anonymousClass, namedNode(COMMON_NAMESPACE_IRIS.rdf.type), namedNode(COMMON_NAMESPACE_IRIS.owl.Class)),
+      quad(ordinaryBlank, namedNode('http://example.org/p'), named)
+    ];
+    const state = projectRdfToGraphState(quads, {
+      blankNodeProjectionMode: 'exclude',
+      axiomSupportProjectionMode: 'exclude'
+    });
+
+    expect(createRdfGraphProjectionPolicy({
+      blankNodeProjectionMode: 'exclude',
+      axiomSupportProjectionMode: 'exclude'
+    })).toEqual({
+      blankNodeProjectionMode: 'exclude',
+      axiomSupportProjectionMode: 'exclude'
+    });
+    expect(state.quads).toHaveLength(quads.length);
+    expect(state.nodes.every((node) => node.term?.termType !== 'BlankNode')).toBe(true);
+    expect(state.edges).toHaveLength(0);
+    expect(state.indexes.propertyIndex.get(createGraphTermId(anonymousClass))).toBeTruthy();
+  });
+
+  test('can project axiom-support blank nodes without projecting ordinary blank nodes', () => {
+    const named = namedNode('http://example.org/Named');
+    const anonymousClass = blankNode('n3-143');
+    const ordinaryBlank = blankNode('ordinary');
+    const state = projectRdfToGraphState([
+      quad(named, namedNode(COMMON_NAMESPACE_IRIS.rdfs.subClassOf), anonymousClass),
+      quad(anonymousClass, namedNode(COMMON_NAMESPACE_IRIS.rdf.type), namedNode(COMMON_NAMESPACE_IRIS.owl.Class)),
+      quad(ordinaryBlank, namedNode('http://example.org/p'), named)
+    ], {
+      blankNodeProjectionMode: 'exclude',
+      axiomSupportProjectionMode: 'include'
+    });
+
+    expect(state.nodes.some((node) => node.value === 'n3-143' && node.kind === 'axiom-support')).toBe(true);
+    expect(state.nodes.some((node) => node.value === 'ordinary')).toBe(false);
   });
 });
 

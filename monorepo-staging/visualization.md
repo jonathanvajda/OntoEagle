@@ -404,6 +404,15 @@ Avoid policies:
 
 Prepare for RDF editing without making the renderer responsible for RDF semantics.
 
+Fidelity policy:
+
+1. Parsed RDF/JS quads or canonical quad rows are the source of truth.
+2. Cytoscape nodes and edges are a renderable projection, not the durable RDF model.
+3. Projection-time exclusions for blank nodes, RDF list nodes, OWL restriction nodes, and other axiom-support structures must not delete or mutate source quads.
+4. Serialization must use the canonical RDF/quad state after applying explicit RDF edit commands, not the currently visible Cytoscape element set.
+5. Visibility filters, hidden selected nodes, focus-node projection, and layout-level abstraction are view state only.
+6. If an editor later supports collapsed anonymous structures, the collapse operation must retain enough source quad identity to expand, edit, serialize, and undo without losing RDF fidelity.
+
 Required capabilities:
 
 1. Add node draft from UI actions or forms.
