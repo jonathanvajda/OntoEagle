@@ -33,6 +33,8 @@ export function projectGraphStateToCytoscapeElements(graphState, options = {}) {
           value: node.value,
           typeIris: node.typeIris,
           annotations: node.annotations,
+          isSelectedVar: Boolean(node.isSelectedVar),
+          sourceModelNode: node.sourceModelNode || null,
           propertyRecord: graphState.indexes?.propertyIndex?.get(node.id) || null
         }
       };
@@ -58,6 +60,7 @@ export function projectGraphStateToCytoscapeElements(graphState, options = {}) {
         predicateIri: edge.predicateIri,
         graphId: edge.graphId,
         quad: edge.quad,
+        sourceModelEdge: edge.sourceModelEdge || null,
         ...edgeRoutingById.get(edge.id)
       }
     }));

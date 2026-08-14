@@ -21,6 +21,7 @@ import {
   listCytoscapeLayoutOptions,
   projectGraphStateToCytoscapeElements,
   projectRdfToGraphState,
+  projectSparqlGraphModelToGraphState,
   selectGraphElementIds,
   updateGraphElementSelection,
   hideSelectedGraphElements,
@@ -625,6 +626,59 @@ describe('Cytoscape visualization Phase 8 selection, dragging, hiding, and inspe
     expect(cleared.ui.selectedNodeIds).toEqual([]);
     expect(cleared.ui.selectedEdgeIds).toEqual([]);
     expect(cleared.ui.activeInspectorTarget).toBeNull();
+  });
+});
+
+describe('Cytoscape visualization Phase 9 SPARQL visualization reuse', () => {
+  test('projects SPARQL graph models into the shared GraphState contract', () => {
+    const graphState = projectSparqlGraphModelToGraphState({
+      queryType: 'SELECT',
+      prefixes: { foaf: 'http://xmlns.com/foaf/0.1/' },
+      whereTripleCount: 2,
+      nodes: [
+        { id: 'var:?p', label: '?p', kind: 'variable', category: 'individual', isSelectedVar: true },
+        { id: 'iri:http://xmlns.com/foaf/0.1/Person', label: 'foaf:Person', kind: 'iri', category: 'class' },
+        { id: 'lit:Alice||', label: '"Alice"', kind: 'literal', category: 'literal' }
+      ],
+      edges: [
+        { id: 'e:type', source: 'var:?p', target: 'iri:http://xmlns.com/foaf/0.1/Person', label: 'rdf:type', category: 'rdfType' },
+        { id: 'e:name', source: 'var:?p', target: 'lit:Alice||', label: 'foaf:name', category: 'datatypeProp' }
+      ]
+    });
+    const elements = projectGraphStateToCytoscapeElements(graphState, { hideBlankNodes: false });
+    const selectedVariable = elements.find((element) => element.group === 'nodes' && element.data.id === 'var:?p');
+    const datatypeEdge = elements.find((element) => element.group === 'edges' && element.data.id === 'e:name');
+
+    expect(graphState.indexes.sparqlQueryType).toBe('SELECT');
+    expect(graphState.indexes.sparqlWhereTripleCount).toBe(2);
+    expect(selectedVariable.data).toMatchObject({
+      kind: 'variable',
+      isSelectedVar: true,
+      label: '?p'
+    });
+    expect(datatypeEdge.data).toMatchObject({
+      kind: 'datatype',
+      label: 'foaf:name',
+      source: 'var:?p',
+      target: 'lit:Alice||'
+    });
+  });
+
+  test('keeps SPARQL path predicates as read-only visualization edges', () => {
+    const graphState = projectSparqlGraphModelToGraphState({
+      nodes: [
+        { id: 'var:?s', label: '?s', kind: 'variable', category: 'variable' },
+        { id: 'var:?o', label: '?o', kind: 'variable', category: 'variable' }
+      ],
+      edges: [
+        { id: 'e:path', source: 'var:?s', target: 'var:?o', label: '[path]', category: 'path' }
+      ]
+    });
+    const edge = projectGraphStateToCytoscapeElements(graphState)
+      .find((element) => element.group === 'edges');
+
+    expect(edge.data.kind).toBe('path');
+    expect(graphState.quads).toHaveLength(0);
   });
 });
 

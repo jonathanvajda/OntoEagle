@@ -26,12 +26,17 @@ export const CYTOSCAPE_VISUAL_STYLE = Object.freeze({
     supportStroke: '#9ca3af',
     literalFill: '#ecfdf5',
     literalStroke: '#047857',
+    variableFill: '#eef2ff',
+    variableStroke: '#4f46e5',
     selectedStroke: '#2563eb',
     hoverStroke: '#111827'
   }),
   edge: Object.freeze({
     defaultStroke: '#6b7280',
     datatypeStroke: '#15803d',
+    annotationStroke: '#c2410c',
+    typeStroke: '#7c3aed',
+    pathStroke: '#0f766e',
     selectedStroke: '#2563eb',
     hoverStroke: '#111827',
     labelBackground: '#ffffff'
@@ -75,6 +80,8 @@ export function createDefaultCytoscapeStylesheet() {
     { selector: 'node[kind = "axiom-support"]', style: { 'background-color': palette.node.supportFill, 'border-color': palette.node.supportStroke, 'border-style': 'dashed' } },
     { selector: 'node[kind = "blank-node"]', style: { 'background-color': '#e5e7eb', 'border-color': '#4b5563', 'border-style': 'dashed' } },
     { selector: 'node[kind = "literal"]', style: { 'background-color': palette.node.literalFill, 'border-color': palette.node.literalStroke, shape: 'rectangle' } },
+    { selector: 'node[kind = "variable"]', style: { 'background-color': palette.node.variableFill, 'border-color': palette.node.variableStroke, 'border-style': 'dotted' } },
+    { selector: 'node[isSelectedVar]', style: { 'border-width': 4, 'border-color': '#ca8a04' } },
     {
       selector: 'edge',
       style: {
@@ -98,6 +105,9 @@ export function createDefaultCytoscapeStylesheet() {
       }
     },
     { selector: 'edge[kind = "datatype"]', style: { 'line-color': palette.edge.datatypeStroke, 'target-arrow-color': palette.edge.datatypeStroke } },
+    { selector: 'edge[kind = "annotation"]', style: { 'line-color': palette.edge.annotationStroke, 'target-arrow-color': palette.edge.annotationStroke } },
+    { selector: 'edge[kind = "type"]', style: { 'line-color': palette.edge.typeStroke, 'target-arrow-color': palette.edge.typeStroke, 'line-style': 'dashed' } },
+    { selector: 'edge[kind = "path"]', style: { 'line-color': palette.edge.pathStroke, 'target-arrow-color': palette.edge.pathStroke, 'line-style': 'dotted' } },
     { selector: 'node.is-hovered', style: { 'border-color': palette.node.hoverStroke, 'border-width': 4 } },
     { selector: 'edge.is-hovered', style: { 'line-color': palette.edge.hoverStroke, 'target-arrow-color': palette.edge.hoverStroke, width: 3 } },
     { selector: 'node:selected', style: { 'border-color': palette.node.selectedStroke, 'border-width': 4 } },

@@ -28,7 +28,7 @@ RDF Triples (In-Memory State)
 * **Single Source of Truth:** An in-memory JavaScript store, such as an array of RDF/JS quads, `N3.Store`, canonical quad rows, or a SPARQL graph model.
 * **Decoupled Renderer:** Cytoscape acts strictly as an imperative view layer. The DOM is never read to establish application state. User interactions, such as node addition, deletion, dragging, hiding, and selection, dispatch state updates first. Those updates then trigger targeted, deterministic Cytoscape mutations through APIs such as `cy.batch()`, `cy.add()`, `cy.remove()`, `cy.json()`, layout calls, and style updates.
 
-The visualizer should support ontology browsing first, then editing-oriented workflows. The expanded target architecture is:
+The visualizer should support ontology and SPARQL pattern browsing first. Editing-oriented workflows are deferred to a separate authoring-app capability plan. The expanded target architecture is:
 
 ```text
 RDF/SPARQL input
@@ -40,7 +40,7 @@ RDF/SPARQL input
 
 Cytoscape is the rendering engine, not the source of truth. The DOM and canvas are never read to infer ontology state. User actions dispatch graph-state or RDF-state updates first; reconciliation functions then update Cytoscape with `cy.batch()`, `cy.add()`, `cy.remove()`, `cy.json()`, or style/layout calls.
 
-This reverses the fragile D3 pattern where rendered DOM objects become a practical source for later reads, additions, deletions, and edits. In the new engine, the RDF dataset, derived graph model, selected elements, hidden elements, layout preferences, and edit drafts live in application state. The canvas is a projection of that state.
+This reverses the fragile D3 pattern where rendered DOM objects become a practical source for later reads. In the new engine, the RDF dataset, derived graph model, selected elements, hidden elements, and layout preferences live in application state. The canvas is a projection of that state.
 
 ## 2. Functional Equivalence Scope
 
@@ -60,79 +60,38 @@ The initial Cytoscape visualizer should restore the important behavior users alr
 
 ## 3. Driving Use Cases
 
-The milestone order should be driven by workflows users will actually perform, not only by renderer parity.
+The visualization milestone is scoped to read-only inspection and renderer reuse. Editing, SPARQL authoring, RDF-to-SPARQL abstraction, and observed-schema generation are valid capabilities, but they are deferred to [RDF and SPARQL Authoring App Capability Notes](./rdf-sparql-authoring-app.md).
 
-### Use Case 1: Edit RDF Visually
+### Use Case 1: Inspect RDF Graphs
 
-A user loads or starts an RDF graph, then adds and edits assertions through the visual interface.
-
-Required user actions:
-
-1. Add a node.
-2. Assert the node's `rdf:type`.
-3. Add or edit annotation properties.
-4. Add or edit object-property edges to other resources.
-5. Add or edit datatype-property values.
-6. Optionally visualize datatype-property values as literal box nodes.
-7. Save the resulting assertions as canonical quad rows in IndexedDB.
-8. Serialize the graph in the user's chosen export format, such as Turtle, N-Triples, JSON-LD, or Mermaid.
-
-Architectural implication:
-
-The visual editor should produce RDF edit commands that normalize into `QuadRow` records. Persistence and export should route through shared data-management and RDF serialization packages. Cytoscape should never be the persistence shape.
-
-### Use Case 2: Author SPARQL Visually
-
-A user builds a SPARQL query pattern through graph interactions rather than writing every clause by hand.
+A user loads RDF and visually explores ontology entities, relationships, labels, annotations, and graph neighborhoods without mutating the RDF dataset.
 
 Required user actions:
 
-1. Add subject, predicate, object, and literal pattern terms.
-2. Convert concrete terms into variables.
-3. Add or edit triple patterns.
-4. Mark variables as projected result variables.
-5. Add constraints such as filters, optional patterns, unions, named graph clauses, and `FILTER NOT EXISTS`.
-6. Serialize the query to SPARQL text.
-7. Parse SPARQL text back into the same internal query-pattern state when feasible.
+1. Load RDF through shared `rdf-io`.
+2. Render ontology-aware graph nodes and edges.
+3. Filter, hide, select, drag, and inspect graph elements.
+4. Copy IRIs, CURIEs, and selected triple IDs.
+5. Preserve source RDF quads even when the visualization excludes support structures.
 
 Architectural implication:
 
-SPARQL needs its own durable internal state object. It cannot be treated as RDF with variables sprinkled in. Triple patterns, variables, filters, groups, optionals, unions, path expressions, and negated patterns need explicit representation so complex queries remain editable after visualization.
+The RDF dataset remains the source of truth. Cytoscape elements are a disposable projection for rendering and interaction.
 
-### Use Case 3: Convert RDF Data Into SPARQL Query Patterns
+### Use Case 2: Inspect SPARQL Query Patterns
 
-A user loads RDF, then switches to SPARQL authoring by abstracting selected subjects, predicates, objects, classes, individuals, or literals.
+A user loads or writes SPARQL text in a SPARQL-focused app, and the visualizer renders the query pattern as a graph without becoming a query editor.
 
-Examples:
+Required user actions:
 
-1. Replace one selected individual with `?s`.
-2. Replace all individuals of a class with a class-constrained variable.
-3. Replace a concrete object value with `?o`.
-4. Replace selected predicates with predicate variables.
-5. Preserve useful type constraints as `?s rdf:type ex:Class`.
-6. Keep selected concrete IRIs fixed while abstracting surrounding terms.
+1. Parse SPARQL through `sparql-utils`.
+2. Project supported SPARQL.js AST patterns into the shared `GraphState` contract.
+3. Render variables, concrete terms, literals, and triple-pattern edges.
+4. Preserve diagnostics for unsupported or partially rendered constructs.
 
 Architectural implication:
 
-The system needs bridges from RDF graph state into SPARQL pattern state. These bridges should be explicit transformation helpers with abstraction policies, not one-off UI shortcuts.
-
-### Use Case 4: Abstract Instance Data Into a Schema or Design Pattern Shape
-
-A user drops RDF instance data into the workspace and asks for a more general pattern view.
-
-Example target behavior:
-
-1. Discover named individuals.
-2. Read each individual's `rdf:type`.
-3. Collapse individuals into their classes.
-4. Discover object properties used between individuals.
-5. Generalize those object-property edges into class-to-class pattern edges.
-6. Recursively follow discovered object-property paths to show how objects can relate in the data sample.
-7. Preserve evidence links back to the concrete triples that justify each generalized edge.
-
-Architectural implication:
-
-The system needs a data-abstraction layer that can derive observed schema/design-pattern graphs from instance data. This is not the same as OWL reasoning or ontology import closure, although those may later enrich it. The first target is an evidence-backed "observed pattern" projection from sample data.
+SPARQL visualization should reuse the Cytoscape renderer and state/filter/inspector patterns developed for RDF. Editing SPARQL query state is deferred to the authoring-app plan.
 
 ## 4. Capability Plan
 
@@ -156,9 +115,7 @@ Required capabilities:
    - current layout name and layout options
    - pinned/manual node positions
    - active inspector target
-   - pending RDF edit draft
-   - pending SPARQL edit draft
-   - active abstraction policy
+   - projection policy for blank nodes and axiom-support structures
 
 Deliverables:
 
@@ -400,164 +357,39 @@ Avoid policies:
 2. Do not store business state only in Cytoscape `data`.
 3. Do not treat selected DOM/canvas elements as canonical application state.
 
-### Phase 9: Editing Workflow
+### Phase 9: SPARQL Visualization Reuse
 
-Prepare for RDF editing without making the renderer responsible for RDF semantics.
-
-Fidelity policy:
-
-1. Parsed RDF/JS quads or canonical quad rows are the source of truth.
-2. Cytoscape nodes and edges are a renderable projection, not the durable RDF model.
-3. Projection-time exclusions for blank nodes, RDF list nodes, OWL restriction nodes, and other axiom-support structures must not delete or mutate source quads.
-4. Serialization must use the canonical RDF/quad state after applying explicit RDF edit commands, not the currently visible Cytoscape element set.
-5. Visibility filters, hidden selected nodes, focus-node projection, and layout-level abstraction are view state only.
-6. If an editor later supports collapsed anonymous structures, the collapse operation must retain enough source quad identity to expand, edit, serialize, and undo without losing RDF fidelity.
-
-Required capabilities:
-
-1. Add node draft from UI actions or forms.
-2. Assert or change a node's `rdf:type`.
-3. Add, edit, or remove annotation-property values.
-4. Add, edit, or remove datatype-property values.
-5. Add, edit, or remove object-property edges.
-6. Add datatype-property-as-edge mode for users who want literal value nodes.
-7. Validate terms before committing to RDF state.
-8. Normalize edits into canonical quad rows.
-9. Commit quad rows to the workspace store and IndexedDB boundary.
-10. Serialize updated RDF through shared export utilities.
-11. Recompute graph projection from updated RDF state.
-12. Reconcile Cytoscape from the new projection.
-13. Keep undo/redo history at the RDF-state operation level.
-
-Editing architecture:
-
-1. Forms produce RDF edit commands.
-2. RDF edit commands normalize to add/remove/update quad-row operations.
-3. Quad-row operations update the canonical workspace store.
-4. Persistence writes the updated quad rows to IndexedDB.
-5. Serialization exports RDF in Turtle, N-Triples, JSON-LD, or other supported formats.
-6. Projection functions rebuild affected graph indexes.
-7. Cytoscape receives minimal add/remove/update operations.
-
-This keeps ontology correctness outside the canvas layer.
-
-Deliverables:
-
-1. `RdfEditCommand` model.
-2. Quad-row add/remove/update helpers.
-3. Node creation workflow for typed resources.
-4. Annotation, datatype, and object-property edit workflows.
-5. Export bridge from current graph state to RDF serialization and Mermaid output.
-
-### Phase 10: SPARQL Authoring State
-
-Create a durable internal state model for SPARQL query authoring and visualization.
-
-Required capabilities:
-
-1. Represent concrete RDF terms, variables, blank nodes, and literals.
-2. Represent triple patterns separately from asserted RDF triples.
-3. Represent projected variables for `SELECT`.
-4. Represent query forms such as `SELECT`, `ASK`, `CONSTRUCT`, and `DESCRIBE`.
-5. Represent pattern groups:
-   - basic graph patterns
-   - `OPTIONAL`
-   - `UNION`
-   - `GRAPH`
-   - `FILTER`
-   - `FILTER NOT EXISTS`
-   - `MINUS`
-6. Preserve query-specific metadata:
-   - query type
-   - selected variables
-   - prefixes
-   - base IRI
-   - union/group membership where supported
-   - graph clauses where supported
-   - source text when round-tripping is partial
-7. Serialize supported query state to SPARQL text.
-8. Parse SPARQL text into query state through `sparql-utils` where feasible.
-9. Record unsupported or lossy constructs as diagnostics rather than silently dropping them.
-
-Deliverables:
-
-1. `SparqlPatternState` data contract.
-2. `SparqlTerm` and `SparqlPatternGroup` data contracts.
-3. SPARQL serializer boundary for supported query state.
-4. SPARQL parser/import boundary from `sparql-utils`.
-5. Tests for variables, filters, optional groups, unions, graph clauses, and `FILTER NOT EXISTS`.
-
-### Phase 11: RDF-to-SPARQL Abstraction Bridge
-
-Support conversion from loaded RDF data into editable SPARQL query patterns.
-
-Required capabilities:
-
-1. Convert selected RDF triples into SPARQL triple patterns.
-2. Convert selected concrete subjects, predicates, objects, or literals into variables.
-3. Convert all individuals of a selected class into a class-constrained variable.
-4. Preserve useful `rdf:type` constraints when abstracting individuals.
-5. Let users choose whether predicates stay concrete or become predicate variables.
-6. Let users choose whether literals stay fixed, become variables, or become datatype/lang-constrained variables.
-7. Preserve provenance from each generated query pattern back to source RDF triples.
-8. Support abstraction presets:
-   - concrete example query
-   - variables for selected nodes
-   - class-level query from individuals
-   - predicate-discovery query
-   - neighborhood query around selected node
-
-Deliverables:
-
-1. `createSparqlPatternFromRdfSelection(graphState, selection, options)` helper.
-2. Abstraction-policy data contract.
-3. Provenance mapping from SPARQL patterns to source quad IDs.
-4. Tests for individual-to-variable, individual-to-class-variable, literal abstraction, and predicate abstraction.
-
-### Phase 12: Instance Data to Observed Schema/Pattern Graph
-
-Derive an evidence-backed schema or design-pattern shape from concrete RDF instance data.
-
-Required capabilities:
-
-1. Identify named individuals in loaded RDF.
-2. Resolve each individual's `rdf:type`.
-3. Collapse individuals into class nodes.
-4. Generalize object-property assertions into class-to-class edges.
-5. Optionally generalize datatype properties into class-to-datatype/literal-value constraints.
-6. Recursively follow object-property paths to a configurable depth.
-7. Count supporting triples for each generalized edge.
-8. Preserve evidence links back to source individuals and quad IDs.
-9. Mark edges as observed-in-data rather than logically entailed.
-10. Optionally enrich the pattern with ontology domain/range declarations when available.
-11. Export the observed pattern as Cytoscape graph state, Mermaid, RDF/OWL design pattern assertions, or SPARQL query template.
-
-Deliverables:
-
-1. `deriveObservedPatternGraphFromInstances(quads, options)` helper.
-2. `ObservedPatternNode` and `ObservedPatternEdge` contracts.
-3. Evidence/provenance index.
-4. Recursion-depth and traversal-policy options.
-5. Tests for simple class collapse, multi-type individuals, object-property paths, datatype-property summaries, and evidence counts.
-
-### Phase 13: SPARQL Visualization Reuse
-
-Use the same graph rendering package for RDF datasets, observed pattern graphs, and SPARQL query patterns.
+Use the same graph rendering package for RDF datasets and SPARQL query patterns. This phase updates SPARQL Pattern Visualizer support in light of the Cytoscape graph-state, projection, styling, filtering, selection, and inspector work.
 
 Required capabilities:
 
 1. Accept SPARQL.js AST output through `sparql-utils`.
-2. Project SPARQL pattern state into the same `GraphState` shape.
+2. Project SPARQL graph models into the same `GraphState` shape.
 3. Represent variables as a separate visual node kind.
 4. Represent constants, blank nodes, and literals with the same term ID helpers used for RDF.
 5. Style SPARQL-only features without forking the Cytoscape renderer.
 6. Preserve diagnostics for constructs that are present in query state but not graphically rendered.
+7. Keep SPARQL editing and query serialization out of the visualization milestone.
 
 Deliverables:
 
-1. `projectSparqlPatternStateToGraphState(sparqlPatternState, options)` helper.
+1. `projectSparqlGraphModelToGraphState(sparqlGraphModel, options)` helper.
 2. Shared Cytoscape renderer that accepts graph state, not RDF-specific input.
-3. Tests proving RDF, observed-pattern, and SPARQL projections all feed the same renderer contract.
+3. Tests proving RDF and SPARQL projections both feed the same renderer contract.
+4. SPV browser rewiring plan that preserves current read-only SPARQL graph visualization behavior.
+
+Implementation note:
+
+SPARQL Pattern Visualizer should keep parsing and AST graph-model derivation in `sparql-utils`, then project that graph model through `cytoscape-visualization`. App code should not reintroduce local `toCytoscapeElements`, local Cytoscape styles, or local layout presets unless a later visualization package change proves the shared renderer contract is insufficient.
+
+### Deferred Authoring Capabilities
+
+The following capabilities are deferred to [RDF and SPARQL Authoring App Capability Notes](./rdf-sparql-authoring-app.md):
+
+1. RDF editing workflow.
+2. SPARQL authoring state and SPARQL editing workflow.
+3. RDF-to-SPARQL abstraction bridge.
+4. Instance data to observed schema/pattern graph derivation.
 
 ## 5. Proposed Package Boundaries
 
@@ -573,12 +405,8 @@ packages/cytoscape-visualization/
     graph-selection.js
     graph-visibility.js
     graph-reducer.js
-    rdf-edit-commands.js
     rdf-to-graph.js
     sparql-to-graph.js
-    sparql-pattern-state.js
-    rdf-to-sparql-abstraction.js
-    observed-pattern-graph.js
     ontology-classification.js
     label-index.js
     property-index.js
@@ -593,8 +421,6 @@ packages/cytoscape-visualization/
     graph-ids.test.js
     rdf-to-graph.test.js
     sparql-to-graph.test.js
-    rdf-to-sparql-abstraction.test.js
-    observed-pattern-graph.test.js
     ontology-classification.test.js
     property-index.test.js
     filter-model.test.js
@@ -671,55 +497,24 @@ Exit criterion: users can explore and declutter the graph at least as effectivel
 
 Exit criterion: hub neighborhoods fan out, labels are readable, and edge overlaps are no worse than the D3 baseline for BFO-sized graphs.
 
-### Milestone 4: Editing-Ready State Flow
+### Milestone 4: Projection Fidelity and Performance
 
-1. Add RDF edit command model.
-2. Add add/remove quad-row operations.
-3. Add annotation/datatype value editing.
-4. Add object-property edge editing.
-5. Persist edited quad rows through the IndexedDB boundary.
-6. Export edited graph through RDF serializers and Mermaid output where supported.
-7. Recompute affected graph indexes after edits.
-8. Reconcile Cytoscape from updated state.
+1. Keep parsed RDF/JS quads or canonical quad rows attached to graph state.
+2. Support projection-time exclusion of blank nodes and axiom-support structures.
+3. Ensure exclusions reduce Cytoscape workload without deleting source RDF.
+4. Add performance notes for parse, projection, Cytoscape construction, and layout timing.
 
-Exit criterion: edits happen against RDF state first and are then reflected in Cytoscape without reading the canvas as data.
+Exit criterion: users can suppress noisy support structures for practical rendering while the full RDF dataset remains available for serialization or future authoring handoff.
 
-### Milestone 5: SPARQL Authoring Model
+### Milestone 5: Shared SPARQL/RDF Rendering
 
-1. Define durable SPARQL pattern state.
-2. Support variables, concrete terms, literals, triple patterns, selected variables, and query type.
-3. Add first support for `OPTIONAL`, `UNION`, `GRAPH`, `FILTER`, and `FILTER NOT EXISTS`.
-4. Serialize supported state to SPARQL text.
-5. Import supported SPARQL text through `sparql-utils`.
-
-Exit criterion: a graph-authored query can round-trip through internal query state without collapsing into renderer-only data.
-
-### Milestone 6: RDF-to-SPARQL Bridge
-
-1. Convert selected RDF triples into SPARQL triple patterns.
-2. Abstract selected concrete nodes and literals into variables.
-3. Preserve selected `rdf:type` statements as class constraints.
-4. Track provenance from generated SPARQL patterns back to source quad rows.
-
-Exit criterion: users can load RDF, select concrete examples, and produce an editable SPARQL query pattern from those examples.
-
-### Milestone 7: Instance-to-Pattern Abstraction
-
-1. Identify named individuals and their classes.
-2. Collapse individuals into class-level nodes.
-3. Generalize observed object-property assertions into class-to-class edges.
-4. Follow object-property paths to configurable depth.
-5. Preserve evidence counts and source quad IDs.
-
-Exit criterion: users can drop RDF instance data into the workspace and generate an evidence-backed schema/design-pattern shape.
-
-### Milestone 8: Shared SPARQL/RDF Rendering
-
-1. Feed RDF graph state, observed pattern graph state, and SPARQL pattern graph state into the same Cytoscape renderer.
+1. Feed RDF graph state and SPARQL pattern graph state into the same Cytoscape renderer.
 2. Style variables and query-pattern constructs.
 3. Reuse selection, filter, layout, and inspector components.
+4. Preserve diagnostics for SPARQL constructs that are parsed but not graphically rendered.
+5. Keep SPARQL editing and serialization deferred to the authoring-app plan.
 
-Exit criterion: RDF visualization, observed-pattern visualization, and SPARQL pattern visualization share the same Cytoscape rendering engine.
+Exit criterion: RDF visualization and SPARQL pattern visualization share the same Cytoscape rendering engine without turning the renderer into a query editor.
 
 ## 8. Open Decisions
 
@@ -728,10 +523,11 @@ Exit criterion: RDF visualization, observed-pattern visualization, and SPARQL pa
 3. Whether `fcose` or `cola` should be accepted as an external dependency after `cose` baseline testing.
 4. Whether hidden node state should be saved in project storage or treated as session-only UI state.
 5. Whether property labels should prefer ontology-provided labels over namespace/local-name compaction in every case.
-6. Which SPARQL constructs are first-class editable graph objects versus text-only clauses with diagnostics.
-7. How much source-text formatting should be preserved when SPARQL is parsed, edited graphically, and serialized again.
-8. Whether RDF-to-SPARQL abstraction should default to individual variables, class-constrained variables, or ask the user each time.
-9. Whether observed schema/design-pattern abstraction should use only asserted sample data or also ontology domain/range and reasoning results.
+6. Which additional SPARQL constructs should be rendered graphically versus reported as diagnostics in a read-only visualization.
+
+Settled decision:
+
+SPARQL Pattern Visualizer is rewired directly to reuse `sparql-utils` for SPARQL AST graph-model derivation and `cytoscape-visualization` for GraphState projection, styles, layouts, and Cytoscape element JSON. SPARQL editing remains deferred to the authoring-app plan.
 
 ## 9. Testing Strategy
 
@@ -740,9 +536,8 @@ Exit criterion: RDF visualization, observed-pattern visualization, and SPARQL pa
 3. Use BFO-like fixtures for high-degree class/property layout behavior.
 4. Use SPARQL fixtures for SELECT, ASK, CONSTRUCT, variables, blank nodes, and literals.
 5. Use SPARQL fixtures for `OPTIONAL`, `UNION`, `GRAPH`, `FILTER`, `FILTER NOT EXISTS`, and unsupported construct diagnostics.
-6. Use RDF instance-data fixtures for class collapse, recursive object-property traversal, and evidence counts.
-7. Snapshot Cytoscape element JSON, not canvas pixels, for normal tests.
-8. Use browser/screenshot tests only for layout smoke tests and visual regressions.
+6. Snapshot Cytoscape element JSON, not canvas pixels, for normal tests.
+7. Use browser/screenshot tests only for layout smoke tests and visual regressions.
 
 ## 10. Success Criteria
 
@@ -755,8 +550,6 @@ The Cytoscape visualizer reaches practical functional equivalence when:
 5. Blank nodes and OWL axiom support structures are hidden by default but recoverable.
 6. Filters, selection, dragging, hiding, and property inspection work from state.
 7. Datatype values can be shown in the inspector and optionally as green literal nodes.
-8. The graph can be edited by mutating quad-row/RDF state first, then reconciling Cytoscape from that state.
-9. Edited RDF can be saved to IndexedDB and serialized in supported export formats.
-10. RDF examples can be abstracted into editable SPARQL query patterns.
-11. Instance data can be abstracted into evidence-backed schema/design-pattern graphs.
-12. RDF, observed-pattern, and SPARQL inputs share the same renderer contract.
+8. Projection-time exclusions reduce visual noise without deleting source RDF quads.
+9. RDF and SPARQL inputs share the same renderer contract.
+10. SPARQL constructs that cannot be rendered are reported as diagnostics rather than silently dropped.

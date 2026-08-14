@@ -1,7 +1,7 @@
 # Maturity Assessment
 
 - **Capability family:** Visualization of RDF in Cytoscape
-- **Current maturity:** Level 2-4 depending on layer.
+- **Current maturity:** Level 4 for the read-only RDF/SPARQL visualization milestone; authoring/editing capabilities are explicitly deferred.
 
 |Layer|Maturity|Reason|
 |:---|:---:|:---|
@@ -15,7 +15,26 @@
 |Layout and edge deconfliction|3|Layout preset registry, deterministic edge routing metadata, and dampened neighbor-drag helpers are implemented and tested. Browser controls expose overview/wide/readable/compact/grid/hierarchy relayout, fit, and optional neighbor nudging. Screenshot comparison and real performance benchmarks remain manual deliverables.|
 |Filtering and visibility|4|Filter option indexes, visibility calculation, filter state updates, filter panel view model, and single/Ctrl/Shift selection helpers are implemented and tested. Browser page exposes blank-node, axiom-support, kind, predicate, subject, object, reset, show-all, and visible/hidden count controls.|
 |Selection, dragging, hiding, and inspector|4|Selection reducers, clear-selection, hide selected, restore hidden, pinned node positions, inspector target state, copy payloads, and neighbor-drag helpers are implemented and tested. Browser page wires node/edge selection, modifier-aware selection state, hiding/restoring, drag position pinning, inspector rows, and copy buttons.|
-|Browser Cytoscape app|3|Parallel page exists for manual comparison and exposes Phase 2 projection controls, Phase 3 grouped inspector rows, Phase 5 hover styling, Phase 6 layout controls, Phase 7 filter controls, and Phase 8 selection/hide/restore/copy interactions; RDF edit workflow is not implemented.|
+|SPARQL visualization reuse|4|`projectSparqlGraphModelToGraphState` projects read-only `sparql-utils` graph models into the shared GraphState contract. Tests cover SELECT variables, class/type heuristics, datatype-property edges, and property-path edges. SPV now uses shared Cytoscape projection, styling, and layout helpers instead of local element/style functions.|
+|Browser Cytoscape app|3|Parallel page exists for manual comparison and exposes Phase 2 projection controls, Phase 3 grouped inspector rows, Phase 5 hover styling, Phase 6 layout controls, Phase 7 filter controls, and Phase 8 selection/hide/restore/copy interactions. RDF editing, SPARQL editing, RDF-to-SPARQL abstraction, and observed-pattern generation are intentionally deferred to the authoring-app plan.|
+
+## Scope Boundary
+
+Visualization remains read-only with respect to semantic source data. The package may preserve source RDF terms, source quads, SPARQL graph-model terms, selected IDs, hidden IDs, layout state, and inspector targets, but it should not own RDF mutation, SPARQL mutation, or observed-schema derivation.
+
+Deferred capabilities are tracked in `monorepo-staging/rdf-sparql-authoring-app.md`.
+
+## Completion Note
+
+The portfolio checklist items "Visualization of RDF in Cytoscape" and "Visualization of SPARQL in Cytoscape" are complete for the current milestone scope:
+
+1. RDF datasets project into shared `GraphState` and Cytoscape element JSON.
+2. SPARQL graph models from `sparql-utils` project into the same `GraphState` and renderer contract.
+3. Shared styles, layout presets, filtering, selection, dragging, hiding, inspector, copy payload, and projection-fidelity helpers are covered by Jest.
+4. Visual Lynx has a parallel Cytoscape RDF page for manual comparison.
+5. SPARQL Pattern Visualizer uses the shared Cytoscape projection, styling, and layout helpers.
+
+Remaining visualization tuning, such as layout performance, node overlap, and visual polish, should be treated as iterative improvement rather than a blocker for milestone completion.
 
 ## Performance Note
 

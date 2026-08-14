@@ -23,9 +23,7 @@ export function createDefaultGraphUiState(overrides = {}) {
     layoutOptions: Object.freeze({ ...(overrides.layoutOptions || {}) }),
     pinnedNodePositions: Object.freeze({ ...(overrides.pinnedNodePositions || {}) }),
     activeInspectorTarget: overrides.activeInspectorTarget || null,
-    pendingRdfEditDraft: overrides.pendingRdfEditDraft || null,
-    pendingSparqlEditDraft: overrides.pendingSparqlEditDraft || null,
-    activeAbstractionPolicy: overrides.activeAbstractionPolicy || null
+    projectionPolicy: overrides.projectionPolicy || null
   });
 }
 

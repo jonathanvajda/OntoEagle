@@ -23,6 +23,12 @@ export {
 } from './rdf-to-graph.js';
 
 export {
+  classifySparqlGraphEdgeKind,
+  classifySparqlGraphNodeKind,
+  projectSparqlGraphModelToGraphState
+} from './sparql-to-graph.js';
+
+export {
   buildInspectorViewModel,
   buildLabelIndex,
   buildNodePropertyIndex

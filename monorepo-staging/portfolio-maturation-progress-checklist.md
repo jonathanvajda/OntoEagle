@@ -58,8 +58,8 @@ Given this portfolio, I would prioritize these epics:
 - [x] 13. SPARQL update pattern implementation
 - [X] 14. YAML, HTML, and print export
 - [x] 15. Toast notifications, logging utils, status notifications, lightmode-darkmode
-- [ ] 16. Visualization of RDF in Cytoscape
-- [ ] 17. Visualization of SPARQL in Cytoscape
+- [x] 16. Visualization of RDF in Cytoscape
+- [x] 17. Visualization of SPARQL in Cytoscape
 - [ ] 18. Standardized JS API to run headless
 - [ ] 19. Package distribution, minification, and CDN exporting/importing
 - [ ] 20. Documentation for an agent to run headless apps
