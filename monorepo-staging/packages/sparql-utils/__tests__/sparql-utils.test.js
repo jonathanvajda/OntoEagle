@@ -12,6 +12,7 @@ import {
   formatSparqlAstTermLabel,
   formatSparqlIriToken,
   formatSparqlPrefixDeclarations,
+  parseSparqlQueryToAst,
   prependSparqlPrologue,
   readBalancedSparqlBraceBlock,
   applySparqlUpdateToQuadStore,
@@ -241,6 +242,34 @@ describe('sparql-utils query pattern extraction', () => {
       datatype: { termType: 'NamedNode', value: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#langString' }
     }, {})).toContain('"Alice"@en');
   });
+
+  test('parses SPARQL query text through an explicitly injected parser runtime', () => {
+    const parseCalls = [];
+    class MockParser {
+      constructor(options) {
+        this.options = options;
+      }
+
+      parse(text) {
+        parseCalls.push([text, this.options]);
+        return { queryType: 'ASK', sourceText: text };
+      }
+    }
+
+    const ast = parseSparqlQueryToAst('ASK { ?s ?p ?o }', {
+      Parser: MockParser,
+      skipValidation: true
+    });
+
+    expect(ast).toEqual({ queryType: 'ASK', sourceText: 'ASK { ?s ?p ?o }' });
+    expect(parseCalls).toEqual([['ASK { ?s ?p ?o }', { skipValidation: true }]]);
+  });
+
+  test('requires an explicit SPARQL.js parser runtime', () => {
+    expect(() => parseSparqlQueryToAst('SELECT * WHERE { ?s ?p ?o }')).toThrow(
+      'SPARQL.js Parser not found'
+    );
+  });
 });
 
 describe('sparql-utils update pattern implementation', () => {
@@ -351,6 +380,17 @@ describe('sparql-utils update pattern implementation', () => {
       objectDatatype: 'http://www.w3.org/2001/XMLSchema#string',
       graph: 'http://example.org/g'
     })]);
+  });
+
+  test('rejects unsupported administrative updates before invoking adapters', async () => {
+    const calls = [];
+    await expect(applySparqlUpdateToQuadStore('CLEAR GRAPH <http://example.org/g>', {
+      runConstructQuery: async () => calls.push('runConstructQuery'),
+      parseConstructResult: async () => calls.push('parseConstructResult'),
+      deleteQuadRows: async () => calls.push('deleteQuadRows'),
+      insertQuadRows: async () => calls.push('insertQuadRows')
+    })).rejects.toThrow('Unsupported UPDATE shape for quad-store materialization');
+    expect(calls).toEqual([]);
   });
 });
 

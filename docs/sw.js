@@ -4,7 +4,7 @@
    - graph.jsonld: stale-while-revalidate
 */
 
-const SW_VERSION = '__BUILD_ID__-sparql-utils-v1';
+const SW_VERSION = '__BUILD_ID__-format-headless-v1';
 const CACHE_SHELL = `ontoeagle-shell-${SW_VERSION}`;
 const CACHE_DATA = `ontoeagle-data-${SW_VERSION}`;
 
@@ -51,8 +51,8 @@ const SHELL_ASSETS = [
   './app/shared/browser-file-io/read-file-as-array-buffer.js',
   './app/shared/browser-file-io/read-file-as-text.js',
   './app/shared/format-registry/index.js',
-  './app/shared/format-registry/browser-file-actions.js',
   './app/shared/format-registry/mime-registry.js',
+  './app/shared/format-registry/rdf-content-detection.js',
   './app/shared/format-registry/rdf-parser-formats.js',
   './app/shared/indexeddb-data-management/id-generation.js',
   './app/shared/indexeddb-data-management/index.js',

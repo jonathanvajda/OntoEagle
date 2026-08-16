@@ -78,3 +78,15 @@ Evidence:
 Qualification:
 
 - App-specific project namespaces remain local configuration where they describe the app's own ontology or data model rather than common vocabulary registry content.
+
+## Headless API Audit Update 2026-08-15
+
+**Headless package rating: 5 - Canonical for the namespace-registry source package and mirrored shared app copies.**
+
+Evidence:
+
+- The package exports deterministic namespace facts, generated full-IRI maps, prefix maps, CURIE expansion/compaction, prefix extraction, serializer prefix preparation, and namespace-stem discovery.
+- `curieForNamespaceId()` was added to prevent downstream local wrappers around registry term CURIE creation.
+- `saveProjectPrefixes()` remains an explicit storage-adapter helper, not implicit storage logic.
+- `applyPrefixesToRdflibStore()` remains an explicit vendor-adapter helper, not pure core.
+- Package Jest covers registry facts, structured lookup failures, prefix warnings, syntax extraction, vendor adapter boundaries, and namespace-stem discovery.

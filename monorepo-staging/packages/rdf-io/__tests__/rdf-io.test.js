@@ -289,6 +289,19 @@ describe('RDF graph export scopes', () => {
 });
 
 describe('vendor adapter layer', () => {
+  test('reports unsupported adapter formats and missing runtime dependencies clearly', async () => {
+    await expect(parseRdfTextWithAdapters('x', { format: 'unsupported-format', runtime: {} }))
+      .rejects.toThrow('Unsupported RDF parse format: unsupported-format');
+    await expect(parseRdfTextWithAdapters('@prefix ex: <http://ex/> .', { format: 'turtle', runtime: {} }))
+      .rejects.toThrow('N3 Parser runtime is not available.');
+    await expect(parseRdfTextWithAdapters('{"@id":"http://ex/s"}', { format: 'jsonld', runtime: {} }))
+      .rejects.toThrow('JSON-LD parser runtime library is not available.');
+    await expect(parseRdfTextWithAdapters('<rdf:RDF />', { format: 'rdfxml', runtime: {} }))
+      .rejects.toThrow('rdflib runtime library is not available.');
+    await expect(serializeRdfDatasetWithAdapters([], { format: 'turtle', runtime: {} }))
+      .rejects.toThrow('N3 Writer runtime is not available.');
+  });
+
   test('parses and serializes N3-backed formats through an injected N3 runtime', async () => {
     const runtime = { N3: createMockN3Runtime() };
     const parsed = await parseRdfTextWithAdapters('<http://ex/s> <http://ex/p> "v" .', {

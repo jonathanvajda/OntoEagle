@@ -185,6 +185,23 @@ describe('query record exchange', () => {
       expect.objectContaining({ code: 'missing_query_text', row: 2 })
     ]));
   });
+
+  test('parses TSV query exchange and warns without skipping unknown query languages', () => {
+    const parsed = parseQueryRecordsFromDelimitedText('query_id\tquery_language\tquery_text\ttags\nq1\tCustom Query\tbody\talpha; beta', {
+      delimiter: '\t'
+    });
+    expect(parsed.records).toEqual([
+      expect.objectContaining({
+        queryId: 'q1',
+        queryLanguage: 'customquery',
+        queryText: 'body',
+        tags: ['alpha', 'beta']
+      })
+    ]);
+    expect(parsed.warnings).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'unknown_query_language', row: 2 })
+    ]));
+  });
 });
 
 describe('IRI mapping row adapter', () => {
@@ -225,5 +242,8 @@ describe('IRI mapping row adapter', () => {
       { 'old iri': 'a', 'new iri': 'b' },
       { 'old iri': 'a', 'new iri': 'c' }
     ], { duplicatePolicy: 'error' })).toThrow('Conflicting mapping for "a"');
+    expect(() => createIriMappingFromRows([
+      { 'old iri': 'a', 'new iri': 'b' }
+    ], { duplicatePolicy: 'overwrite' })).toThrow('Unsupported IRI mapping duplicate policy: overwrite');
   });
 });

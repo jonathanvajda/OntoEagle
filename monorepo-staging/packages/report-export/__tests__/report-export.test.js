@@ -40,6 +40,26 @@ describe('serializeReportValueToYaml', () => {
     expect(yaml).toContain('"http://purl.org/dc/terms/title": "Example"');
     expect(yaml).toContain('"dcterms:title": "Example compact"');
   });
+
+  test('serializes arrays, empty objects, empty arrays, and optional trailing newline deterministically', () => {
+    const yaml = serializeReportValueToYaml({
+      rows: [
+        { id: 'one', values: [1, 2] },
+        {}
+      ],
+      emptyList: [],
+      emptyObject: {}
+    }, { trailingNewline: false });
+
+    expect(yaml).toContain('rows:');
+    expect(yaml).toContain('- id: "one"');
+    expect(yaml).toContain('values:');
+    expect(yaml).toContain('- 1');
+    expect(yaml).toContain('- {}');
+    expect(yaml).toContain('emptyList:\n  []');
+    expect(yaml).toContain('emptyObject:\n  {}');
+    expect(yaml.endsWith('\n')).toBe(false);
+  });
 });
 
 describe('serializeReportDocumentToHtml', () => {
@@ -145,8 +165,14 @@ describe('openPrintableHtmlDocument', () => {
     expect(() => openPrintableHtmlDocument('<p>x</p>', { windowRef })).toThrow(ReportExportError);
   });
 
+  test('throws a validation error for blank printable HTML', () => {
+    expect(() => openPrintableHtmlDocument('   ', { windowRef: { open: jest.fn() } })).toThrow(ReportExportError);
+  });
+
   test('appendPrintScript supports fragments', () => {
-    expect(appendPrintScript('<p>x</p>', { closeAfterPrint: false })).toContain('window.print()');
+    const html = appendPrintScript('<p>x</p>', { closeAfterPrint: false });
+    expect(html).toContain('window.print()');
+    expect(html).not.toContain('window.close()');
   });
 });
 

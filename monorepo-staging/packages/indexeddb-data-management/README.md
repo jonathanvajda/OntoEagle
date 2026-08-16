@@ -129,7 +129,10 @@ The current store APIs still normalize plain JS records so existing apps can mig
     "@value": "project:default-workspace",
     "@type": "http://www.w3.org/2001/XMLSchema#string"
   },
-  "http://purl.org/dc/terms/title": "Default Cross-App Workspace",
+  "http://purl.org/dc/terms/title": {
+    "@value": "Default Cross-App Workspace",
+    "@language": "en"
+  },
   "http://purl.org/dc/terms/created": {
     "@value": "2026-07-31T00:00:00.000Z",
     "@type": "http://www.w3.org/2001/XMLSchema#dateTime"

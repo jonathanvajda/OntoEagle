@@ -5,6 +5,7 @@ import {
   getLocalDateParts,
   getTimestampForFilename,
   getUtcDateParts,
+  NORMALIZATION_CASE_STYLES,
   normalizeStringToAsciiSlug,
   normalizeStringToCamelCase,
   normalizeStringToCase,
@@ -20,6 +21,20 @@ import {
 } from '../src/index.js';
 
 describe('case conversion normalization', () => {
+  test('publishes supported case styles as a stable contract', () => {
+    expect(NORMALIZATION_CASE_STYLES).toEqual([
+      'flatcase',
+      'UPPERFLATCASE',
+      'camelCase',
+      'PascalCase',
+      'snake_case',
+      'SHOUTING_SNAKE',
+      'kebab-case',
+      'Train-Case',
+      'COBOL-CASE'
+    ]);
+  });
+
   test('splits human, punctuation, snake, kebab, camel, Pascal, and acronym text', () => {
     expect(splitStringToWords('has email_address!!')).toEqual(['has', 'email', 'address']);
     expect(splitStringToWords('meetingDate')).toEqual(['meeting', 'Date']);
@@ -52,6 +67,7 @@ describe('case conversion normalization', () => {
     expect(normalizeStringToCase('email address', 'snake_case')).toBe('email_address');
     expect(normalizeStringToCase('email address', 'SHOUTING_SNAKE')).toBe('EMAIL_ADDRESS');
     expect(normalizeStringToCase('email address', 'unknown', { fallbackStyle: 'kebab-case' })).toBe('email-address');
+    expect(normalizeStringToCase('email address', 'unknown', { fallbackStyle: 'missing' })).toBe('emailAddress');
 
     expect(detectStringCaseStyle('Meeting Date')).toBe('human');
     expect(detectStringCaseStyle('meetingDate')).toBe('camelCase');
@@ -75,9 +91,19 @@ describe('date and filename timestamp normalization', () => {
     expect(getUtcDateParts(date)).toEqual({ year: '2026', month: '04', day: '13' });
   });
 
+  test('falls back to current date parts for invalid date inputs', () => {
+    const parts = getUtcDateParts('not-a-date');
+    expect(parts).toEqual({
+      year: expect.stringMatching(/^\d{4}$/),
+      month: expect.stringMatching(/^\d{2}$/),
+      day: expect.stringMatching(/^\d{2}$/)
+    });
+  });
+
   test('formats filename timestamps and appends before extension', () => {
     const date = new Date('2026-04-13T12:34:56Z');
     expect(getTimestampForFilename(date, { utc: true })).toBe('2026-04-13_12-34-56');
     expect(appendTimestampToFilename('report.csv', { date, utc: true })).toBe('report_2026-04-13_12-34-56.csv');
+    expect(appendTimestampToFilename('report', { date, utc: true, separator: '--' })).toBe('report--2026-04-13_12-34-56');
   });
 });

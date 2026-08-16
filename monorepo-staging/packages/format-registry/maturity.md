@@ -69,3 +69,20 @@ Evidence:
 Qualification:
 
 - Deprecated artifacts and standalone experimental pages are not treated as canonical consumers until they are either removed or intentionally migrated.
+
+## Headless API Audit Update 2026-08-15
+
+**Headless package rating: 5 - Canonical for the format-registry source package and OntoEagle active app copy.**
+
+Evidence:
+
+- The source package public API no longer exports browser download or file-input helpers.
+- `downloadTextFile` remains owned by `browser-file-io`.
+- HTML accept-string construction remains owned by `browser-file-io` as `createAcceptAttribute`.
+- RDF text sniffing is retained as pure registry behavior under `detectRdfMimeTypeFromText`, returning the structured descriptor-result shape used by the registry.
+- The OntoEagle app copy was aligned with the same boundary.
+- Jest now asserts that `downloadTextFile`, `getAcceptExtensions`, and `guessRdfMimeTypeFromText` are absent from the public `format-registry` API.
+
+Mirror status:
+
+- OntoEagle, TOM, Axiolotl, Visual Lynx, OCM, SPV, Ontology Tabulator, Table Nova, and IRI Swapper shared `format-registry` copies were synchronized to this boundary during the audit.

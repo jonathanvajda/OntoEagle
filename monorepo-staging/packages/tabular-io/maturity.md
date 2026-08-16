@@ -67,3 +67,19 @@ Qualification:
 
 - XLS/XLSX handling remains a vendor adapter concern until the shared package explicitly owns a SheetJS runtime contract.
 - IRI mapping import/export remains a domain adapter over generic tabular rows and should not be folded into generic tabular parsing.
+
+## 2026-08-15 Headless API Audit
+
+Maturity remains Level 5 for the scoped CSV/TSV and delimited-record
+capability.
+
+- Delimited parsing/serialization, query-record exchange, table-shape helpers,
+  and IRI mapping row normalization are pure, environment-neutral JavaScript.
+- Browser file reads, downloads, IndexedDB writes, UI status, and File System
+  Access folder sync remain outside the package.
+- XLS/XLSX support remains deferred to a future SheetJS adapter with explicit
+  runtime injection and the same row/record output contracts.
+- `createIriMappingFromRows` now rejects unsupported duplicate policies instead
+  of silently treating them like `last`.
+- Jest coverage now includes TSV query exchange, unknown query-language
+  warnings, and invalid IRI mapping duplicate-policy errors.

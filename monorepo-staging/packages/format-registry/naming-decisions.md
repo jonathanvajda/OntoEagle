@@ -23,7 +23,7 @@ This first pass proposes names only. Do not treat them as accepted until charact
 |NAME-003|`workspaceExportExtension`, `getDownloadExtension`|`getExtensionForMimeType(mimeType)`|Proposed|The function returns a download/file extension for a MIME type.|`getDownloadExtension`|App-specific export-kind maps should call this after resolving kind to MIME.|
 |NAME-004|`detectFormatByExtension`|`getInputKindForExtension(extension)`|Proposed for adapter|The TOM function returns a broad kind, not a MIME type.|`detectFormatByExtension`|Keep this as app intake adapter unless canonical package supports broad categories.|
 |NAME-005|`detectTabularType`|`getTabularFormatForFilename(filename)`|Proposed for tabular registry|The output is a tabular kind based on filename.|`detectTabularType`|Likely belongs to `tabular-formats.js`.|
-|NAME-006|`guessMediaType`|`guessRdfMimeTypeFromText(text)`|Proposed|This is content heuristic/sniffing, not filename registry lookup.|`guessMediaType`|Should return confidence or explicit fallback in canonical contract.|
+|NAME-006|`guessMediaType`, `guessRdfMimeTypeFromText`|`detectRdfMimeTypeFromText(text)`|Yes|This is deterministic content sniffing, not parser validation. `detect` is the action and the return follows the registry descriptor-result shape.|`guessMediaType`, `guessRdfMimeTypeFromText`|Callers that need only the MIME string should read `result.value.mimeType` after checking `result.ok`.|
 |NAME-007|`isN3ParserFormat`|`isN3SupportedRdfMimeType(mimeType)`|Proposed|Clarifies that the predicate is about MIME support for N3 parser/writer behavior.|`isN3ParserFormat`|May need separate parse/write support predicates.|
 |NAME-008|`supportedConversions`, `getWorkspaceExportFormats`|`getSupportedOutputMimeTypes(inputMime, options)`|Proposed|Names behavior as output MIME selection, while options can carry app-specific scope.|`supportedConversions` alone|Visual output formats and graph-scope rules may require adapters.|
 
@@ -37,4 +37,4 @@ This first pass proposes names only. Do not treat them as accepted until charact
 ## Notes
 
 - Most existing functions use `format` to mean different things: MIME type, parser format, export kind, or input class. The canonical package should reserve `format` for structured format records or avoid it in function names.
-
+- 2026-08-15: Browser download helpers were removed from the format-registry public API. Use `browser-file-io` for download and accept-attribute behavior.

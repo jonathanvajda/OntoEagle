@@ -1,8 +1,10 @@
 import {
   buildOpaqueOntologyIri,
   buildReadableOntologyIri,
+  collectUsedOpaqueOntologyIriNumbers,
   createOntologySettingsViewFromMetadataRecord,
   deriveOntologyImportTarget,
+  findMaxOpaqueOntologyIriNumber,
   findNextAvailableOpaqueOntologyIriNumber,
   generateOntologySettings,
   normalizeOntologyMetadataRecord,
@@ -39,10 +41,36 @@ describe('ontology-metadata package source', () => {
       dateParts: { year: '2026', month: '08', day: '10' }
     });
 
-    expect(settings[COMMON_NAMESPACE_IRIS.owl.versionIRI]).toBe('https://example.org/2026-08-10/ExampleOntology');
+    expect(settings['@id']).toBe('https://example.org/ExampleOntology');
+    expect(settings.iriMode).toBeUndefined();
+    expect(settings.base).toBeUndefined();
+    expect(settings.opaqueDigits).toBeUndefined();
+    expect(settings[COMMON_NAMESPACE_IRIS.owl.versionIRI]).toEqual([{ '@id': 'https://example.org/2026-08-10/ExampleOntology' }]);
     expect(findNextAvailableOpaqueOntologyIriNumber(new Set([1, 2]), settings, 1)).toBe(3);
     expect(buildOpaqueOntologyIri(3, settings)).toBe('https://example.org/ont000003');
     expect(buildReadableOntologyIri('Example entity', { ...settings, readableCase: 'PascalCase' }, new Set(['https://example.org/ExampleEntity']))).toBe('https://example.org/ExampleEntity_2');
+    expect(createOntologySettingsViewFromMetadataRecord(settings)).toMatchObject({
+      iri: 'https://example.org/ExampleOntology',
+      base: 'https://example.org',
+      iriMode: 'opaque',
+      opaqueDigits: 6
+    });
+  });
+
+  test('provisions opaque IRIs from canonical full-IRI policy values', () => {
+    const settings = normalizeOntologyMetadataRecord({
+      iri: 'https://example.org/ExampleOntology',
+      [COMMON_NAMESPACE_IRIS.okea.hasOntologyBaseIri]: 'https://example.org/custom',
+      [COMMON_NAMESPACE_IRIS.okea.hasIriLocalNameDelimiterTextValue]: '#',
+      [COMMON_NAMESPACE_IRIS.okea.hasOpaqueIriLocalNamePrefixTextValue]: 'term',
+      [COMMON_NAMESPACE_IRIS.okea.hasOpaqueIriLocalNameIntegerWidthValue]: 4,
+      [COMMON_NAMESPACE_IRIS.okea.hasOpaqueIriLocalNameIntegerStartValue]: 10
+    });
+
+    expect(buildOpaqueOntologyIri(12, settings)).toBe('https://example.org/custom#term0012');
+    expect(collectUsedOpaqueOntologyIriNumbers(['https://example.org/custom#term0012'], settings)).toEqual(new Set([12]));
+    expect(findMaxOpaqueOntologyIriNumber(['https://example.org/custom#term0012'], settings)).toBe(12);
+    expect(findNextAvailableOpaqueOntologyIriNumber(new Set([10, 11, 12]), settings)).toBe(13);
   });
 
   test('normalizes legacy settings into full-IRI metadata profile records', () => {

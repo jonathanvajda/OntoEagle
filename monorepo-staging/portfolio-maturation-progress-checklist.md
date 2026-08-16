@@ -60,6 +60,21 @@ Given this portfolio, I would prioritize these epics:
 - [x] 15. Toast notifications, logging utils, status notifications, lightmode-darkmode
 - [x] 16. Visualization of RDF in Cytoscape
 - [x] 17. Visualization of SPARQL in Cytoscape
-- [ ] 18. Standardized JS API to run headless
+- [x] 18. Standardized JS API to run headless
+  - [x] 18.1 Define shared headless API result, artifact, diagnostic, execution metadata, and manifest conventions.
+  - [x] 18.2 MIME type/format/extension registry headless API audit and contract stabilization.
+  - [x] 18.3 Namespace prefix registry headless API audit and contract stabilization.
+  - [x] 18.4 Normalization utilities headless API audit and contract stabilization.
+  - [x] 18.5 Browser file/download utilities adapter-boundary audit.
+  - [x] 18.6 RDF parsing and serialization headless API audit and contract stabilization.
+  - [x] 18.7 Tabular parsing and serialization headless API audit and contract stabilization.
+  - [x] 18.8 YAML, HTML, and print export headless API audit and contract stabilization.
+  - [x] 18.9 SPARQL query/update utilities headless API audit and contract stabilization.
+  - [x] 18.10 Ontology metadata read/write and IRI provisioning headless API audit and contract stabilization.
+  - [x] 18.11 IndexedDB/project/graph/settings data-management side-effect boundary audit.
+  - [x] 18.12 RDF/SPARQL visualization headless API audit for read-only graph projection and renderer adapters.
+  - [x] 18.13 Browser app adapter audit: app UIs call public package APIs rather than duplicated local logic.
+  - [x] 18.14 Headless Jest coverage audit: public APIs run under Node without DOM.
+  - [x] 18.15 Interface matrix populated for each capability family.
 - [ ] 19. Package distribution, minification, and CDN exporting/importing
 - [ ] 20. Documentation for an agent to run headless apps

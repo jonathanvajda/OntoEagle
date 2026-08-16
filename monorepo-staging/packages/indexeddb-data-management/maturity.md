@@ -3,7 +3,7 @@
 ## Capability Family
 
 - **Capability family:** IndexedDB and app data management
-- **Date updated:** 2026-07-31
+- **Date updated:** 2026-08-15
 
 ## Maturity Scale
 
@@ -31,24 +31,26 @@
 |MAT-009|Mermaid IndexedDB project/diagram backend|4|4|Explicit project/diagram CRUD backend with mock IndexedDB tests and project concept separation.|Domain is Mermaid diagrams; ID shape differs from RDF/project artifacts.|Use as reference architecture, not direct copy.|TBD|2026-07-28|
 |MAT-010|Mermaid File System Access storage and registry|4|4|Structured `StorageError`, lock strategy, handle registry, migration tests.|Browser FSA only; not all OntoEagle apps need folder-backed projects immediately.|Treat as optional `file-system-project-store` adapter after core IDB model.|TBD|2026-07-28|
 |MAT-011|Cross-app File System Access project-folder backend|4|5|Shared package now includes app-neutral folder path planning, manifest read/write, artifact writes, recursive scan, manifest/IndexedDB reconciliation, discovered file staging, conflict statuses, and stale-derived-output helpers with Jest coverage.|No ontology app has completed the folder-backed pilot yet; manifest-last batch writes and recovery/audit records are still partial.|Pilot TOM first, then Axiolotl; add manifest-last batch write/recovery before rating canonical.|TBD|2026-08-01|
+|MAT-012|IndexedDB/project/graph/settings headless side-effect boundary|5|5|Headless API audit documents pure model functions, injected store abstractions, IndexedDB adapters, FSA adapters, download/archive adapters, error codes, and Jest coverage. Source scan found no DOM, localStorage, fetch, or console coupling in shared package source.|Cross-app adoption remains Level 4 until every app removes local duplicates after browser validation, but the package-side boundary is stable.|Use this package as the canonical storage/model boundary for future app rewiring and deletion passes.|TBD|2026-08-15|
 
 ## Promotion Checklist Status
 
-- [ ] Function names describe the action, not the source app or one current use case.
-- [ ] Inputs and outputs are explicit and documented.
-- [ ] Core logic is pure or mostly pure.
-- [ ] DOM, storage, file, download, and vendor side effects are behind adapters.
-- [ ] Error and warning behavior is predictable.
-- [ ] Representative fixtures exist.
-- [ ] Jest tests cover happy paths, edge cases, and known invalid inputs.
-- [ ] Browser, worker, and Node assumptions are documented.
-- [ ] Dependency and vendor provenance is documented.
+- [x] Function names describe the action, not the source app or one current use case.
+- [x] Inputs and outputs are explicit and documented.
+- [x] Core logic is pure or mostly pure.
+- [x] DOM, storage, file, download, and vendor side effects are behind adapters.
+- [x] Error and warning behavior is predictable.
+- [x] Representative fixtures exist.
+- [x] Jest tests cover happy paths, edge cases, and known invalid inputs.
+- [x] Browser, worker, and Node assumptions are documented.
+- [x] Dependency and vendor provenance is documented.
 
 ## Notes
 
-- No current candidate is canonical. Mermaid’s storage architecture is closest to package-ready for project/artifact CRUD, but it should inform the shared contract rather than become the shared package unchanged.
 - Axiolotl and OntoEagle should be demanding pilots because they exercise graph storage and dataset preload/user dataset distinctions.
 - Mermaid should influence maturity expectations for this cycle. A promoted project/artifact package should have tested create, list, rename/update, delete, nested-artifact listing, cascade/delete behavior, and backend-boundary tests before being rated package-ready.
 - Mermaid should not inflate the maturity rating of ontology-specific stores. It provides a strong project-management benchmark, while RDF datasets, quads, preload/user dataset distinctions, and ontology workspace hydration still need fixtures from OntoEagle and Axiolotl.
 - Pilot migration plans now exist for Axiolotl and TOM. These plans keep legacy discovery/export/migration non-destructive while targeting a clean shared storage architecture after user validation.
 - File System Access promotion planning now has a package implementation for the shared project-folder layer. Cross-app folder storage is not canonical until TOM and Axiolotl pilots validate the package against real app workflows and old local persistence is removed.
+- The shared package is canonical for the data-management side-effect boundary. App migrations can still remain below Level 5 until local duplicates are deleted and browser validation is complete.
+- 18.11 documents the stable public API groups in `headless-api-audit.md`. IndexedDB, File System Access, download/archive, crypto, and Web Locks are accepted adapter boundaries; DOM, localStorage, fetch, app logging, RDF parsing, and tabular parsing are out of scope for this package.

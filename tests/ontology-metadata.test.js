@@ -57,7 +57,7 @@ describe('ontology-metadata shared package', () => {
     expect(result.versionToOntologyIri.get('https://example.org/2026/ont')).toBe('https://example.org/ont');
   });
 
-  test('generates TOM-compatible ontology settings with registry-backed predicates', () => {
+  test('generates canonical ontology settings with registry-backed predicates', () => {
     const settings = generateOntologySettings({
       base: 'https://example.org',
       label: 'Test Ontology',
@@ -67,12 +67,22 @@ describe('ontology-metadata shared package', () => {
     });
 
     expect(settings).toMatchObject({
+      '@id': 'https://example.org/TestOntology',
+      [COMMON_NAMESPACE_IRIS.owl.versionIRI]: [{ '@id': 'https://example.org/2026-08-10/TestOntology' }],
+      [COMMON_NAMESPACE_IRIS.owl.versionInfo]: [{ '@value': '2026-08-10' }],
+      [COMMON_NAMESPACE_IRIS.dcterms.title]: [{ '@value': 'Test Ontology', '@language': 'en' }],
+      [COMMON_NAMESPACE_IRIS.dcterms.creator]: [{ '@value': 'Jonathan Vajda' }],
+      [COMMON_NAMESPACE_IRIS.dcterms.description]: [{ '@value': 'A test ontology', '@language': 'en' }],
+      [COMMON_NAMESPACE_IRIS.okea.hasIriPolicyModeTextValue]: [{ '@value': 'opaque' }],
+      [COMMON_NAMESPACE_IRIS.okea.hasOpaqueIriLocalNamePrefixTextValue]: [{ '@value': 'ont' }],
+      [COMMON_NAMESPACE_IRIS.okea.hasOpaqueIriLocalNameIntegerWidthValue]: [{ '@value': 6, '@type': COMMON_NAMESPACE_IRIS.xsd.nonNegativeInteger }],
+      [COMMON_NAMESPACE_IRIS.okea.hasOpaqueIriLocalNameIntegerStartValue]: [{ '@value': 1, '@type': COMMON_NAMESPACE_IRIS.xsd.integer }],
+      [COMMON_NAMESPACE_IRIS.okea.hasIriLocalNameStyleTextValue]: [{ '@value': 'PascalCase' }]
+    });
+    expect(settings.iriMode).toBeUndefined();
+
+    expect(createOntologySettingsViewFromMetadataRecord(settings)).toMatchObject({
       iri: 'https://example.org/TestOntology',
-      [COMMON_NAMESPACE_IRIS.owl.versionIRI]: 'https://example.org/2026-08-10/TestOntology',
-      [COMMON_NAMESPACE_IRIS.owl.versionInfo]: '2026-08-10',
-      [COMMON_NAMESPACE_IRIS.rdfs.label]: 'Test Ontology',
-      [COMMON_NAMESPACE_IRIS.dcterms.creator]: 'Jonathan Vajda',
-      [COMMON_NAMESPACE_IRIS.dcterms.description]: 'A test ontology',
       iriMode: 'opaque',
       opaqueLeading: 'ont',
       opaqueDigits: 6,

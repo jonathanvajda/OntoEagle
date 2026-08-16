@@ -51,4 +51,4 @@ Use this file to separate pure registry behavior from DOM, download, parser, sto
 ## Notes
 
 - The canonical package should be worker-safe and browser-native. It should not reference `window`, `document`, `FileReader`, `Blob`, IndexedDB, FSA, OPFS, or vendor parser globals.
-
+- 2026-08-15: The source package boundary was stabilized to enforce this rule. `browser-file-actions.js` was removed from `format-registry`; `detectRdfMimeTypeFromText` remains as pure content detection, and browser download/accept behavior belongs to `browser-file-io`.

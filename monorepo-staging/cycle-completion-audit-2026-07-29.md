@@ -42,7 +42,7 @@ Target repos:
 |:---|:---|:---|
 |TOM `parseFileExtension` tests|Final extension, uppercase, no extension, trailing dot, null.|`format-registry` `getFilenameExtension`; TOM test now imports shared registry.|
 |TOM `detectFormatByExtension` tests|CSV/TSV/XLSX -> spreadsheet; RDF extensions -> ontology; unknown -> unsupported.|`format-registry` `getInputKindForExtension`; TOM test now imports shared registry.|
-|TOM `guessMediaType` tests|JSON-LD before Turtle, Turtle, RDF/XML, N-Triples, plain text.|`format-registry` `guessRdfMimeTypeFromText`; TOM test now imports shared registry.|
+|TOM `guessMediaType` tests|JSON-LD before Turtle, Turtle, RDF/XML, N-Triples, plain text.|`format-registry` `detectRdfMimeTypeFromText`; TOM test now imports the shared structured detector.|
 |OCM `csvEscape` / `rowsToCsv` tests|Commas, quotes, embedded newlines, trailing newline.|`tabular-io` `escapeDelimitedCell` and `serializeDelimitedRows`; OCM test now imports shared package copy.|
 |Table Nova `detectDelimiterFromLine` tests|Comma vs tab detection.|`tabular-io` `detectCsvOrTsvDelimiter`; Table Nova test now imports shared package copy.|
 |Table Nova `parseLine` tests|Quoted commas and escaped quotes.|`tabular-io` `parseDelimitedLine`; Table Nova test now imports shared package copy.|

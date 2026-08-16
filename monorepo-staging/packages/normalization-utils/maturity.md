@@ -18,3 +18,18 @@ active direct duplicate in this family was found during this pass.
 Search token normalization, NLP lexical normalization, MIME normalization, RDF
 term normalization, and ontology validation remain intentionally outside this
 package because their input/output contracts differ.
+
+## 2026-08-15 Headless API Audit
+
+Maturity remains Level 5 after the headless API audit.
+
+- Public exports remain pure JavaScript functions with no DOM, storage, download,
+  logging, network, or vendor dependency.
+- `NORMALIZATION_CASE_STYLES` is now exported as the stable list of accepted
+  case-style identifiers.
+- Date and timestamp functions are deterministic when callers pass a `Date`.
+  Omitting the date intentionally uses the current clock.
+- Invalid date inputs fall back to the current date instead of leaking `NaN`
+  date parts.
+- Edge-case Jest coverage was added for supported style publication, fallback
+  styles, invalid dates, extensionless filenames, and custom filename separators.

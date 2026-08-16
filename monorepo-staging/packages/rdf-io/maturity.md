@@ -65,3 +65,19 @@ Completion evidence:
 Regression note:
 
 - Old app-level RDF expectations are represented by package Jest fixtures and thin app tests. Any intentional output differences should continue to be documented where app adapters normalize MIME names, return structured result objects, choose triple-vs-quad output, or preserve prefixes differently.
+
+## 2026-08-15 Headless API Audit
+
+Maturity remains Level 5 for the scoped RDF parsing and serialization capability.
+
+- Dependency-free RDF model, N-Triples/N-Quads parse/serialize, object-to-RDF
+  projection, JSON-LD fallback projection, and graph export scope helpers are
+  environment-neutral.
+- Turtle, N3, TriG, JSON-LD expansion/compaction, and RDF/XML are
+  vendor-adapter capabilities. Headless callers should pass `runtime: { N3,
+  jsonld, $rdf }`; browser globals remain only as static-app runtime fallback.
+- The package returns RDF text, RDF/JS data, warnings, and graph export counts.
+  It does not read files, download files, mutate DOM, write IndexedDB, or own UI
+  status.
+- Additional Jest coverage now confirms unsupported formats and missing adapter
+  runtimes fail with stable messages.

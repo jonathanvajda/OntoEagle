@@ -4,6 +4,7 @@ import {
   applyPrefixesToRdflibStore,
   compactIriToCurie,
   createN3WriterOptionsWithPrefixes,
+  curieForNamespaceId,
   deriveNamespaceStemFromIri,
   discoverBaseIriOrNamespaceStem,
   expandCurieToIri,
@@ -52,6 +53,22 @@ describe('namespace-registry package', () => {
     expect(iriForNamespaceId('rdf', 'type')).toEqual({
       ok: true,
       value: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
+    });
+    expect(curieForNamespaceId('rdf', 'type')).toEqual({
+      ok: true,
+      value: 'rdf:type',
+      prefix: 'rdf',
+      localName: 'type'
+    });
+    expect(curieForNamespaceId('owl', 'notReal')).toEqual({
+      ok: false,
+      error: 'unknown namespace id',
+      input: 'notReal'
+    });
+    expect(curieForNamespaceId('notReal', 'type')).toEqual({
+      ok: false,
+      error: 'unknown namespace',
+      input: 'notReal'
     });
     expect(COMMON_NAMESPACE_IRIS.rdf.type).toBe('http://www.w3.org/1999/02/22-rdf-syntax-ns#type');
     expect(COMMON_NAMESPACE_IRIS.owl.Class).toBe('http://www.w3.org/2002/07/owl#Class');
