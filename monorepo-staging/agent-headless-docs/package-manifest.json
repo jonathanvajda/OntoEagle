@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "policy": {
+    "canonicalCapabilityContract": "JavaScript package API",
+    "canonicalUserProductSurface": "Browser app",
+    "entrypointRule": "Import only from package src/index.js during staging or mirrored shared package index.js in browser apps.",
+    "adapterRule": "DOM, storage, file picker, download, renderer, CLI, CI, and agent protocol work must be adapters over package APIs."
+  },
+  "packages": [
+    {
+      "id": "format-registry",
+      "path": "monorepo-staging/packages/format-registry/src/index.js",
+      "capabilities": ["format.normalize", "format.detect", "format.describe", "rdf.parser-format"],
+      "canonicalInputs": ["filename", "extension", "mimeType", "formatKey", "rdfText"],
+      "canonicalOutputs": ["mimeDescriptor", "normalizedMimeResult", "extension", "formatMap", "rdfContentDetection"],
+      "sideEffects": "none",
+      "tests": ["monorepo-staging/packages/format-registry/__tests__/mime-registry.test.js"],
+      "primaryExports": ["getSupportedMimeTypeForFilename", "getOutputMimeTypeForExtension", "normalizeSupportedMimeType", "getPreferredExtensionForMimeType", "getN3ParserFormatForMimeType", "detectRdfMimeTypeFromText"]
+    },
+    {
+      "id": "namespace-registry",
+      "path": "monorepo-staging/packages/namespace-registry/src/index.js",
+      "capabilities": ["namespace.lookup", "curie.expand", "curie.compact", "prefix.extract", "prefix.select"],
+      "canonicalInputs": ["registryKey", "idKey", "iri", "curie", "prefixMap", "rdfText", "rdfTerms"],
+      "canonicalOutputs": ["iri", "curie", "prefixMap", "namespaceStem", "selectedPrefixes"],
+      "sideEffects": "none except explicit rdflib store prefix adapter",
+      "tests": ["monorepo-staging/packages/namespace-registry/__tests__/namespace-registry.test.js"],
+      "primaryExports": ["COMMON_NAMESPACE_IRIS", "iriForNamespaceId", "curieForNamespaceId", "expandCurieToIri", "compactIriToCurie", "namespacePrefixMapFromRegistry", "selectPrefixesUsedByRdfTerms"]
+    },
+    {
+      "id": "browser-file-io",
+      "path": "monorepo-staging/packages/browser-file-io/src/index.js",
+      "capabilities": ["file.read-text", "file.read-bytes", "download.blob", "download.text", "filename.normalize", "accept.create"],
+      "canonicalInputs": ["FileLike", "BlobLike", "text", "filename", "mimeDescriptor"],
+      "canonicalOutputs": ["text", "arrayBuffer", "Blob", "filename", "acceptAttribute"],
+      "sideEffects": "explicit browser FileReader/Blob/download adapters",
+      "tests": ["monorepo-staging/packages/browser-file-io/__tests__/browser-file-io.test.js"],
+      "primaryExports": ["readFileAsText", "readFileAsArrayBuffer", "createTextBlob", "downloadBlob", "downloadTextFile", "createAcceptAttribute", "normalizeFileExtension", "createSafeFilenameBase", "isBlobLike"]
+    },
+    {
+      "id": "tabular-io",
+      "path": "monorepo-staging/packages/tabular-io/src/index.js",
+      "capabilities": ["tabular.parse-delimited", "tabular.serialize-delimited", "tabular.records", "query-records.exchange", "iri-mapping.create"],
+      "canonicalInputs": ["delimitedText", "rows", "records", "headers", "mappingRows"],
+      "canonicalOutputs": ["rows", "records", "delimitedText", "iriMapping"],
+      "sideEffects": "none",
+      "tests": ["monorepo-staging/packages/tabular-io/__tests__/tabular-io.test.js"],
+      "primaryExports": ["parseDelimitedText", "serializeDelimitedRows", "serializeDelimitedRecords", "rowsToRecords", "parseQueryRecordsFromDelimitedText", "serializeQueryRecordsToDelimitedText", "createIriMappingFromRows"]
+    },
+    {
+      "id": "rdf-io",
+      "path": "monorepo-staging/packages/rdf-io/src/index.js",
+      "capabilities": ["rdf.parse", "rdf.serialize", "rdf.normalize", "rdf.to-jsonld", "rdf.graph-export", "object.to-rdf"],
+      "canonicalInputs": ["rdfText", "mimeType", "rdfJsQuads", "quadRows", "objectRecord", "vendorAdapters"],
+      "canonicalOutputs": ["rdfJsQuads", "jsonLdGraph", "rdfText", "artifact"],
+      "sideEffects": "none in core; vendor parser/serializer adapters injected",
+      "tests": ["monorepo-staging/packages/rdf-io/__tests__/rdf-io.test.js"],
+      "primaryExports": ["quad", "normalizeQuad", "datasetToQuads", "parseRdfText", "serializeRdfDataset", "serializeRdfDatasetWithAdapters", "serializeRdfDatasetForGraphScope", "rdfDatasetToJsonLdGraph", "projectObjectToRdfQuads"]
+    },
+    {
+      "id": "indexeddb-data-management",
+      "path": "monorepo-staging/packages/indexeddb-data-management/src/index.js",
+      "capabilities": ["project.records", "artifact.records", "settings.records", "graph.records", "quadRows", "indexeddb.adapter", "fsa.adapter", "manifest.export", "legacy.migration"],
+      "canonicalInputs": ["projectRecord", "artifactRecord", "datasetRecord", "runRecord", "settingRecord", "graphRecord", "quadRows", "rdfJsQuads", "manifest", "adapters"],
+      "canonicalOutputs": ["normalizedRecord", "jsonLdRecord", "graphPlan", "manifest", "syncReport", "archiveArtifact"],
+      "sideEffects": "explicit IndexedDB, FSA, Blob/JSZip, download, crypto, and Web Locks adapters",
+      "tests": ["monorepo-staging/packages/indexeddb-data-management/__tests__/indexeddb-data-management.test.js", "monorepo-staging/packages/indexeddb-data-management/__tests__/file-system-access.test.js"],
+      "primaryExports": ["normalizeProjectRecord", "normalizeArtifactRecord", "normalizeSettingRecord", "normalizeQuadRow", "createProjectStore", "createSettingsStore", "createQuadRowStore", "openProjectPortfolioDatabase", "createProjectPortfolioStores", "convertRdfJsQuadsToQuadRows", "createProjectExportManifest", "createProjectFolderStore", "reconcileProjectFolderScan"]
+    },
+    {
+      "id": "ontology-utils",
+      "path": "monorepo-staging/packages/ontology-utils/src/index.js",
+      "capabilities": ["iri.validate", "blank-node.detect", "rdf-term.classify", "ontology-input.classify", "xsd.describe", "uuid.create"],
+      "canonicalInputs": ["string", "rdfJsTerm", "rdfJsQuad", "datatypeIri", "ontologyInputDescriptor", "cryptoAdapter", "date"],
+      "canonicalOutputs": ["boolean", "normalizedString", "classification", "jsonSchemaFragment", "coercedValue", "uuid", "graphIri"],
+      "sideEffects": "secure Web Crypto required for UUID unless injected",
+      "tests": ["monorepo-staging/packages/ontology-utils/__tests__/ontology-utils.test.js"],
+      "primaryExports": ["isAbsoluteIri", "normalizeIriToken", "isBlankNodeId", "isRdfTerm", "canUseTermAsSubject", "classifyOntologyInput", "isRegisteredVocabularyIri", "getXsdDatatypeLocalName", "coerceLexicalValueForXsdDatatype", "createUuid", "createTimestampedGraphIri"]
+    },
+    {
+      "id": "normalization-utils",
+      "path": "monorepo-staging/packages/normalization-utils/src/index.js",
+      "capabilities": ["string.case-normalize", "string.case-detect", "label.build", "datetime.parts", "filename.timestamp"],
+      "canonicalInputs": ["string", "caseStyle", "words", "date", "filename"],
+      "canonicalOutputs": ["normalizedString", "caseStyle", "label", "dateParts", "filename"],
+      "sideEffects": "none; date defaults are injectable",
+      "tests": ["monorepo-staging/packages/normalization-utils/__tests__/normalization-utils.test.js"],
+      "primaryExports": ["splitStringToWords", "normalizeStringToCase", "normalizeStringToPascalCase", "normalizeStringToSnakeCase", "normalizeStringToAsciiSlug", "detectStringCaseStyle", "buildLabelFromWords", "getUtcDateTimeParts", "appendTimestampToFilename"]
+    },
+    {
+      "id": "sparql-utils",
+      "path": "monorepo-staging/packages/sparql-utils/src/index.js",
+      "capabilities": ["sparql.prologue", "sparql.lexical-scan", "sparql.kind", "sparql.iri-rewrite", "sparql.query-graph", "sparql.update-materialize"],
+      "canonicalInputs": ["sparqlText", "prefixMap", "iriMapping", "parserAdapter", "graphStoreAdapter"],
+      "canonicalOutputs": ["prologue", "tokens", "operationFamily", "previewRows", "rewrittenSparql", "graphModel", "updateResult"],
+      "sideEffects": "none in core; execution/persistence requires injected adapters",
+      "tests": ["monorepo-staging/packages/sparql-utils/__tests__/sparql-utils.test.js"],
+      "primaryExports": ["extractSparqlPrologue", "scanSparqlLexicalTokens", "classifySparqlOperationFamily", "extractSparqlRewriteTokens", "buildSparqlRewritePreviewRows", "rewriteSparqlIris", "extractSparqlQueryPatterns", "materializeSparqlUpdateOperation"]
+    },
+    {
+      "id": "ontology-metadata",
+      "path": "monorepo-staging/packages/ontology-metadata/src/index.js",
+      "capabilities": ["ontology-metadata.normalize", "ontology-metadata.read-rdf", "ontology-metadata.write-rdf", "ontology-metadata.read-jsonld", "ontology-iri.provision"],
+      "canonicalInputs": ["metadataRecord", "rdfJsQuads", "jsonLd", "iriPolicy", "existingIris"],
+      "canonicalOutputs": ["metadataRecord", "settingsView", "rdfJsQuads", "importTarget", "ontologyIri", "nextNumber"],
+      "sideEffects": "none",
+      "tests": ["monorepo-staging/packages/ontology-metadata/__tests__/ontology-metadata.test.js"],
+      "primaryExports": ["generateOntologySettings", "normalizeOntologyMetadataRecord", "writeOntologyMetadataQuads", "readOntologyMetadataRecordFromQuads", "readOntologyRecordsFromJsonLd", "deriveOntologyImportTarget", "buildOpaqueOntologyIri", "buildReadableOntologyIri", "findNextAvailableOpaqueOntologyIriNumber"]
+    },
+    {
+      "id": "report-export",
+      "path": "monorepo-staging/packages/report-export/src/index.js",
+      "capabilities": ["report.yaml", "report.html", "report.export-descriptor", "report.print"],
+      "canonicalInputs": ["reportValue", "reportDocument", "exportOptions", "html"],
+      "canonicalOutputs": ["yamlText", "htmlText", "exportDescriptor", "printWindowResult"],
+      "sideEffects": "print-window adapter only",
+      "tests": ["monorepo-staging/packages/report-export/__tests__/report-export.test.js"],
+      "primaryExports": ["serializeReportValueToYaml", "serializeReportDocumentToHtml", "createReportTextExportDescriptor", "appendPrintScript", "openPrintableHtmlDocument", "escapeHtmlText"]
+    },
+    {
+      "id": "ui-feedback",
+      "path": "monorepo-staging/packages/ui-feedback/src/index.js",
+      "capabilities": ["status.present", "status.render", "toast.render", "logger.scoped", "theme.preference"],
+      "canonicalInputs": ["severity", "message", "domTarget", "logger", "settingsStore", "themeValue"],
+      "canonicalOutputs": ["presentation", "renderResult", "logger", "themePreference"],
+      "sideEffects": "explicit DOM, console, and settings-store adapters",
+      "tests": ["monorepo-staging/packages/ui-feedback/__tests__/ui-feedback.test.js"],
+      "primaryExports": ["createStatusPresentation", "renderStatusMessage", "clearStatusMessage", "inferToastSeverity", "renderToastNotification", "createScopedConsoleLogger", "runLoggedAsyncAction", "normalizeThemePreference", "applyThemePreference", "readThemePreference", "writeThemePreference", "toggleThemePreference"]
+    },
+    {
+      "id": "cytoscape-visualization",
+      "path": "monorepo-staging/packages/cytoscape-visualization/src/index.js",
+      "capabilities": ["rdf.graph-project", "sparql.graph-project", "cytoscape.elements", "cytoscape.styles", "cytoscape.layouts", "graph.filter", "graph.inspect", "graph.interaction"],
+      "canonicalInputs": ["rdfJsQuads", "sparqlGraphModel", "projectionOptions", "filterOptions", "layoutKey"],
+      "canonicalOutputs": ["GraphState", "cytoscapeElements", "stylesheet", "layoutOptions", "filterViewModel", "inspectorViewModel", "copyPayload", "uiState"],
+      "sideEffects": "none; live Cytoscape is a browser adapter",
+      "tests": ["monorepo-staging/packages/cytoscape-visualization/__tests__/cytoscape-visualization.test.js"],
+      "primaryExports": ["projectRdfToGraphState", "projectSparqlGraphModelToGraphState", "projectGraphStateToCytoscapeElements", "createDefaultCytoscapeStylesheet", "createCytoscapeLayoutOptions", "buildInspectorViewModel", "calculateVisibleGraphElementIds", "updateGraphElementSelection", "createGraphElementCopyPayload"]
+    }
+  ]
+}

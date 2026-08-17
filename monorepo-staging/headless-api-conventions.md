@@ -2,11 +2,11 @@
 
 ## Status
 
-Draft. Decisions 1-7 from `headless-capability-migration-checklist.md` are accepted. The canonicality wording for browser app versus JavaScript API remains unresolved.
+Accepted for the current headless standardization milestone. Decisions 1-8 from `headless-capability-migration-checklist.md` are accepted.
 
-Current working assumption:
+Canonicality rule:
 
-The JavaScript API is the canonical capability contract. Browser apps remain the primary deployed user surface and must call the JavaScript API through adapters.
+The JavaScript API is the canonical capability contract. Browser apps are the canonical user product surface and must call the JavaScript API through adapters.
 
 ## Scope
 
@@ -120,7 +120,7 @@ Adapters MAY read files, write files, touch the DOM, download artifacts, persist
 
 Core APIs MUST NOT acquire input or present output. They receive data/options and return values/artifacts/diagnostics.
 
-## Capability Manifest Draft
+## Capability Manifest
 
 Machine-readable manifests should eventually use:
 
@@ -150,4 +150,4 @@ Machine-readable manifests should eventually use:
 }
 ```
 
-Do not populate manifests broadly until two or three package migrations confirm these fields are stable.
+Manifests should stay lightweight. They are discovery aids for humans, CI, and agents, not a replacement for JSDoc, package tests, or full typed declarations.

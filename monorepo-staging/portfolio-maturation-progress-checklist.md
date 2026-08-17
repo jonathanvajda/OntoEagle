@@ -76,5 +76,5 @@ Given this portfolio, I would prioritize these epics:
   - [x] 18.13 Browser app adapter audit: app UIs call public package APIs rather than duplicated local logic.
   - [x] 18.14 Headless Jest coverage audit: public APIs run under Node without DOM.
   - [x] 18.15 Interface matrix populated for each capability family.
-- [ ] 19. Package distribution, minification, and CDN exporting/importing
-- [ ] 20. Documentation for an agent to run headless apps
+- [x] 19. Documentation for an agent to run headless apps
+- [ ] 20. Package distribution, minification, and CDN exporting/importing
